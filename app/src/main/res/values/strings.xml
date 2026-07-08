@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">ReadLog</string>
+
+    <!-- Login -->
+    <string name="login_brand">ReadLog.</string>
+    <string name="login_tagline">A quiet space for\nyour readings.</string>
+    <string name="login_continue_google">Continue with Google account</string>
+    <string name="login_continue_offline">Continue offline</string>
 </resources>
