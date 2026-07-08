@@ -31,9 +31,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import com.rodrigonovoa.readlog.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant

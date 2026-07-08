@@ -1,0 +1,6 @@
+<resources>
+    <string name="login_brand">ReadLog.</string>
+    <string name="login_tagline">Un espacio tranquilo para\ntus lecturas.</string>
+    <string name="login_continue_google">Continuar con cuenta de Google</string>
+    <string name="login_continue_offline">Continuar sin conexión</string>
+</resources>
