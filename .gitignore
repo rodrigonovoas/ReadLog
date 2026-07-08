@@ -44,3 +44,6 @@ Thumbs.db
 *.class
 *.dex
 *.ap_
+
+# Agent instructions
+AGENTS.md
