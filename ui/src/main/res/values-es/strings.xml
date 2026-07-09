@@ -3,4 +3,6 @@
     <string name="login_tagline">Un espacio tranquilo para\ntus lecturas.</string>
     <string name="login_continue_google">Continuar con cuenta de Google</string>
     <string name="login_continue_offline">Continuar sin conexión</string>
+    <string name="login_error_generic">Error de autenticación. Inténtalo de nuevo.</string>
+    <string name="book_collection_title">Colección de libros</string>
 </resources>
