@@ -2,6 +2,7 @@ package com.rodrigonovoa.readlog.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rodrigonovoa.readlog.domain.auth.AuthLauncher
 import com.rodrigonovoa.readlog.domain.usecase.ContinueOfflineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SignInWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
-    private val continueOfflineUseCase: ContinueOfflineUseCase
+    private val continueOfflineUseCase: ContinueOfflineUseCase,
+    private val authLauncher: AuthLauncher,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -31,19 +33,22 @@ class LoginViewModel @Inject constructor(
             is LoginIntent.OnGoogleSignInClicked -> {
                 _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
                 viewModelScope.launch {
-                    _effect.emit(LoginEffect.LaunchGoogleSignIn)
-                }
-            }
-            is LoginIntent.OnGoogleTokenReceived -> {
-                viewModelScope.launch {
-                    val result = signInWithGoogleUseCase(intent.token)
-                    if (result.isSuccess) {
-                        _uiState.value = _uiState.value.copy(isLoading = false)
-                        _effect.emit(LoginEffect.NavigateToCollection)
+                    val tokenResult = authLauncher.launchGoogleSignIn()
+                    if (tokenResult.isSuccess) {
+                        val signInResult = signInWithGoogleUseCase(tokenResult.getOrThrow())
+                        if (signInResult.isSuccess) {
+                            _uiState.value = _uiState.value.copy(isLoading = false)
+                            _effect.emit(LoginEffect.NavigateToCollection)
+                        } else {
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                errorMessage = signInResult.exceptionOrNull()?.message ?: "Authentication failed"
+                            )
+                        }
                     } else {
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
-                            errorMessage = result.exceptionOrNull()?.message ?: "Authentication failed"
+                            errorMessage = tokenResult.exceptionOrNull()?.message ?: "Google sign-in failed"
                         )
                     }
                 }
@@ -53,12 +58,6 @@ class LoginViewModel @Inject constructor(
                     continueOfflineUseCase()
                     _effect.emit(LoginEffect.NavigateToCollection)
                 }
-            }
-            is LoginIntent.OnGoogleSignInFailed -> {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = intent.message
-                )
             }
             is LoginIntent.DismissError -> {
                 _uiState.value = _uiState.value.copy(errorMessage = null)
