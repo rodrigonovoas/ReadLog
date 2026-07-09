@@ -1,12 +1,13 @@
 package com.rodrigonovoa.readlog.domain.usecase
 
+import com.rodrigonovoa.readlog.domain.model.User
 import com.rodrigonovoa.readlog.domain.repository.AuthRepository
 import javax.inject.Inject
 
-class SignInWithGoogleUseCase @Inject constructor(
+class GetCurrentUserUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(idToken: String): Result<Unit> {
-        return authRepository.signInWithGoogle(idToken)
+    operator fun invoke(): User? {
+        return authRepository.getCurrentUser()
     }
 }

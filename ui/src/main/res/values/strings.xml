@@ -3,4 +3,6 @@
     <string name="login_tagline">A quiet space for\nyour readings.</string>
     <string name="login_continue_google">Continue with Google account</string>
     <string name="login_continue_offline">Continue offline</string>
+    <string name="login_error_generic">Authentication failed. Please try again.</string>
+    <string name="book_collection_title">Book Collection</string>
 </resources>

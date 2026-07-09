@@ -57,6 +57,12 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.androidx.navigation.compose)
+
+    // Credential Manager + Google Identity (app layer only, not data)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     // Hilt
     implementation(libs.hilt.android)

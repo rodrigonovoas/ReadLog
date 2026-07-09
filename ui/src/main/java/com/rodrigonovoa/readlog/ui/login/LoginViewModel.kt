@@ -5,8 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.rodrigonovoa.readlog.domain.usecase.ContinueOfflineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SignInWithGoogleUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,37 +20,49 @@ class LoginViewModel @Inject constructor(
     private val continueOfflineUseCase: ContinueOfflineUseCase
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
-    val uiState: StateFlow<LoginUiState> = _uiState
+    private val _uiState = MutableStateFlow(LoginUiState())
+    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    fun signInWithGoogle() {
-        viewModelScope.launch {
-            _uiState.value = LoginUiState.Loading
-            val result = signInWithGoogleUseCase()
-            _uiState.value = if (result.isSuccess) {
-                LoginUiState.Success
-            } else {
-                LoginUiState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
+    private val _effect = MutableSharedFlow<LoginEffect>()
+    val effect: SharedFlow<LoginEffect> = _effect.asSharedFlow()
+
+    fun processIntent(intent: LoginIntent) {
+        when (intent) {
+            is LoginIntent.OnGoogleSignInClicked -> {
+                _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+                viewModelScope.launch {
+                    _effect.emit(LoginEffect.LaunchGoogleSignIn)
+                }
+            }
+            is LoginIntent.OnGoogleTokenReceived -> {
+                viewModelScope.launch {
+                    val result = signInWithGoogleUseCase(intent.token)
+                    if (result.isSuccess) {
+                        _uiState.value = _uiState.value.copy(isLoading = false)
+                        _effect.emit(LoginEffect.NavigateToCollection)
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = result.exceptionOrNull()?.message ?: "Authentication failed"
+                        )
+                    }
+                }
+            }
+            is LoginIntent.OnContinueOfflineClicked -> {
+                viewModelScope.launch {
+                    continueOfflineUseCase()
+                    _effect.emit(LoginEffect.NavigateToCollection)
+                }
+            }
+            is LoginIntent.OnGoogleSignInFailed -> {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = intent.message
+                )
+            }
+            is LoginIntent.DismissError -> {
+                _uiState.value = _uiState.value.copy(errorMessage = null)
             }
         }
-    }
-
-    fun continueOffline() {
-        viewModelScope.launch {
-            _uiState.value = LoginUiState.Loading
-            val result = continueOfflineUseCase()
-            _uiState.value = if (result.isSuccess) {
-                LoginUiState.Success
-            } else {
-                LoginUiState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
-            }
-        }
-    }
-
-    sealed interface LoginUiState {
-        data object Idle : LoginUiState
-        data object Loading : LoginUiState
-        data object Success : LoginUiState
-        data class Error(val message: String) : LoginUiState
     }
 }

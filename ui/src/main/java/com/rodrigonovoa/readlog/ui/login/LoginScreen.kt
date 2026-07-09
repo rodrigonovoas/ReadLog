@@ -1,5 +1,6 @@
 package com.rodrigonovoa.readlog.ui.login
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -30,6 +32,7 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,13 +43,12 @@ import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant
 import com.rodrigonovoa.readlog.ui.theme.color_primary
 import com.rodrigonovoa.readlog.ui.theme.color_secondary
 import com.rodrigonovoa.readlog.ui.theme.color_surface
-import androidx.compose.foundation.Canvas
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
-    onContinueWithGoogle: () -> Unit = {},
-    onContinueOffline: () -> Unit = {},
+    state: LoginUiState,
+    onIntent: (LoginIntent) -> Unit,
 ) {
     Box(
         modifier = modifier
@@ -78,7 +80,7 @@ fun LoginScreen(
                     fontSize = 15.sp,
                     lineHeight = 22.sp,
                     color = color_on_surface_variant,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    textAlign = TextAlign.Center,
                 )
             }
 
@@ -89,20 +91,33 @@ fun LoginScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Button(
-                    onClick = onContinueWithGoogle,
+                    onClick = {
+                        onIntent(LoginIntent.OnGoogleSignInClicked)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
+                    enabled = !state.isLoading,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = color_primary,
                         contentColor = color_surface,
+                        disabledContainerColor = color_primary.copy(alpha = 0.5f),
+                        disabledContentColor = color_surface.copy(alpha = 0.7f),
                     ),
                 ) {
-                    PersonIcon(
-                        color = color_surface,
-                        modifier = Modifier.size(20.dp),
-                    )
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = color_surface,
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        PersonIcon(
+                            color = color_surface,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
                     Spacer(Modifier.width(10.dp))
                     Text(
                         text = stringResource(R.string.login_continue_google),
@@ -113,13 +128,15 @@ fun LoginScreen(
                 }
 
                 TextButton(
-                    onClick = onContinueOffline,
+                    onClick = {                     onIntent(LoginIntent.OnContinueOfflineClicked) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp),
                     shape = RoundedCornerShape(28.dp),
+                    enabled = !state.isLoading,
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = color_on_surface_variant,
+                        disabledContentColor = color_on_surface_variant.copy(alpha = 0.5f),
                     ),
                 ) {
                     Text(
@@ -127,6 +144,20 @@ fun LoginScreen(
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
+                    )
+                }
+
+                state.errorMessage?.let { error ->
+                    Text(
+                        text = error,
+                        color = Color(0xFFB00020),
+                        fontFamily = FontFamily.SansSerif,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -175,7 +206,6 @@ private fun PersonIcon(color: Color, modifier: Modifier = Modifier) {
 }
 
 private fun DrawScope.drawPersonIcon(color: Color) {
-    // Based on a 20x20 viewBox: head circle (cx=10, cy=7, r=4) + shoulders path.
     val scale = size.minDimension / 20f
     drawCircle(
         color = color,
@@ -203,6 +233,9 @@ private fun DrawScope.drawPersonIcon(color: Color) {
 @Composable
 private fun LoginScreenPreview() {
     ReadLogTheme {
-        LoginScreen()
+        LoginScreen(
+            state = LoginUiState(),
+            onIntent = {},
+        )
     }
 }
