@@ -58,13 +58,13 @@ import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant
+import com.rodrigonovoa.readlog.ui.theme.color_outline
+import com.rodrigonovoa.readlog.ui.theme.color_placeholder
 import com.rodrigonovoa.readlog.ui.theme.color_primary
 import com.rodrigonovoa.readlog.ui.theme.color_surface
 import com.rodrigonovoa.readlog.ui.theme.color_surface_variant
 import com.rodrigonovoa.readlog.ui.theme.color_track
-
-private val color_outline = Color(0xFFC9BBA3)
-private val color_placeholder = Color(0xFFB9A78E)
+import com.rodrigonovoa.readlog.ui.theme.color_transparent
 
 @Composable
 fun AddBookScreen(
@@ -294,7 +294,7 @@ private fun AddBookModeSelector(
                 )
                 .clip(RoundedCornerShape(12.dp))
                 .background(
-                    if (selectedMode == AddBookMode.Manual) color_surface_variant else Color.Transparent
+                    if (selectedMode == AddBookMode.Manual) color_surface_variant else color_transparent
                 )
                 .clickable { onModeSelected(AddBookMode.Manual) },
             contentAlignment = Alignment.Center,
@@ -313,7 +313,7 @@ private fun AddBookModeSelector(
                 .height(38.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(
-                    if (selectedMode == AddBookMode.Scan) color_surface_variant else Color.Transparent
+                    if (selectedMode == AddBookMode.Scan) color_surface_variant else color_transparent
                 )
                 .shadow(
                     elevation = if (selectedMode == AddBookMode.Scan) 6.dp else 0.dp,

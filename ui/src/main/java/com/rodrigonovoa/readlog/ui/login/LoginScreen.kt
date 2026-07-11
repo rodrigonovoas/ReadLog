@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
+import com.rodrigonovoa.readlog.ui.theme.color_error
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant
 import com.rodrigonovoa.readlog.ui.theme.color_primary
@@ -150,7 +151,7 @@ fun LoginScreen(
                 state.errorMessage?.let { error ->
                     Text(
                         text = error,
-                        color = Color(0xFFB00020),
+                        color = color_error,
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
