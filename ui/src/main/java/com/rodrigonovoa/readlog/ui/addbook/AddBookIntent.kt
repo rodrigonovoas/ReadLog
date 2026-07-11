@@ -13,4 +13,6 @@ sealed interface AddBookIntent {
     data object OnBackClicked : AddBookIntent
     data object DismissError : AddBookIntent
     data object LaunchCoverPicker : AddBookIntent
+    data object OnConfirmExitClicked : AddBookIntent
+    data object OnDismissExitClicked : AddBookIntent
 }

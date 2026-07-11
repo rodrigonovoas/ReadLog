@@ -24,12 +24,15 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.activity.compose.BackHandler
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,6 +72,10 @@ fun AddBookScreen(
     onIntent: (AddBookIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    BackHandler(enabled = !state.showExitConfirmation) {
+        onIntent(AddBookIntent.OnBackClicked)
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -191,6 +198,35 @@ fun AddBookScreen(
                     )
                 }
             }
+        }
+
+        if (state.showExitConfirmation) {
+            AlertDialog(
+                onDismissRequest = { onIntent(AddBookIntent.OnDismissExitClicked) },
+                title = {
+                    Text(
+                        text = stringResource(R.string.add_book_exit_dialog_title),
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                },
+                text = {
+                    Text(text = stringResource(R.string.add_book_exit_dialog_message))
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = { onIntent(AddBookIntent.OnConfirmExitClicked) },
+                    ) {
+                        Text(text = stringResource(R.string.add_book_exit_dialog_yes))
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { onIntent(AddBookIntent.OnDismissExitClicked) },
+                    ) {
+                        Text(text = stringResource(R.string.add_book_exit_dialog_no))
+                    }
+                },
+            )
         }
     }
 }

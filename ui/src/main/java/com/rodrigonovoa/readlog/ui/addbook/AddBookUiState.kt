@@ -13,4 +13,5 @@ data class AddBookUiState(
     val isSubmitEnabled: Boolean = false,
     val progressPercentage: Int = 0,
     val errorMessage: String? = null,
+    val showExitConfirmation: Boolean = false,
 )

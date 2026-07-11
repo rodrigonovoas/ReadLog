@@ -93,7 +93,24 @@ class AddBookViewModel @Inject constructor(
                 submitBook()
             }
             is AddBookIntent.OnBackClicked -> {
+                val state = _uiState.value
+                val hasData = state.title.isNotEmpty() ||
+                    state.author.isNotEmpty() ||
+                    state.pages.isNotEmpty() ||
+                    state.currentPage.isNotEmpty() ||
+                    state.coverUri != null
+                if (hasData) {
+                    _uiState.value = state.copy(showExitConfirmation = true)
+                } else {
+                    viewModelScope.launch { _effect.emit(AddBookEffect.NavigateBack) }
+                }
+            }
+            is AddBookIntent.OnConfirmExitClicked -> {
+                _uiState.value = _uiState.value.copy(showExitConfirmation = false)
                 viewModelScope.launch { _effect.emit(AddBookEffect.NavigateBack) }
+            }
+            is AddBookIntent.OnDismissExitClicked -> {
+                _uiState.value = _uiState.value.copy(showExitConfirmation = false)
             }
             is AddBookIntent.DismissError -> {
                 _uiState.value = _uiState.value.copy(errorMessage = null)

@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
 
                         BookCollectionScreen(
                             modifier = Modifier.fillMaxSize(),
-                            books = listOf(),
+                            books = books,
                             onAddBookClick = { navController.navigate("addBook") },
                         )
                     }

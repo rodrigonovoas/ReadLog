@@ -26,4 +26,8 @@
     <string name="add_book_submit">Añadir a mi colección</string>
     <string name="add_book_scan_empty_title">Escanear</string>
     <string name="add_book_cover_content_description">Portada del libro</string>
+    <string name="add_book_exit_dialog_title">Cambios sin guardar</string>
+    <string name="add_book_exit_dialog_message">Tienes datos sin guardar. ¿Estás seguro de que quieres salir?</string>
+    <string name="add_book_exit_dialog_yes">Sí</string>
+    <string name="add_book_exit_dialog_no">No</string>
 </resources>

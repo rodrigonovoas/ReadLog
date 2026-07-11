@@ -26,4 +26,8 @@
     <string name="add_book_submit">Add to my collection</string>
     <string name="add_book_scan_empty_title">Scan</string>
     <string name="add_book_cover_content_description">Book cover</string>
+    <string name="add_book_exit_dialog_title">Unsaved Changes</string>
+    <string name="add_book_exit_dialog_message">You have unsaved data. Are you sure you want to leave?</string>
+    <string name="add_book_exit_dialog_yes">Yes</string>
+    <string name="add_book_exit_dialog_no">No</string>
 </resources>

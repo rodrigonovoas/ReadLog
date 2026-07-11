@@ -232,7 +232,7 @@ class AddBookViewModelTest {
     }
 
     @Test
-    fun `back clicked emits navigate back`() = runTest {
+    fun `back clicked with empty state emits navigate back`() = runTest {
         var effect: AddBookEffect? = null
         val collectJob = launch { effect = viewModel.effect.first() }
 
@@ -241,6 +241,57 @@ class AddBookViewModelTest {
         collectJob.join()
 
         assertTrue(effect is AddBookEffect.NavigateBack)
+    }
+
+    @Test
+    fun `back clicked with data shows exit confirmation`() = runTest {
+        viewModel.processIntent(AddBookIntent.OnTitleChanged("Test"))
+        advanceUntilIdle()
+
+        val effects = mutableListOf<AddBookEffect>()
+        val collectJob = launch {
+            viewModel.effect.collect { effects.add(it) }
+        }
+
+        viewModel.processIntent(AddBookIntent.OnBackClicked)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.showExitConfirmation)
+        assertTrue(effects.isEmpty())
+        collectJob.cancel()
+    }
+
+    @Test
+    fun `confirm exit emits navigate back and hides dialog`() = runTest {
+        viewModel.processIntent(AddBookIntent.OnTitleChanged("Test"))
+        viewModel.processIntent(AddBookIntent.OnBackClicked)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.showExitConfirmation)
+
+        var effect: AddBookEffect? = null
+        val collectJob = launch { effect = viewModel.effect.first() }
+
+        viewModel.processIntent(AddBookIntent.OnConfirmExitClicked)
+        advanceUntilIdle()
+        collectJob.join()
+
+        assertTrue(effect is AddBookEffect.NavigateBack)
+        assertFalse(viewModel.uiState.value.showExitConfirmation)
+    }
+
+    @Test
+    fun `dismiss exit hides dialog`() = runTest {
+        viewModel.processIntent(AddBookIntent.OnTitleChanged("Test"))
+        viewModel.processIntent(AddBookIntent.OnBackClicked)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.showExitConfirmation)
+
+        viewModel.processIntent(AddBookIntent.OnDismissExitClicked)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.showExitConfirmation)
     }
 
     @Test
