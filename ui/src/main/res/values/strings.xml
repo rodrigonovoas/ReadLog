@@ -8,4 +8,17 @@
     <string name="book_collection_title">Your readings</string>
     <string name="book_collection_progress_pct">%1$d%%</string>
     <string name="book_collection_add_book">Add book</string>
+    <string name="add_book_title">New Book</string>
+    <string name="add_book_manual_tab">Manual</string>
+    <string name="add_book_scan_tab">Scan</string>
+    <string name="add_book_back_content_description">Back</string>
+    <string name="add_book_cover_placeholder">Add cover</string>
+    <string name="add_book_field_title_label">TITLE</string>
+    <string name="add_book_field_title_placeholder">Ex. One Hundred Years of Solitude</string>
+    <string name="add_book_field_author_label">AUTHOR</string>
+    <string name="add_book_field_author_placeholder">Ex. Gabriel García Márquez</string>
+    <string name="add_book_field_pages_label">NUMBER OF PAGES</string>
+    <string name="add_book_field_pages_placeholder">Ex. 340</string>
+    <string name="add_book_submit">Add to my collection</string>
+    <string name="add_book_scan_empty_title">Scan</string>
 </resources>

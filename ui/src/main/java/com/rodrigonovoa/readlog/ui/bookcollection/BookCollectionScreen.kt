@@ -54,6 +54,7 @@ import com.rodrigonovoa.readlog.ui.theme.color_track
 fun BookCollectionScreen(
     books: List<Book>,
     modifier: Modifier = Modifier,
+    onAddBookClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -77,6 +78,7 @@ fun BookCollectionScreen(
         }
 
         AddBookButton(
+            onClick = onAddBookClick,
             modifier = Modifier
                 .padding(bottom = 28.dp, top = 20.dp)
                 .align(Alignment.CenterHorizontally),
@@ -282,9 +284,12 @@ private fun ClockIcon(
 }
 
 @Composable
-private fun AddBookButton(modifier: Modifier = Modifier) {
+private fun AddBookButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Button(
-        onClick = { },
+        onClick = onClick,
         modifier = modifier
             .height(52.dp),
         shape = RoundedCornerShape(26.dp),

@@ -8,12 +8,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.rodrigonovoa.readlog.domain.usecase.IsUserSignedInUseCase
+import com.rodrigonovoa.readlog.ui.addbook.AddBookMode
+import com.rodrigonovoa.readlog.ui.addbook.AddBookScreen
 import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionScreen
 import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionViewModel
 import com.rodrigonovoa.readlog.ui.login.LoginEffect
@@ -72,6 +76,17 @@ class MainActivity : ComponentActivity() {
                         BookCollectionScreen(
                             modifier = Modifier.fillMaxSize(),
                             books = books,
+                            onAddBookClick = { navController.navigate("addBook") },
+                        )
+                    }
+                    composable("addBook") {
+                        val selectedMode = remember { mutableStateOf(AddBookMode.Manual) }
+
+                        AddBookScreen(
+                            modifier = Modifier.fillMaxSize(),
+                            selectedMode = selectedMode.value,
+                            onModeSelected = { selectedMode.value = it },
+                            onBackClick = { navController.popBackStack() },
                         )
                     }
                 }

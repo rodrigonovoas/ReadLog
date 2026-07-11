@@ -8,4 +8,17 @@
     <string name="book_collection_title">Tus lecturas</string>
     <string name="book_collection_progress_pct">%1$d%%</string>
     <string name="book_collection_add_book">Añadir libro</string>
+    <string name="add_book_title">Nuevo Libro</string>
+    <string name="add_book_manual_tab">Manual</string>
+    <string name="add_book_scan_tab">Escanear</string>
+    <string name="add_book_back_content_description">Atrás</string>
+    <string name="add_book_cover_placeholder">Añadir portada</string>
+    <string name="add_book_field_title_label">TÍTULO</string>
+    <string name="add_book_field_title_placeholder">Ej. Cien años de soledad</string>
+    <string name="add_book_field_author_label">AUTOR</string>
+    <string name="add_book_field_author_placeholder">Ej. Gabriel García Márquez</string>
+    <string name="add_book_field_pages_label">NÚMERO DE PÁGINAS</string>
+    <string name="add_book_field_pages_placeholder">Ej. 340</string>
+    <string name="add_book_submit">Añadir a mi colección</string>
+    <string name="add_book_scan_empty_title">Escanear</string>
 </resources>
