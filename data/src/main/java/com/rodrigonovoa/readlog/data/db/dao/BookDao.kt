@@ -25,4 +25,7 @@ interface BookDao {
 
     @Query("SELECT * FROM books WHERE bookId = :id")
     suspend fun getById(id: Int): BookEntity?
+
+    @Query("SELECT COUNT(*) FROM books")
+    suspend fun getAllCount(): Int
 }

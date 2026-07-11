@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.rodrigonovoa.readlog.domain.usecase.IsUserSignedInUseCase
 import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionScreen
+import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionViewModel
 import com.rodrigonovoa.readlog.ui.login.LoginEffect
 import com.rodrigonovoa.readlog.ui.login.LoginScreen
 import com.rodrigonovoa.readlog.ui.login.LoginViewModel
@@ -65,7 +66,13 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("bookCollection") {
-                        BookCollectionScreen(modifier = Modifier.fillMaxSize())
+                        val viewModel: BookCollectionViewModel = hiltViewModel()
+                        val books by viewModel.books.collectAsState()
+
+                        BookCollectionScreen(
+                            modifier = Modifier.fillMaxSize(),
+                            books = books,
+                        )
                     }
                 }
             }

@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
@@ -50,7 +51,10 @@ import com.rodrigonovoa.readlog.ui.theme.color_surface_variant
 import com.rodrigonovoa.readlog.ui.theme.color_track
 
 @Composable
-fun BookCollectionScreen(modifier: Modifier = Modifier) {
+fun BookCollectionScreen(
+    books: List<Book>,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -67,7 +71,7 @@ fun BookCollectionScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(14.dp),
             contentPadding = PaddingValues(vertical = 4.dp),
         ) {
-            items(mockBooks) { book ->
+            items(books, key = { it.bookId }) { book ->
                 BookCard(book = book)
             }
         }
@@ -125,9 +129,16 @@ private fun HeaderSection(modifier: Modifier = Modifier) {
 
 @Composable
 private fun BookCard(
-    book: MockBook,
+    book: Book,
     modifier: Modifier = Modifier,
 ) {
+    val progress = if (book.numPages > 0) {
+        book.currentPage.toFloat() / book.numPages.toFloat()
+    } else {
+        0f
+    }
+    val color = bookColor(book.bookId)
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -142,7 +153,7 @@ private fun BookCard(
                 .width(56.dp)
                 .height(80.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(book.color)
+                .background(color)
                 .padding(horizontal = 5.dp, vertical = 6.dp),
         ) {
             Text(
@@ -195,15 +206,18 @@ private fun BookCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(book.progress)
+                            .fillMaxWidth(progress.coerceIn(0f, 1f))
                             .height(5.dp)
                             .clip(RoundedCornerShape(3.dp))
-                            .background(book.color),
+                            .background(color),
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = stringResource(R.string.book_collection_progress_pct, (book.progress * 100).toInt()),
+                    text = stringResource(
+                        R.string.book_collection_progress_pct,
+                        (progress * 100).toInt()
+                    ),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = color_on_surface_variant,
@@ -223,6 +237,14 @@ private fun BookCard(
         ) {
             ClockIcon(tint = color_surface)
         }
+    }
+}
+
+private fun bookColor(bookId: Int): Color {
+    return when (bookId % 3) {
+        0 -> color_primary
+        1 -> color_secondary
+        else -> color_on_surface_variant
     }
 }
 
@@ -286,44 +308,40 @@ private fun AddBookButton(modifier: Modifier = Modifier) {
     }
 }
 
-// ---------- Mock data ----------
-
-private data class MockBook(
-    val id: Int,
-    val title: String,
-    val author: String,
-    val color: Color,
-    val progress: Float,
-)
-
-private val mockBooks = listOf(
-    MockBook(
-        id = 1,
-        title = "Cien años de soledad",
-        author = "Gabriel García Márquez",
-        color = color_primary,
-        progress = 0.68f,
-    ),
-    MockBook(
-        id = 2,
-        title = "Las palabras y las cosas",
-        author = "Michel Foucault",
-        color = color_secondary,
-        progress = 0.34f,
-    ),
-    MockBook(
-        id = 3,
-        title = "El nombre del viento",
-        author = "Patrick Rothfuss",
-        color = color_on_surface_variant,
-        progress = 0.12f,
-    ),
-)
-
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 private fun BookCollectionScreenPreview() {
+    val previewBooks = listOf(
+        Book(
+            bookId = 1,
+            title = "Cien años de soledad",
+            author = "Gabriel García Márquez",
+            genre = "Novel",
+            releaseDate = "1967",
+            numPages = 340,
+            currentPage = 231,
+        ),
+        Book(
+            bookId = 2,
+            title = "Las palabras y las cosas",
+            author = "Michel Foucault",
+            genre = "Philosophy",
+            releaseDate = "1966",
+            numPages = 300,
+            currentPage = 102,
+        ),
+        Book(
+            bookId = 3,
+            title = "El nombre del viento",
+            author = "Patrick Rothfuss",
+            genre = "Fantasy",
+            releaseDate = "2007",
+            numPages = 662,
+            currentPage = 80,
+        ),
+    )
+
     ReadLogTheme {
-        BookCollectionScreen()
+        BookCollectionScreen(books = previewBooks)
     }
 }
