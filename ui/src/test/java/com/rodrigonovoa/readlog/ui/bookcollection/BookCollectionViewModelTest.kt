@@ -1,10 +1,14 @@
 package com.rodrigonovoa.readlog.ui.bookcollection
 
 import com.rodrigonovoa.readlog.domain.model.Book
-import com.rodrigonovoa.readlog.ui.fakes.FakeGetBooksUseCase
-import com.rodrigonovoa.readlog.ui.fakes.FakeInsertMockBooksUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetBooksUseCase
+import com.rodrigonovoa.readlog.domain.usecase.InsertMockBooksUseCase
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -12,7 +16,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -20,15 +23,17 @@ import org.junit.Test
 class BookCollectionViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private lateinit var getBooksUseCase: FakeGetBooksUseCase
-    private lateinit var insertMockBooksUseCase: FakeInsertMockBooksUseCase
+    private lateinit var getBooksUseCase: GetBooksUseCase
+    private lateinit var insertMockBooksUseCase: InsertMockBooksUseCase
     private lateinit var viewModel: BookCollectionViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        getBooksUseCase = FakeGetBooksUseCase()
-        insertMockBooksUseCase = FakeInsertMockBooksUseCase()
+        getBooksUseCase = mockk()
+        insertMockBooksUseCase = mockk(relaxed = true)
+        val booksFlow = MutableStateFlow<List<Book>>(emptyList())
+        every { getBooksUseCase() } returns booksFlow
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
             insertMockBooksUseCase = insertMockBooksUseCase,
@@ -44,7 +49,7 @@ class BookCollectionViewModelTest {
     fun `init calls insert mock books use case`() = runTest {
         advanceUntilIdle()
 
-        assertTrue(insertMockBooksUseCase.invoked)
+        coVerify { insertMockBooksUseCase() }
     }
 
     @Test
@@ -70,7 +75,13 @@ class BookCollectionViewModelTest {
             ),
         )
 
-        getBooksUseCase.emitBooks(expectedBooks)
+        val booksFlow = MutableStateFlow(expectedBooks)
+        every { getBooksUseCase() } returns booksFlow
+        // Re-create ViewModel so it subscribes to the new flow
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            insertMockBooksUseCase = insertMockBooksUseCase,
+        )
         advanceUntilIdle()
 
         assertEquals(expectedBooks, viewModel.books.value)

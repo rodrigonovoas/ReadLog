@@ -1,15 +1,18 @@
 package com.rodrigonovoa.readlog.domain.usecase
 
-import com.rodrigonovoa.readlog.domain.fakes.FakeBookRepository
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.repository.BookRepository
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class GetBooksUseCaseTest {
 
-    private val repository = FakeBookRepository()
+    private val repository = mockk<BookRepository>()
     private val useCase = GetBooksUseCase(repository)
 
     @Test
@@ -34,7 +37,7 @@ class GetBooksUseCaseTest {
                 currentPage = 102,
             ),
         )
-        repository.books = expectedBooks
+        every { repository.getAllBooks() } returns flowOf(expectedBooks)
 
         val result = useCase().first()
 
@@ -43,7 +46,7 @@ class GetBooksUseCaseTest {
 
     @Test
     fun `invoke returns empty list when repository is empty`() = runTest {
-        repository.books = emptyList()
+        every { repository.getAllBooks() } returns flowOf(emptyList())
 
         val result = useCase().first()
 

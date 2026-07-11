@@ -1,8 +1,10 @@
 package com.rodrigonovoa.readlog.ui.login
 
-import com.rodrigonovoa.readlog.ui.fakes.FakeAuthLauncher
-import com.rodrigonovoa.readlog.ui.fakes.FakeContinueOfflineUseCase
-import com.rodrigonovoa.readlog.ui.fakes.FakeSignInWithGoogleUseCase
+import com.rodrigonovoa.readlog.domain.auth.AuthLauncher
+import com.rodrigonovoa.readlog.domain.usecase.ContinueOfflineUseCase
+import com.rodrigonovoa.readlog.domain.usecase.SignInWithGoogleUseCase
+import io.mockk.coEvery
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -24,17 +26,17 @@ import org.junit.Test
 class LoginViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
-    private lateinit var signInUseCase: FakeSignInWithGoogleUseCase
-    private lateinit var continueOfflineUseCase: FakeContinueOfflineUseCase
-    private lateinit var authLauncher: FakeAuthLauncher
+    private lateinit var signInUseCase: SignInWithGoogleUseCase
+    private lateinit var continueOfflineUseCase: ContinueOfflineUseCase
+    private lateinit var authLauncher: AuthLauncher
     private lateinit var viewModel: LoginViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        signInUseCase = FakeSignInWithGoogleUseCase()
-        continueOfflineUseCase = FakeContinueOfflineUseCase()
-        authLauncher = FakeAuthLauncher()
+        signInUseCase = mockk()
+        continueOfflineUseCase = mockk()
+        authLauncher = mockk()
         viewModel = LoginViewModel(
             signInWithGoogleUseCase = signInUseCase,
             continueOfflineUseCase = continueOfflineUseCase,
@@ -57,8 +59,8 @@ class LoginViewModelTest {
 
     @Test
     fun `google sign in success navigates to collection`() = runTest {
-        authLauncher.launchResult = Result.success("token")
-        signInUseCase.result = Result.success(Unit)
+        coEvery { authLauncher.launchGoogleSignIn() } returns Result.success("token")
+        coEvery { signInUseCase(any()) } returns Result.success(Unit)
 
         var effect: LoginEffect? = null
         val collectJob = launch { effect = viewModel.effect.first() }
@@ -74,7 +76,7 @@ class LoginViewModelTest {
 
     @Test
     fun `google sign in token failure shows error`() = runTest {
-        authLauncher.launchResult = Result.failure(RuntimeException("Google error"))
+        coEvery { authLauncher.launchGoogleSignIn() } returns Result.failure(RuntimeException("Google error"))
 
         viewModel.processIntent(LoginIntent.OnGoogleSignInClicked)
         advanceUntilIdle()
@@ -85,8 +87,8 @@ class LoginViewModelTest {
 
     @Test
     fun `google sign in auth failure shows error`() = runTest {
-        authLauncher.launchResult = Result.success("token")
-        signInUseCase.result = Result.failure(RuntimeException("Auth error"))
+        coEvery { authLauncher.launchGoogleSignIn() } returns Result.success("token")
+        coEvery { signInUseCase(any()) } returns Result.failure(RuntimeException("Auth error"))
 
         viewModel.processIntent(LoginIntent.OnGoogleSignInClicked)
         advanceUntilIdle()
@@ -97,6 +99,8 @@ class LoginViewModelTest {
 
     @Test
     fun `continue offline navigates to collection`() = runTest {
+        coEvery { continueOfflineUseCase() } returns Result.success(Unit)
+
         var effect: LoginEffect? = null
         val collectJob = launch { effect = viewModel.effect.first() }
 
@@ -109,7 +113,7 @@ class LoginViewModelTest {
 
     @Test
     fun `dismiss error clears error message`() = runTest {
-        authLauncher.launchResult = Result.failure(RuntimeException("Error"))
+        coEvery { authLauncher.launchGoogleSignIn() } returns Result.failure(RuntimeException("Error"))
         viewModel.processIntent(LoginIntent.OnGoogleSignInClicked)
         advanceUntilIdle()
 

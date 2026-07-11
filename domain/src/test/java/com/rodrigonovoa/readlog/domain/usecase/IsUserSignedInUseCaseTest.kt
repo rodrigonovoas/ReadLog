@@ -1,21 +1,20 @@
 package com.rodrigonovoa.readlog.domain.usecase
 
-import com.rodrigonovoa.readlog.domain.fakes.FakeAuthRepository
-import com.rodrigonovoa.readlog.domain.model.User
-import org.junit.Assert.assertEquals
+import com.rodrigonovoa.readlog.domain.repository.AuthRepository
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class IsUserSignedInUseCaseTest {
 
-    private val repository = FakeAuthRepository()
+    private val repository = mockk<AuthRepository>()
     private val useCase = IsUserSignedInUseCase(repository)
 
     @Test
     fun `invoke returns false when no user is signed in`() {
-        repository.fakeCurrentUser = null
+        every { repository.isUserSignedIn() } returns false
 
         val result = useCase()
 
@@ -24,7 +23,7 @@ class IsUserSignedInUseCaseTest {
 
     @Test
     fun `invoke returns true when user is signed in`() {
-        repository.fakeCurrentUser = User(uid = "123", email = "a@b.com", displayName = "User")
+        every { repository.isUserSignedIn() } returns true
 
         val result = useCase()
 
