@@ -7,6 +7,7 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.rodrigonovoa.readlog.data.mapper.UserDataMapperImpl
 import com.rodrigonovoa.readlog.domain.model.User
 import io.mockk.every
 import io.mockk.mockk
@@ -30,7 +31,7 @@ class AuthRepositoryImplTest {
     @Before
     fun setup() {
         firebaseAuth = mockk(relaxed = true)
-        repository = AuthRepositoryImpl(firebaseAuth)
+        repository = AuthRepositoryImpl(firebaseAuth, UserDataMapperImpl())
         mockkStatic(GoogleAuthProvider::class)
     }
 
