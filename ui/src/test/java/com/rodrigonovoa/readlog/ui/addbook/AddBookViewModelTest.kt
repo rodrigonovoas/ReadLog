@@ -2,8 +2,12 @@ package com.rodrigonovoa.readlog.ui.addbook
 
 import android.net.Uri
 import com.rodrigonovoa.readlog.domain.usecase.AddBookUseCase
+import com.rodrigonovoa.readlog.domain.usecase.CalculateReadingProgressUseCase
+import com.rodrigonovoa.readlog.domain.usecase.CapCurrentPageUseCase
+import com.rodrigonovoa.readlog.domain.usecase.ValidateAddBookFormUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,13 +31,24 @@ class AddBookViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var addBookUseCase: AddBookUseCase
+    private lateinit var validateFormUseCase: ValidateAddBookFormUseCase
+    private lateinit var capCurrentPageUseCase: CapCurrentPageUseCase
+    private lateinit var calculateProgressUseCase: CalculateReadingProgressUseCase
     private lateinit var viewModel: AddBookViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         addBookUseCase = mockk()
-        viewModel = AddBookViewModel(addBookUseCase = addBookUseCase)
+        validateFormUseCase = mockk(relaxed = true)
+        capCurrentPageUseCase = mockk(relaxed = true)
+        calculateProgressUseCase = mockk(relaxed = true)
+        viewModel = AddBookViewModel(
+            addBookUseCase = addBookUseCase,
+            validateFormUseCase = validateFormUseCase,
+            capCurrentPageUseCase = capCurrentPageUseCase,
+            calculateProgressUseCase = calculateProgressUseCase,
+        )
     }
 
     @After
@@ -59,6 +74,8 @@ class AddBookViewModelTest {
 
     @Test
     fun `title change updates state`() = runTest {
+        every { validateFormUseCase(any(), any(), any()) } returns false
+
         viewModel.processIntent(AddBookIntent.OnTitleChanged("Test Title"))
         advanceUntilIdle()
 
@@ -66,100 +83,39 @@ class AddBookViewModelTest {
     }
 
     @Test
-    fun `pages change updates state`() = runTest {
+    fun `pages change updates state with use case delegation`() = runTest {
+        every { capCurrentPageUseCase(any(), any()) } returns "231"
+        every { calculateProgressUseCase(any(), any()) } returns 67
+        every { validateFormUseCase(any(), any(), any()) } returns true
+
         viewModel.processIntent(AddBookIntent.OnPagesChanged("340"))
         advanceUntilIdle()
 
         assertEquals("340", viewModel.uiState.value.pages)
-    }
-
-    @Test
-    fun `current page change updates state`() = runTest {
-        viewModel.processIntent(AddBookIntent.OnPagesChanged("340"))
-        viewModel.processIntent(AddBookIntent.OnCurrentPageChanged("231"))
-        advanceUntilIdle()
-
         assertEquals("231", viewModel.uiState.value.currentPage)
         assertEquals(67, viewModel.uiState.value.progressPercentage)
+        assertTrue(viewModel.uiState.value.isSubmitEnabled)
     }
 
     @Test
-    fun `current page is capped to numPages`() = runTest {
-        viewModel.processIntent(AddBookIntent.OnPagesChanged("340"))
-        viewModel.processIntent(AddBookIntent.OnCurrentPageChanged("500"))
+    fun `current page change updates state with use case delegation`() = runTest {
+        every { capCurrentPageUseCase(any(), any()) } returns "50"
+        every { calculateProgressUseCase(any(), any()) } returns 50
+        every { validateFormUseCase(any(), any(), any()) } returns true
+
+        viewModel.processIntent(AddBookIntent.OnCurrentPageChanged("50"))
         advanceUntilIdle()
 
-        assertEquals("340", viewModel.uiState.value.currentPage)
-        assertEquals(100, viewModel.uiState.value.progressPercentage)
-    }
-
-    @Test
-    fun `current page is capped when numPages decreases`() = runTest {
-        viewModel.processIntent(AddBookIntent.OnPagesChanged("500"))
-        viewModel.processIntent(AddBookIntent.OnCurrentPageChanged("400"))
-        advanceUntilIdle()
-
-        viewModel.processIntent(AddBookIntent.OnPagesChanged("200"))
-        advanceUntilIdle()
-
-        assertEquals("200", viewModel.uiState.value.currentPage)
-        assertEquals(100, viewModel.uiState.value.progressPercentage)
-    }
-
-    @Test
-    fun `current page is capped when numPages decreases from higher value`() = runTest {
-        viewModel.processIntent(AddBookIntent.OnPagesChanged("500"))
-        viewModel.processIntent(AddBookIntent.OnCurrentPageChanged("400"))
-        advanceUntilIdle()
-
-        assertEquals("400", viewModel.uiState.value.currentPage)
-        assertEquals(80, viewModel.uiState.value.progressPercentage)
-
-        viewModel.processIntent(AddBookIntent.OnPagesChanged("200"))
-        advanceUntilIdle()
-
-        assertEquals("200", viewModel.uiState.value.currentPage)
-        assertEquals(100, viewModel.uiState.value.progressPercentage)
-    }
-
-    @Test
-    fun `progress is zero when current page is zero`() = runTest {
-        viewModel.processIntent(AddBookIntent.OnPagesChanged("340"))
-        viewModel.processIntent(AddBookIntent.OnCurrentPageChanged("0"))
-        advanceUntilIdle()
-
-        assertEquals(0, viewModel.uiState.value.progressPercentage)
-    }
-
-    @Test
-    fun `submit is disabled when title is empty`() = runTest {
-        viewModel.processIntent(AddBookIntent.OnPagesChanged("100"))
-        advanceUntilIdle()
-
-        assertFalse(viewModel.uiState.value.isSubmitEnabled)
-    }
-
-    @Test
-    fun `submit is disabled when pages is not a positive integer`() = runTest {
-        viewModel.processIntent(AddBookIntent.OnTitleChanged("Title"))
-        viewModel.processIntent(AddBookIntent.OnPagesChanged("0"))
-        advanceUntilIdle()
-
-        assertFalse(viewModel.uiState.value.isSubmitEnabled)
-    }
-
-    @Test
-    fun `submit is disabled when currentPage is negative`() = runTest {
-        viewModel.processIntent(AddBookIntent.OnTitleChanged("Title"))
-        viewModel.processIntent(AddBookIntent.OnPagesChanged("100"))
-        viewModel.processIntent(AddBookIntent.OnCurrentPageChanged("-1"))
-        advanceUntilIdle()
-
-        assertFalse(viewModel.uiState.value.isSubmitEnabled)
+        assertEquals("50", viewModel.uiState.value.currentPage)
+        assertEquals(50, viewModel.uiState.value.progressPercentage)
     }
 
     @Test
     fun `submit is enabled with valid title and pages and empty currentPage`() = runTest {
+        every { capCurrentPageUseCase(any(), any()) } returns ""
+        every { calculateProgressUseCase(any(), any()) } returns 0
+        every { validateFormUseCase(any(), any(), any()) } returns true
+
         viewModel.processIntent(AddBookIntent.OnTitleChanged("Title"))
         viewModel.processIntent(AddBookIntent.OnPagesChanged("100"))
         advanceUntilIdle()
@@ -168,13 +124,14 @@ class AddBookViewModelTest {
     }
 
     @Test
-    fun `submit is enabled with valid title pages and currentPage`() = runTest {
-        viewModel.processIntent(AddBookIntent.OnTitleChanged("Title"))
+    fun `submit is disabled when form is invalid`() = runTest {
+        every { validateFormUseCase(any(), any(), any()) } returns false
+
+        viewModel.processIntent(AddBookIntent.OnTitleChanged(""))
         viewModel.processIntent(AddBookIntent.OnPagesChanged("100"))
-        viewModel.processIntent(AddBookIntent.OnCurrentPageChanged("50"))
         advanceUntilIdle()
 
-        assertTrue(viewModel.uiState.value.isSubmitEnabled)
+        assertFalse(viewModel.uiState.value.isSubmitEnabled)
     }
 
     @Test
@@ -200,6 +157,9 @@ class AddBookViewModelTest {
     @Test
     fun `add book success emits navigate back and passes currentPage`() = runTest {
         coEvery { addBookUseCase(any(), any(), any(), any()) } returns Result.success(Unit)
+        every { capCurrentPageUseCase(any(), any()) } returns "50"
+        every { calculateProgressUseCase(any(), any()) } returns 50
+        every { validateFormUseCase(any(), any(), any()) } returns true
 
         viewModel.processIntent(AddBookIntent.OnTitleChanged("Title"))
         viewModel.processIntent(AddBookIntent.OnAuthorChanged("Author"))

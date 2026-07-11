@@ -3,6 +3,9 @@ package com.rodrigonovoa.readlog.ui.addbook
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rodrigonovoa.readlog.domain.usecase.AddBookUseCase
+import com.rodrigonovoa.readlog.domain.usecase.CalculateReadingProgressUseCase
+import com.rodrigonovoa.readlog.domain.usecase.CapCurrentPageUseCase
+import com.rodrigonovoa.readlog.domain.usecase.ValidateAddBookFormUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +19,9 @@ import javax.inject.Inject
 @HiltViewModel
 class AddBookViewModel @Inject constructor(
     private val addBookUseCase: AddBookUseCase,
+    private val validateFormUseCase: ValidateAddBookFormUseCase,
+    private val capCurrentPageUseCase: CapCurrentPageUseCase,
+    private val calculateProgressUseCase: CalculateReadingProgressUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddBookUiState())
@@ -32,7 +38,7 @@ class AddBookViewModel @Inject constructor(
             is AddBookIntent.OnTitleChanged -> {
                 _uiState.value = _uiState.value.copy(
                     title = intent.title,
-                    isSubmitEnabled = isFormValid(
+                    isSubmitEnabled = validateFormUseCase(
                         title = intent.title,
                         pages = _uiState.value.pages,
                         currentPage = _uiState.value.currentPage,
@@ -44,15 +50,18 @@ class AddBookViewModel @Inject constructor(
             }
             is AddBookIntent.OnPagesChanged -> {
                 val pageNumber = intent.pages.toIntOrNull()
-                val cappedCurrentPage = capCurrentPage(
+                val cappedCurrentPage = capCurrentPageUseCase(
                     currentPageStr = _uiState.value.currentPage,
                     maxPages = pageNumber,
                 )
                 _uiState.value = _uiState.value.copy(
                     pages = intent.pages,
                     currentPage = cappedCurrentPage,
-                    progressPercentage = calculateProgress(cappedCurrentPage, intent.pages),
-                    isSubmitEnabled = isFormValid(
+                    progressPercentage = calculateProgressUseCase(
+                        currentPageStr = cappedCurrentPage,
+                        pagesStr = intent.pages,
+                    ),
+                    isSubmitEnabled = validateFormUseCase(
                         title = _uiState.value.title,
                         pages = intent.pages,
                         currentPage = cappedCurrentPage,
@@ -60,14 +69,17 @@ class AddBookViewModel @Inject constructor(
                 )
             }
             is AddBookIntent.OnCurrentPageChanged -> {
-                val cappedCurrentPage = capCurrentPage(
+                val cappedCurrentPage = capCurrentPageUseCase(
                     currentPageStr = intent.currentPage,
                     maxPages = _uiState.value.pages.toIntOrNull(),
                 )
                 _uiState.value = _uiState.value.copy(
                     currentPage = cappedCurrentPage,
-                    progressPercentage = calculateProgress(cappedCurrentPage, _uiState.value.pages),
-                    isSubmitEnabled = isFormValid(
+                    progressPercentage = calculateProgressUseCase(
+                        currentPageStr = cappedCurrentPage,
+                        pagesStr = _uiState.value.pages,
+                    ),
+                    isSubmitEnabled = validateFormUseCase(
                         title = _uiState.value.title,
                         pages = _uiState.value.pages,
                         currentPage = cappedCurrentPage,
@@ -90,31 +102,6 @@ class AddBookViewModel @Inject constructor(
                 viewModelScope.launch { _effect.emit(AddBookEffect.RequestCoverPicker) }
             }
         }
-    }
-
-    private fun isFormValid(title: String, pages: String, currentPage: String): Boolean {
-        val pageNumber = pages.toIntOrNull()
-        if (title.isBlank() || pageNumber == null || pageNumber <= 0) return false
-        if (currentPage.isEmpty()) return true
-        val currentPageNumber = currentPage.toIntOrNull()
-        return currentPageNumber != null
-                && currentPageNumber >= 0
-                && currentPageNumber <= pageNumber
-    }
-
-    private fun capCurrentPage(currentPageStr: String, maxPages: Int?): String {
-        if (currentPageStr.isEmpty()) return currentPageStr
-        val currentPageNumber = currentPageStr.toIntOrNull() ?: return currentPageStr
-        if (maxPages == null) return currentPageStr
-        return if (currentPageNumber > maxPages) maxPages.toString() else currentPageStr
-    }
-
-    private fun calculateProgress(currentPageStr: String, pagesStr: String): Int {
-        if (currentPageStr.isEmpty()) return 0
-        val currentPage = currentPageStr.toIntOrNull() ?: return 0
-        val totalPages = pagesStr.toIntOrNull() ?: return 0
-        if (totalPages <= 0) return 0
-        return ((currentPage.toFloat() / totalPages.toFloat()) * 100).toInt().coerceIn(0, 100)
     }
 
     private fun submitBook() {
