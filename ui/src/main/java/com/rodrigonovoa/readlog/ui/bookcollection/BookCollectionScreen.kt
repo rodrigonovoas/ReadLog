@@ -1,5 +1,6 @@
 package com.rodrigonovoa.readlog.ui.bookcollection
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -62,18 +64,26 @@ fun BookCollectionScreen(
             .background(color_surface)
             .safeDrawingPadding(),
     ) {
-        HeaderSection()
+        HeaderSection(showTitle = books.isNotEmpty())
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            contentPadding = PaddingValues(vertical = 4.dp),
-        ) {
-            items(books, key = { it.bookId }) { book ->
-                BookCard(book = book)
+        if (books.isEmpty()) {
+            EmptyCollectionSection(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                contentPadding = PaddingValues(vertical = 4.dp),
+            ) {
+                items(books, key = { it.bookId }) { book ->
+                    BookCard(book = book)
+                }
             }
         }
 
@@ -87,7 +97,10 @@ fun BookCollectionScreen(
 }
 
 @Composable
-private fun HeaderSection(modifier: Modifier = Modifier) {
+private fun HeaderSection(
+    showTitle: Boolean = true,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -102,14 +115,16 @@ private fun HeaderSection(modifier: Modifier = Modifier) {
                 fontWeight = FontWeight.Medium,
                 color = color_on_surface_variant,
             )
-            Text(
-                text = stringResource(R.string.book_collection_title),
-                fontFamily = FontFamily.Serif,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 26.sp,
-                color = color_on_surface,
-                modifier = Modifier.padding(top = 2.dp),
-            )
+            if (showTitle) {
+                Text(
+                    text = stringResource(R.string.book_collection_title),
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 26.sp,
+                    color = color_on_surface,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
         }
 
         Box(
@@ -313,6 +328,37 @@ private fun AddBookButton(
     }
 }
 
+@Composable
+private fun EmptyCollectionSection(
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_empty_collection),
+            contentDescription = null,
+            modifier = Modifier.size(100.dp),
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.book_collection_empty_title),
+            fontFamily = FontFamily.Serif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 20.sp,
+            color = color_on_surface,
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = stringResource(R.string.book_collection_empty_subtitle),
+            fontSize = 14.sp,
+            color = color_on_surface_variant,
+        )
+    }
+}
+
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 private fun BookCollectionScreenPreview() {
@@ -348,5 +394,13 @@ private fun BookCollectionScreenPreview() {
 
     ReadLogTheme {
         BookCollectionScreen(books = previewBooks)
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412, heightDp = 915)
+@Composable
+private fun BookCollectionScreenEmptyPreview() {
+    ReadLogTheme {
+        BookCollectionScreen(books = emptyList())
     }
 }

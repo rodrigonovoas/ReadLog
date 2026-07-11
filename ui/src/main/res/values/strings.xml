@@ -8,6 +8,8 @@
     <string name="book_collection_title">Your readings</string>
     <string name="book_collection_progress_pct">%1$d%%</string>
     <string name="book_collection_add_book">Add book</string>
+    <string name="book_collection_empty_title">Add your first book</string>
+    <string name="book_collection_empty_subtitle">Build your personal reading collection</string>
     <string name="add_book_title">New Book</string>
     <string name="add_book_manual_tab">Manual</string>
     <string name="add_book_scan_tab">Scan</string>
