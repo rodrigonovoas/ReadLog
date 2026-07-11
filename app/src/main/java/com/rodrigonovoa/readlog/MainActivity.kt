@@ -4,20 +4,22 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.rodrigonovoa.readlog.domain.usecase.IsUserSignedInUseCase
-import com.rodrigonovoa.readlog.ui.addbook.AddBookMode
+import com.rodrigonovoa.readlog.ui.addbook.AddBookEffect
+import com.rodrigonovoa.readlog.ui.addbook.AddBookIntent
 import com.rodrigonovoa.readlog.ui.addbook.AddBookScreen
+import com.rodrigonovoa.readlog.ui.addbook.AddBookViewModel
 import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionScreen
 import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionViewModel
 import com.rodrigonovoa.readlog.ui.login.LoginEffect
@@ -80,13 +82,34 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("addBook") {
-                        val selectedMode = remember { mutableStateOf(AddBookMode.Manual) }
+                        val viewModel: AddBookViewModel = hiltViewModel()
+                        val state by viewModel.uiState.collectAsState()
+
+                        val photoPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.PickVisualMedia(),
+                        ) { uri ->
+                            viewModel.processIntent(AddBookIntent.OnCoverSelected(uri))
+                        }
+
+                        LaunchedEffect(Unit) {
+                            viewModel.effect.collect { effect ->
+                                when (effect) {
+                                    is AddBookEffect.NavigateBack -> {
+                                        navController.popBackStack()
+                                    }
+                                    is AddBookEffect.RequestCoverPicker -> {
+                                        photoPickerLauncher.launch(
+                                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                        )
+                                    }
+                                }
+                            }
+                        }
 
                         AddBookScreen(
                             modifier = Modifier.fillMaxSize(),
-                            selectedMode = selectedMode.value,
-                            onModeSelected = { selectedMode.value = it },
-                            onBackClick = { navController.popBackStack() },
+                            state = state,
+                            onIntent = viewModel::processIntent,
                         )
                     }
                 }

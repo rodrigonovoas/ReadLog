@@ -1,5 +1,6 @@
 package com.rodrigonovoa.readlog.ui.addbook
 
+import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -47,6 +49,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
@@ -60,24 +63,11 @@ import com.rodrigonovoa.readlog.ui.theme.color_track
 private val color_outline = Color(0xFFC9BBA3)
 private val color_placeholder = Color(0xFFB9A78E)
 
-enum class AddBookMode {
-    Manual,
-    Scan,
-}
-
 @Composable
 fun AddBookScreen(
+    state: AddBookUiState,
+    onIntent: (AddBookIntent) -> Unit,
     modifier: Modifier = Modifier,
-    selectedMode: AddBookMode = AddBookMode.Manual,
-    title: String = "",
-    author: String = "",
-    pages: String = "",
-    onModeSelected: (AddBookMode) -> Unit = {},
-    onTitleChange: (String) -> Unit = {},
-    onAuthorChange: (String) -> Unit = {},
-    onPagesChange: (String) -> Unit = {},
-    onBackClick: () -> Unit = {},
-    onAddBookClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -85,7 +75,9 @@ fun AddBookScreen(
             .background(color_surface)
             .safeDrawingPadding(),
     ) {
-        AddBookHeader(onBackClick = onBackClick)
+        AddBookHeader(
+            onBackClick = { onIntent(AddBookIntent.OnBackClicked) },
+        )
 
         Column(
             modifier = Modifier
@@ -96,33 +88,57 @@ fun AddBookScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             AddBookModeSelector(
-                selectedMode = selectedMode,
-                onModeSelected = onModeSelected,
+                selectedMode = state.selectedMode,
+                onModeSelected = { onIntent(AddBookIntent.OnModeSelected(it)) },
             )
 
-            when (selectedMode) {
+            when (state.selectedMode) {
                 AddBookMode.Manual -> {
-                    CoverPicker()
+                    CoverPicker(
+                        coverUri = state.coverUri,
+                        onClick = { onIntent(AddBookIntent.LaunchCoverPicker) },
+                    )
 
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         AddBookTextField(
                             label = stringResource(R.string.add_book_field_title_label),
-                            value = title,
+                            value = state.title,
                             placeholder = stringResource(R.string.add_book_field_title_placeholder),
-                            onValueChange = onTitleChange,
+                            onValueChange = { onIntent(AddBookIntent.OnTitleChanged(it)) },
                         )
                         AddBookTextField(
                             label = stringResource(R.string.add_book_field_author_label),
-                            value = author,
+                            value = state.author,
                             placeholder = stringResource(R.string.add_book_field_author_placeholder),
-                            onValueChange = onAuthorChange,
+                            onValueChange = { onIntent(AddBookIntent.OnAuthorChanged(it)) },
                         )
                         AddBookTextField(
                             label = stringResource(R.string.add_book_field_pages_label),
-                            value = pages,
+                            value = state.pages,
                             placeholder = stringResource(R.string.add_book_field_pages_placeholder),
-                            onValueChange = onPagesChange,
+                            onValueChange = { onIntent(AddBookIntent.OnPagesChanged(it)) },
                             keyboardType = KeyboardType.Number,
+                        )
+                        AddBookTextField(
+                            label = stringResource(R.string.add_book_field_current_page_label),
+                            value = state.currentPage,
+                            placeholder = stringResource(R.string.add_book_field_current_page_placeholder),
+                            onValueChange = { onIntent(AddBookIntent.OnCurrentPageChanged(it)) },
+                            keyboardType = KeyboardType.Number,
+                        )
+                    }
+
+                    if (state.currentPage.isNotEmpty()) {
+                        ReadingProgressBar(progressPercentage = state.progressPercentage)
+                    }
+
+                    if (state.errorMessage != null) {
+                        Text(
+                            text = state.errorMessage,
+                            color = color_primary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 4.dp),
                         )
                     }
                 }
@@ -144,25 +160,36 @@ fun AddBookScreen(
             }
         }
 
-        if (selectedMode == AddBookMode.Manual) {
+        if (state.selectedMode == AddBookMode.Manual) {
             Button(
-                onClick = onAddBookClick,
+                onClick = { onIntent(AddBookIntent.OnAddBookClicked) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 24.dp, top = 20.dp, end = 24.dp, bottom = 28.dp)
                     .height(56.dp),
                 shape = RoundedCornerShape(28.dp),
+                enabled = state.isSubmitEnabled && !state.isLoading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = color_primary,
                     contentColor = color_surface,
+                    disabledContainerColor = color_primary.copy(alpha = 0.5f),
+                    disabledContentColor = color_surface.copy(alpha = 0.7f),
                 ),
                 contentPadding = PaddingValues(horizontal = 24.dp),
             ) {
-                Text(
-                    text = stringResource(R.string.add_book_submit),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = color_surface,
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.add_book_submit),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
     }
@@ -277,36 +304,59 @@ private fun AddBookModeSelector(
 }
 
 @Composable
-private fun CoverPicker(modifier: Modifier = Modifier) {
-    val strokeWidth = 1.5.dp
-    val cornerRadius = 16.dp
+private fun CoverPicker(
+    coverUri: Uri?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(150.dp)
-            .drawBehind {
-                drawRoundRect(
-                    color = color_outline,
-                    cornerRadius = CornerRadius(cornerRadius.toPx(), cornerRadius.toPx()),
-                    style = Stroke(
-                        width = strokeWidth.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f), 0f),
-                    ),
-                )
-            },
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            AddCoverIcon(color = color_placeholder)
-            Text(
-                text = stringResource(R.string.add_book_cover_placeholder),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = color_placeholder,
+        if (coverUri != null) {
+            AsyncImage(
+                model = coverUri,
+                contentDescription = stringResource(R.string.add_book_cover_content_description),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp)),
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
             )
+        } else {
+            val strokeWidth = 1.5.dp
+            val cornerRadius = 16.dp
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .drawBehind {
+                        drawRoundRect(
+                            color = color_outline,
+                            cornerRadius = CornerRadius(cornerRadius.toPx(), cornerRadius.toPx()),
+                            style = Stroke(
+                                width = strokeWidth.toPx(),
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f), 0f),
+                            ),
+                        )
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    AddCoverIcon(color = color_placeholder)
+                    Text(
+                        text = stringResource(R.string.add_book_cover_placeholder),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = color_placeholder,
+                    )
+                }
+            }
         }
     }
 }
@@ -429,13 +479,56 @@ private fun AddCoverIcon(
     }
 }
 
+@Composable
+private fun ReadingProgressBar(
+    progressPercentage: Int,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(5.dp)
+                .clip(RoundedCornerShape(3.dp))
+                .background(color_track),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth((progressPercentage / 100f).coerceIn(0f, 1f))
+                    .height(5.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(color_primary),
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = stringResource(R.string.book_collection_progress_pct, progressPercentage),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = color_on_surface_variant,
+        )
+    }
+}
+
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)
 @Composable
 private fun AddBookScreenPreview() {
     ReadLogTheme {
         AddBookScreen(
-            selectedMode = AddBookMode.Manual,
-            onModeSelected = {},
+            state = AddBookUiState(
+                title = "One Hundred Years of Solitude",
+                author = "Gabriel García Márquez",
+                pages = "340",
+                currentPage = "231",
+                progressPercentage = 67,
+                isSubmitEnabled = true,
+            ),
+            onIntent = {},
         )
     }
 }

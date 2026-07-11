@@ -19,6 +19,9 @@
     <string name="add_book_field_author_placeholder">Ej. Gabriel García Márquez</string>
     <string name="add_book_field_pages_label">NÚMERO DE PÁGINAS</string>
     <string name="add_book_field_pages_placeholder">Ej. 340</string>
+    <string name="add_book_field_current_page_label">Página actual</string>
+    <string name="add_book_field_current_page_placeholder">Ej. 20</string>
     <string name="add_book_submit">Añadir a mi colección</string>
     <string name="add_book_scan_empty_title">Escanear</string>
+    <string name="add_book_cover_content_description">Portada del libro</string>
 </resources>
