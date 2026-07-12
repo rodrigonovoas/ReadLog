@@ -12,6 +12,9 @@
     <string name="book_collection_add_book">Add book</string>
     <string name="book_collection_empty_title">Add your first book</string>
     <string name="book_collection_empty_subtitle">Build your personal reading collection</string>
+    <string name="book_collection_edit">Edit</string>
+    <string name="book_collection_delete">Delete</string>
+    <string name="book_collection_close_dialog_content_description">Close</string>
     <string name="add_book_title">New Book</string>
     <string name="add_book_manual_tab">Manual</string>
     <string name="add_book_scan_tab">Scan</string>

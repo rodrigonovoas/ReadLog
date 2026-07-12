@@ -6,4 +6,5 @@ data class BookCollectionUiState(
     val books: List<Book> = emptyList(),
     val greetingResId: Int = 0,
     val userName: String = "",
+    val selectedBookId: Int? = null,
 )

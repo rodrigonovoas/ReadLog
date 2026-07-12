@@ -143,4 +143,53 @@ class BookCollectionViewModelTest {
 
         assertEquals("reader", viewModel.uiState.value.userName)
     }
+
+    @Test
+    fun `selectBook sets selectedBookId when null`() = runTest {
+        advanceUntilIdle()
+
+        viewModel.selectBook(1)
+
+        assertEquals(1, viewModel.uiState.value.selectedBookId)
+    }
+
+    @Test
+    fun `selectBook ignores when already selected`() = runTest {
+        advanceUntilIdle()
+
+        viewModel.selectBook(1)
+        viewModel.selectBook(2)
+
+        assertEquals(1, viewModel.uiState.value.selectedBookId)
+    }
+
+    @Test
+    fun `dismissPopup resets selectedBookId to null`() = runTest {
+        advanceUntilIdle()
+        viewModel.selectBook(1)
+
+        viewModel.dismissPopup()
+
+        assertEquals(null, viewModel.uiState.value.selectedBookId)
+    }
+
+    @Test
+    fun `onEditClick dismisses popup`() = runTest {
+        advanceUntilIdle()
+        viewModel.selectBook(1)
+
+        viewModel.onEditClick()
+
+        assertEquals(null, viewModel.uiState.value.selectedBookId)
+    }
+
+    @Test
+    fun `onDeleteClick dismisses popup`() = runTest {
+        advanceUntilIdle()
+        viewModel.selectBook(1)
+
+        viewModel.onDeleteClick()
+
+        assertEquals(null, viewModel.uiState.value.selectedBookId)
+    }
 }

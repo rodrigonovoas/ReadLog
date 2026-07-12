@@ -79,6 +79,10 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxSize(),
                             uiState = uiState,
                             onAddBookClick = { navController.navigate("addBook") },
+                            onBookLongPress = viewModel::selectBook,
+                            onDismissPopup = viewModel::dismissPopup,
+                            onEditClick = viewModel::onEditClick,
+                            onDeleteClick = viewModel::onDeleteClick,
                         )
                     }
                     composable("addBook") {

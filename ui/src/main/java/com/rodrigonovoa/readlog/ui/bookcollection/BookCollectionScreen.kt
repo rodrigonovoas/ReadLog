@@ -1,7 +1,9 @@
 package com.rodrigonovoa.readlog.ui.bookcollection
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,11 +23,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -40,10 +44,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
+import com.rodrigonovoa.readlog.ui.theme.color_error
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant
 import com.rodrigonovoa.readlog.ui.theme.color_primary
@@ -57,6 +63,10 @@ fun BookCollectionScreen(
     uiState: BookCollectionUiState,
     modifier: Modifier = Modifier,
     onAddBookClick: () -> Unit = {},
+    onBookLongPress: (Int) -> Unit = {},
+    onDismissPopup: () -> Unit = {},
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {},
 ) {
     val books = uiState.books
     Column(
@@ -90,7 +100,11 @@ fun BookCollectionScreen(
                 contentPadding = PaddingValues(vertical = 4.dp),
             ) {
                 items(books, key = { it.bookId }) { book ->
-                    BookCard(book = book)
+                    BookCard(
+                        book = book,
+                        isSelected = uiState.selectedBookId == book.bookId,
+                        onLongPress = { onBookLongPress(book.bookId) },
+                    )
                 }
             }
         }
@@ -101,6 +115,18 @@ fun BookCollectionScreen(
                 .padding(bottom = 28.dp, top = 20.dp)
                 .align(Alignment.CenterHorizontally),
         )
+    }
+
+    uiState.selectedBookId?.let { selectedId ->
+        val selectedBook = uiState.books.find { it.bookId == selectedId }
+        if (selectedBook != null) {
+            BookActionsDialog(
+                title = selectedBook.title,
+                onDismiss = onDismissPopup,
+                onEditClick = onEditClick,
+                onDeleteClick = onDeleteClick,
+            )
+        }
     }
 }
 
@@ -153,9 +179,12 @@ private fun HeaderSection(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BookCard(
     book: Book,
+    isSelected: Boolean,
+    onLongPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val progress = if (book.numPages > 0) {
@@ -164,12 +193,17 @@ private fun BookCard(
         0f
     }
     val color = bookColor(book.bookId)
+    val cardBackground = if (isSelected) color_track else color_surface_variant
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(color_surface_variant)
+            .background(cardBackground)
+            .combinedClickable(
+                onClick = { },
+                onLongClick = onLongPress,
+            )
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -271,6 +305,65 @@ private fun bookColor(bookId: Int): Color {
         0 -> color_primary
         1 -> color_secondary
         else -> color_on_surface_variant
+    }
+}
+
+@Composable
+private fun BookActionsDialog(
+    title: String,
+    onDismiss: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = color_surface,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = title,
+                        fontFamily = FontFamily.Serif,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp,
+                        color = color_on_surface,
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(
+                                R.string.book_collection_close_dialog_content_description
+                            ),
+                            tint = color_on_surface_variant,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = onEditClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = color_primary),
+                ) {
+                    Text(text = stringResource(R.string.book_collection_edit))
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = color_error),
+                ) {
+                    Text(text = stringResource(R.string.book_collection_delete))
+                }
+            }
+        }
     }
 }
 

@@ -50,4 +50,22 @@ class BookCollectionViewModel @Inject constructor(
             userName = name,
         )
     }
+
+    fun selectBook(bookId: Int) {
+        if (_uiState.value.selectedBookId == null) {
+            _uiState.value = _uiState.value.copy(selectedBookId = bookId)
+        }
+    }
+
+    fun dismissPopup() {
+        _uiState.value = _uiState.value.copy(selectedBookId = null)
+    }
+
+    fun onEditClick() {
+        dismissPopup()
+    }
+
+    fun onDeleteClick() {
+        dismissPopup()
+    }
 }
