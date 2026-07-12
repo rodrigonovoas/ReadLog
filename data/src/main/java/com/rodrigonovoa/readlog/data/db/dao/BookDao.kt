@@ -23,8 +23,14 @@ interface BookDao {
     @Query("SELECT * FROM books ORDER BY creationDate DESC")
     fun getAll(): Flow<List<BookEntity>>
 
+    @Query("SELECT * FROM books ORDER BY creationDate DESC")
+    suspend fun getAllList(): List<BookEntity>
+
     @Query("SELECT * FROM books WHERE bookId = :id")
     suspend fun getById(id: Int): BookEntity?
+
+    @Query("SELECT * FROM books WHERE remoteId = :remoteId")
+    suspend fun getByRemoteId(remoteId: String): BookEntity?
 
     @Query("SELECT COUNT(*) FROM books")
     suspend fun getAllCount(): Int

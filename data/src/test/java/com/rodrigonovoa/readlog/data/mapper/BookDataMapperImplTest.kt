@@ -13,6 +13,7 @@ class BookDataMapperImplTest {
     fun `toDomain maps entity to domain model`() {
         val entity = BookEntity(
             bookId = 1,
+            remoteId = "book-uuid-1",
             title = "Cien años de soledad",
             author = "Gabriel García Márquez",
             genre = "Novel",
@@ -20,6 +21,7 @@ class BookDataMapperImplTest {
             numPages = 340,
             currentPage = 231,
             creationDate = 12345678L,
+            lastModified = 11111111L,
         )
 
         val result = mapper.toDomain(entity)
@@ -27,6 +29,7 @@ class BookDataMapperImplTest {
         assertEquals(
             Book(
                 bookId = 1,
+                remoteId = "book-uuid-1",
                 title = "Cien años de soledad",
                 author = "Gabriel García Márquez",
                 genre = "Novel",
@@ -34,6 +37,7 @@ class BookDataMapperImplTest {
                 numPages = 340,
                 currentPage = 231,
                 creationDate = 12345678L,
+                lastModified = 11111111L,
             ),
             result
         )
@@ -43,6 +47,7 @@ class BookDataMapperImplTest {
     fun `toEntity maps domain model to entity`() {
         val domain = Book(
             bookId = 2,
+            remoteId = "book-uuid-2",
             title = "Las palabras y las cosas",
             author = "Michel Foucault",
             genre = "Philosophy",
@@ -50,6 +55,7 @@ class BookDataMapperImplTest {
             numPages = 300,
             currentPage = 102,
             creationDate = 87654321L,
+            lastModified = 22222222L,
         )
 
         val result = mapper.toEntity(domain)
@@ -57,6 +63,7 @@ class BookDataMapperImplTest {
         assertEquals(
             BookEntity(
                 bookId = 2,
+                remoteId = "book-uuid-2",
                 title = "Las palabras y las cosas",
                 author = "Michel Foucault",
                 genre = "Philosophy",
@@ -64,6 +71,7 @@ class BookDataMapperImplTest {
                 numPages = 300,
                 currentPage = 102,
                 creationDate = 87654321L,
+                lastModified = 22222222L,
             ),
             result
         )
@@ -73,6 +81,7 @@ class BookDataMapperImplTest {
     fun `roundtrip conversion preserves data`() {
         val original = Book(
             bookId = 3,
+            remoteId = "book-uuid-3",
             title = "El nombre del viento",
             author = "Patrick Rothfuss",
             genre = "Fantasy",
@@ -80,6 +89,7 @@ class BookDataMapperImplTest {
             numPages = 662,
             currentPage = 80,
             creationDate = 11111111L,
+            lastModified = 33333333L,
         )
 
         val entity = mapper.toEntity(original)

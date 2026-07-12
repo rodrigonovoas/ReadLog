@@ -23,6 +23,15 @@ interface SessionDao {
     @Query("SELECT * FROM sessions WHERE bookId = :bookId ORDER BY creationDate DESC")
     fun getAllForBook(bookId: Int): Flow<List<SessionEntity>>
 
+    @Query("SELECT * FROM sessions WHERE bookId = :bookId ORDER BY creationDate DESC")
+    suspend fun getAllListForBook(bookId: Int): List<SessionEntity>
+
+    @Query("SELECT * FROM sessions ORDER BY creationDate DESC")
+    suspend fun getAllList(): List<SessionEntity>
+
     @Query("SELECT * FROM sessions WHERE sessionId = :id")
     suspend fun getById(id: Int): SessionEntity?
+
+    @Query("SELECT * FROM sessions WHERE remoteId = :remoteId")
+    suspend fun getByRemoteId(remoteId: String): SessionEntity?
 }

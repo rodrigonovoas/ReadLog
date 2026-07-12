@@ -20,7 +20,10 @@ import androidx.room.PrimaryKey
 data class SessionEntity(
     @PrimaryKey(autoGenerate = true)
     val sessionId: Int = 0,
+    val remoteId: String = "",
     val bookId: Int,
+    val bookRemoteId: String = "",
     val time: Long,
-    val creationDate: Long = System.currentTimeMillis()
+    val creationDate: Long = System.currentTimeMillis(),
+    val lastModified: Long = 0L,
 )

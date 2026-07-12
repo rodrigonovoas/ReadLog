@@ -23,6 +23,15 @@ interface AnnotationDao {
     @Query("SELECT * FROM annotations WHERE sessionId = :sessionId ORDER BY creationDate DESC")
     fun getAllForSession(sessionId: Int): Flow<List<AnnotationEntity>>
 
+    @Query("SELECT * FROM annotations WHERE sessionId = :sessionId ORDER BY creationDate DESC")
+    suspend fun getAllListForSession(sessionId: Int): List<AnnotationEntity>
+
+    @Query("SELECT * FROM annotations ORDER BY creationDate DESC")
+    suspend fun getAllList(): List<AnnotationEntity>
+
     @Query("SELECT * FROM annotations WHERE annotationId = :id")
     suspend fun getById(id: Int): AnnotationEntity?
+
+    @Query("SELECT * FROM annotations WHERE remoteId = :remoteId")
+    suspend fun getByRemoteId(remoteId: String): AnnotationEntity?
 }

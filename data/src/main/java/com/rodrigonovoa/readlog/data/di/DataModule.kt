@@ -1,17 +1,35 @@
 package com.rodrigonovoa.readlog.data.di
 
+import com.rodrigonovoa.readlog.data.firestore.AnnotationFirestoreDataSource
+import com.rodrigonovoa.readlog.data.firestore.AnnotationFirestoreDataSourceImpl
+import com.rodrigonovoa.readlog.data.firestore.BookFirestoreDataSource
+import com.rodrigonovoa.readlog.data.firestore.BookFirestoreDataSourceImpl
+import com.rodrigonovoa.readlog.data.firestore.SessionFirestoreDataSource
+import com.rodrigonovoa.readlog.data.firestore.SessionFirestoreDataSourceImpl
 import com.rodrigonovoa.readlog.data.mapper.AnnotationDataMapper
 import com.rodrigonovoa.readlog.data.mapper.AnnotationDataMapperImpl
+import com.rodrigonovoa.readlog.data.mapper.AnnotationFirestoreMapper
+import com.rodrigonovoa.readlog.data.mapper.AnnotationFirestoreMapperImpl
 import com.rodrigonovoa.readlog.data.mapper.BookDataMapper
 import com.rodrigonovoa.readlog.data.mapper.BookDataMapperImpl
+import com.rodrigonovoa.readlog.data.mapper.BookFirestoreMapper
+import com.rodrigonovoa.readlog.data.mapper.BookFirestoreMapperImpl
 import com.rodrigonovoa.readlog.data.mapper.SessionDataMapper
 import com.rodrigonovoa.readlog.data.mapper.SessionDataMapperImpl
+import com.rodrigonovoa.readlog.data.mapper.SessionFirestoreMapper
+import com.rodrigonovoa.readlog.data.mapper.SessionFirestoreMapperImpl
 import com.rodrigonovoa.readlog.data.mapper.UserDataMapper
 import com.rodrigonovoa.readlog.data.mapper.UserDataMapperImpl
+import com.rodrigonovoa.readlog.data.repository.AnnotationRepositoryImpl
 import com.rodrigonovoa.readlog.data.repository.AuthRepositoryImpl
 import com.rodrigonovoa.readlog.data.repository.BookRepositoryImpl
+import com.rodrigonovoa.readlog.data.repository.SessionRepositoryImpl
+import com.rodrigonovoa.readlog.data.repository.SyncRepositoryImpl
+import com.rodrigonovoa.readlog.domain.repository.AnnotationRepository
 import com.rodrigonovoa.readlog.domain.repository.AuthRepository
 import com.rodrigonovoa.readlog.domain.repository.BookRepository
+import com.rodrigonovoa.readlog.domain.repository.SessionRepository
+import com.rodrigonovoa.readlog.domain.repository.SyncRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -35,6 +53,24 @@ abstract class DataModule {
     ): BookRepository
 
     @Binds
+    @Singleton
+    abstract fun bindSessionRepository(
+        impl: SessionRepositoryImpl
+    ): SessionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAnnotationRepository(
+        impl: AnnotationRepositoryImpl
+    ): AnnotationRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSyncRepository(
+        impl: SyncRepositoryImpl
+    ): SyncRepository
+
+    @Binds
     abstract fun bindUserDataMapper(
         impl: UserDataMapperImpl
     ): UserDataMapper
@@ -53,4 +89,37 @@ abstract class DataModule {
     abstract fun bindAnnotationDataMapper(
         impl: AnnotationDataMapperImpl
     ): AnnotationDataMapper
+
+    @Binds
+    abstract fun bindBookFirestoreMapper(
+        impl: BookFirestoreMapperImpl
+    ): BookFirestoreMapper
+
+    @Binds
+    abstract fun bindSessionFirestoreMapper(
+        impl: SessionFirestoreMapperImpl
+    ): SessionFirestoreMapper
+
+    @Binds
+    abstract fun bindAnnotationFirestoreMapper(
+        impl: AnnotationFirestoreMapperImpl
+    ): AnnotationFirestoreMapper
+
+    @Binds
+    @Singleton
+    abstract fun bindBookFirestoreDataSource(
+        impl: BookFirestoreDataSourceImpl
+    ): BookFirestoreDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindSessionFirestoreDataSource(
+        impl: SessionFirestoreDataSourceImpl
+    ): SessionFirestoreDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindAnnotationFirestoreDataSource(
+        impl: AnnotationFirestoreDataSourceImpl
+    ): AnnotationFirestoreDataSource
 }

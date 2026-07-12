@@ -13,9 +13,12 @@ class AnnotationDataMapperImplTest {
     fun `toDomain maps entity to domain model`() {
         val entity = AnnotationEntity(
             annotationId = 1,
+            remoteId = "annotation-uuid-1",
             sessionId = 10,
+            sessionRemoteId = "session-uuid-10",
             annotation = "Interesting plot twist",
             creationDate = 12345678L,
+            lastModified = 11111111L,
         )
 
         val result = mapper.toDomain(entity)
@@ -23,9 +26,12 @@ class AnnotationDataMapperImplTest {
         assertEquals(
             Annotation(
                 annotationId = 1,
+                remoteId = "annotation-uuid-1",
                 sessionId = 10,
+                sessionRemoteId = "session-uuid-10",
                 annotation = "Interesting plot twist",
                 creationDate = 12345678L,
+                lastModified = 11111111L,
             ),
             result
         )
@@ -35,9 +41,12 @@ class AnnotationDataMapperImplTest {
     fun `toEntity maps domain model to entity`() {
         val domain = Annotation(
             annotationId = 2,
+            remoteId = "annotation-uuid-2",
             sessionId = 20,
+            sessionRemoteId = "session-uuid-20",
             annotation = "Character development noted",
             creationDate = 87654321L,
+            lastModified = 22222222L,
         )
 
         val result = mapper.toEntity(domain)
@@ -45,9 +54,12 @@ class AnnotationDataMapperImplTest {
         assertEquals(
             AnnotationEntity(
                 annotationId = 2,
+                remoteId = "annotation-uuid-2",
                 sessionId = 20,
+                sessionRemoteId = "session-uuid-20",
                 annotation = "Character development noted",
                 creationDate = 87654321L,
+                lastModified = 22222222L,
             ),
             result
         )
@@ -57,9 +69,12 @@ class AnnotationDataMapperImplTest {
     fun `roundtrip conversion preserves data`() {
         val original = Annotation(
             annotationId = 3,
+            remoteId = "annotation-uuid-3",
             sessionId = 30,
+            sessionRemoteId = "session-uuid-30",
             annotation = "Foreshadowing on page 42",
             creationDate = 99999999L,
+            lastModified = 33333333L,
         )
 
         val entity = mapper.toEntity(original)

@@ -26,7 +26,9 @@ object DatabaseModule {
             context,
             ReadLogDatabase::class.java,
             "readlog_database"
-        ).build()
+        )
+            .addMigrations(ReadLogDatabase.MIGRATION_1_2)
+            .build()
     }
 
     @Provides
