@@ -4,7 +4,9 @@
     <string name="login_continue_google">Continue with Google account</string>
     <string name="login_continue_offline">Continue offline</string>
     <string name="login_error_generic">Authentication failed. Please try again.</string>
-    <string name="book_collection_greeting">Good afternoon, George</string>
+    <string name="book_collection_greeting_morning">Good morning, %1$s</string>
+    <string name="book_collection_greeting_afternoon">Good afternoon, %1$s</string>
+    <string name="book_collection_greeting_evening">Good evening, %1$s</string>
     <string name="book_collection_title">Your readings</string>
     <string name="book_collection_progress_pct">%1$d%%</string>
     <string name="book_collection_add_book">Add book</string>

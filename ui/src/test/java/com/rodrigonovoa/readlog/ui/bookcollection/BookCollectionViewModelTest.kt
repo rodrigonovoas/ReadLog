@@ -1,8 +1,12 @@
 package com.rodrigonovoa.readlog.ui.bookcollection
 
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.User
 import com.rodrigonovoa.readlog.domain.usecase.GetBooksUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetTimeOfDayUseCase
 import com.rodrigonovoa.readlog.domain.usecase.InsertMockBooksUseCase
+import com.rodrigonovoa.readlog.domain.usecase.TimeOfDay
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -25,6 +29,8 @@ class BookCollectionViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getBooksUseCase: GetBooksUseCase
     private lateinit var insertMockBooksUseCase: InsertMockBooksUseCase
+    private lateinit var getCurrentUserUseCase: GetCurrentUserUseCase
+    private lateinit var getTimeOfDayUseCase: GetTimeOfDayUseCase
     private lateinit var viewModel: BookCollectionViewModel
 
     @Before
@@ -32,11 +38,17 @@ class BookCollectionViewModelTest {
         Dispatchers.setMain(testDispatcher)
         getBooksUseCase = mockk()
         insertMockBooksUseCase = mockk(relaxed = true)
+        getCurrentUserUseCase = mockk()
+        getTimeOfDayUseCase = mockk()
         val booksFlow = MutableStateFlow<List<Book>>(emptyList())
         every { getBooksUseCase() } returns booksFlow
+        every { getCurrentUserUseCase() } returns null
+        every { getTimeOfDayUseCase() } returns TimeOfDay.AFTERNOON
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
             insertMockBooksUseCase = insertMockBooksUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
         )
     }
 
@@ -81,16 +93,54 @@ class BookCollectionViewModelTest {
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
             insertMockBooksUseCase = insertMockBooksUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
         )
         advanceUntilIdle()
 
-        assertEquals(expectedBooks, viewModel.books.value)
+        assertEquals(expectedBooks, viewModel.uiState.value.books)
     }
 
     @Test
     fun `init emits empty list when no books`() = runTest {
         advanceUntilIdle()
 
-        assertEquals(emptyList<Book>(), viewModel.books.value)
+        assertEquals(emptyList<Book>(), viewModel.uiState.value.books)
+    }
+
+    @Test
+    fun `greeting uses first name only from displayName`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid", "test@test.com", "Rodrigo Novoa Salgado")
+        every { getTimeOfDayUseCase() } returns TimeOfDay.AFTERNOON
+        val booksFlow = MutableStateFlow<List<Book>>(emptyList())
+        every { getBooksUseCase() } returns booksFlow
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            insertMockBooksUseCase = insertMockBooksUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+        )
+        advanceUntilIdle()
+
+        assertEquals("Rodrigo", viewModel.uiState.value.userName)
+    }
+
+    @Test
+    fun `greeting falls back to reader when no user is signed in`() = runTest {
+        every { getCurrentUserUseCase() } returns null
+        every { getTimeOfDayUseCase() } returns TimeOfDay.MORNING
+        val booksFlow = MutableStateFlow<List<Book>>(emptyList())
+        every { getBooksUseCase() } returns booksFlow
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            insertMockBooksUseCase = insertMockBooksUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+        )
+        advanceUntilIdle()
+
+        assertEquals("reader", viewModel.uiState.value.userName)
     }
 }

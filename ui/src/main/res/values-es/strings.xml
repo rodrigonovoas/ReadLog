@@ -4,7 +4,9 @@
     <string name="login_continue_google">Continuar con cuenta de Google</string>
     <string name="login_continue_offline">Continuar sin conexión</string>
     <string name="login_error_generic">Error de autenticación. Inténtalo de nuevo.</string>
-    <string name="book_collection_greeting">Buenas tardes, George</string>
+    <string name="book_collection_greeting_morning">Buenos días, %1$s</string>
+    <string name="book_collection_greeting_afternoon">Buenas tardes, %1$s</string>
+    <string name="book_collection_greeting_evening">Buenas noches, %1$s</string>
     <string name="book_collection_title">Tus lecturas</string>
     <string name="book_collection_progress_pct">%1$d%%</string>
     <string name="book_collection_add_book">Añadir libro</string>

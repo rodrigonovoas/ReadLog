@@ -73,11 +73,11 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("bookCollection") {
                         val viewModel: BookCollectionViewModel = hiltViewModel()
-                        val books by viewModel.books.collectAsState()
+                        val uiState by viewModel.uiState.collectAsState()
 
                         BookCollectionScreen(
                             modifier = Modifier.fillMaxSize(),
-                            books = books,
+                            uiState = uiState,
                             onAddBookClick = { navController.navigate("addBook") },
                         )
                     }

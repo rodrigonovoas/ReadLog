@@ -54,17 +54,25 @@ import com.rodrigonovoa.readlog.ui.theme.color_track
 
 @Composable
 fun BookCollectionScreen(
-    books: List<Book>,
+    uiState: BookCollectionUiState,
     modifier: Modifier = Modifier,
     onAddBookClick: () -> Unit = {},
 ) {
+    val books = uiState.books
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(color_surface)
             .safeDrawingPadding(),
     ) {
-        HeaderSection(showTitle = books.isNotEmpty())
+        HeaderSection(
+            showTitle = books.isNotEmpty(),
+            greeting = if (uiState.greetingResId != 0) {
+                stringResource(uiState.greetingResId, uiState.userName)
+            } else {
+                ""
+            },
+        )
 
         if (books.isEmpty()) {
             EmptyCollectionSection(
@@ -99,6 +107,7 @@ fun BookCollectionScreen(
 @Composable
 private fun HeaderSection(
     showTitle: Boolean = true,
+    greeting: String,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -110,7 +119,7 @@ private fun HeaderSection(
     ) {
         Column {
             Text(
-                text = stringResource(R.string.book_collection_greeting),
+                text = greeting,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
                 color = color_on_surface_variant,
@@ -393,7 +402,13 @@ private fun BookCollectionScreenPreview() {
     )
 
     ReadLogTheme {
-        BookCollectionScreen(books = previewBooks)
+        BookCollectionScreen(
+            uiState = BookCollectionUiState(
+                books = previewBooks,
+                greetingResId = R.string.book_collection_greeting_afternoon,
+                userName = "George",
+            )
+        )
     }
 }
 
@@ -401,6 +416,11 @@ private fun BookCollectionScreenPreview() {
 @Composable
 private fun BookCollectionScreenEmptyPreview() {
     ReadLogTheme {
-        BookCollectionScreen(books = emptyList())
+        BookCollectionScreen(
+            uiState = BookCollectionUiState(
+                greetingResId = R.string.book_collection_greeting_afternoon,
+                userName = "George",
+            )
+        )
     }
 }
