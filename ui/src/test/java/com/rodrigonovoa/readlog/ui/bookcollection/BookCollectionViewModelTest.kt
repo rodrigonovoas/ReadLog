@@ -153,57 +153,124 @@ class BookCollectionViewModelTest {
     }
 
     @Test
-    fun `selectBook sets selectedBookId when null`() = runTest {
+    fun `onEditIconClick sets activeDialog with EDIT type`() = runTest {
+        val book = Book(
+            bookId = 1,
+            title = "Cien años de soledad",
+            author = "Author",
+            genre = "Novel",
+            releaseDate = "2020",
+            numPages = 100,
+            currentPage = 50,
+        )
+        val booksFlow = MutableStateFlow(listOf(book))
+        every { getBooksUseCase() } returns booksFlow
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            insertMockBooksUseCase = insertMockBooksUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+        )
         advanceUntilIdle()
 
-        viewModel.selectBook(1)
+        viewModel.onEditIconClick(1)
 
-        assertEquals(1, viewModel.uiState.value.selectedBookId)
+        assertEquals(
+            BookDialogState(bookId = 1, bookTitle = "Cien años de soledad", type = BookDialogType.EDIT),
+            viewModel.uiState.value.activeDialog,
+        )
     }
 
     @Test
-    fun `selectBook ignores when already selected`() = runTest {
+    fun `onDeleteIconClick sets activeDialog with DELETE type`() = runTest {
+        val book = Book(
+            bookId = 1,
+            title = "Cien años de soledad",
+            author = "Author",
+            genre = "Novel",
+            releaseDate = "2020",
+            numPages = 100,
+            currentPage = 50,
+        )
+        val booksFlow = MutableStateFlow(listOf(book))
+        every { getBooksUseCase() } returns booksFlow
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            insertMockBooksUseCase = insertMockBooksUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+        )
         advanceUntilIdle()
 
-        viewModel.selectBook(1)
-        viewModel.selectBook(2)
+        viewModel.onDeleteIconClick(1)
 
-        assertEquals(1, viewModel.uiState.value.selectedBookId)
+        assertEquals(
+            BookDialogState(bookId = 1, bookTitle = "Cien años de soledad", type = BookDialogType.DELETE),
+            viewModel.uiState.value.activeDialog,
+        )
     }
 
     @Test
-    fun `dismissPopup resets selectedBookId to null`() = runTest {
+    fun `dismissDialog resets activeDialog to null`() = runTest {
+        val book = Book(
+            bookId = 1,
+            title = "Book",
+            author = "Author",
+            genre = "Novel",
+            releaseDate = "2020",
+            numPages = 100,
+            currentPage = 50,
+        )
+        val booksFlow = MutableStateFlow(listOf(book))
+        every { getBooksUseCase() } returns booksFlow
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            insertMockBooksUseCase = insertMockBooksUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+        )
         advanceUntilIdle()
-        viewModel.selectBook(1)
+        viewModel.onEditIconClick(1)
 
-        viewModel.dismissPopup()
+        viewModel.dismissDialog()
 
-        assertEquals(null, viewModel.uiState.value.selectedBookId)
+        assertEquals(null, viewModel.uiState.value.activeDialog)
     }
 
     @Test
-    fun `onEditClick dismisses popup`() = runTest {
+    fun `confirmDelete dismisses dialog`() = runTest {
+        val bookToDelete = Book(
+            bookId = 1,
+            title = "Book to delete",
+            author = "Author",
+            genre = "Novel",
+            releaseDate = "2020",
+            numPages = 100,
+            currentPage = 50,
+        )
+        val booksFlow = MutableStateFlow(listOf(bookToDelete))
+        every { getBooksUseCase() } returns booksFlow
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            insertMockBooksUseCase = insertMockBooksUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+        )
         advanceUntilIdle()
-        viewModel.selectBook(1)
+        viewModel.onDeleteIconClick(1)
 
-        viewModel.onEditClick()
+        viewModel.confirmDelete()
+        advanceUntilIdle()
 
-        assertEquals(null, viewModel.uiState.value.selectedBookId)
+        assertEquals(null, viewModel.uiState.value.activeDialog)
     }
 
     @Test
-    fun `onDeleteClick dismisses popup`() = runTest {
-        advanceUntilIdle()
-        viewModel.selectBook(1)
-
-        viewModel.onDeleteClick()
-        advanceUntilIdle()
-
-        assertEquals(null, viewModel.uiState.value.selectedBookId)
-    }
-
-    @Test
-    fun `onDeleteClick invokes deleteBookUseCase with selected book`() = runTest {
+    fun `confirmDelete invokes deleteBookUseCase with selected book`() = runTest {
         val bookToDelete = Book(
             bookId = 1,
             title = "Book to delete",
@@ -224,13 +291,12 @@ class BookCollectionViewModelTest {
         )
         advanceUntilIdle()
 
-        viewModel.selectBook(1)
+        viewModel.onDeleteIconClick(1)
         coEvery { deleteBookUseCase(bookToDelete) } returns Result.success(Unit)
 
-        viewModel.onDeleteClick()
+        viewModel.confirmDelete()
         advanceUntilIdle()
 
         coVerify { deleteBookUseCase(bookToDelete) }
-        assertEquals(null, viewModel.uiState.value.selectedBookId)
     }
 }

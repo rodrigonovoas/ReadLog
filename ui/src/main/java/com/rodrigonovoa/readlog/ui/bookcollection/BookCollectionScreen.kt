@@ -1,9 +1,8 @@
 package com.rodrigonovoa.readlog.ui.bookcollection
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,20 +16,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +50,7 @@ import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
-import com.rodrigonovoa.readlog.ui.theme.color_error
+import com.rodrigonovoa.readlog.ui.theme.color_error_container
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant
 import com.rodrigonovoa.readlog.ui.theme.color_primary
@@ -63,10 +64,11 @@ fun BookCollectionScreen(
     uiState: BookCollectionUiState,
     modifier: Modifier = Modifier,
     onAddBookClick: () -> Unit = {},
-    onBookLongPress: (Int) -> Unit = {},
-    onDismissPopup: () -> Unit = {},
-    onEditClick: (Int) -> Unit = {},
-    onDeleteClick: () -> Unit = {},
+    onEditIconClick: (Int) -> Unit = {},
+    onDeleteIconClick: (Int) -> Unit = {},
+    onDismissDialog: () -> Unit = {},
+    onConfirmEdit: (Int) -> Unit = {},
+    onConfirmDelete: () -> Unit = {},
 ) {
     val books = uiState.books
     Column(
@@ -102,8 +104,8 @@ fun BookCollectionScreen(
                 items(books, key = { it.bookId }) { book ->
                     BookCard(
                         book = book,
-                        isSelected = uiState.selectedBookId == book.bookId,
-                        onLongPress = { onBookLongPress(book.bookId) },
+                        onEditClick = { onEditIconClick(book.bookId) },
+                        onDeleteClick = { onDeleteIconClick(book.bookId) },
                     )
                 }
             }
@@ -117,14 +119,17 @@ fun BookCollectionScreen(
         )
     }
 
-    uiState.selectedBookId?.let { selectedId ->
-        val selectedBook = uiState.books.find { it.bookId == selectedId }
-        if (selectedBook != null) {
-            BookActionsDialog(
-                title = selectedBook.title,
-                onDismiss = onDismissPopup,
-                onEditClick = { onEditClick(selectedBook.bookId) },
-                onDeleteClick = onDeleteClick,
+    uiState.activeDialog?.let { dialog ->
+        when (dialog.type) {
+            BookDialogType.EDIT -> EditBookDialog(
+                bookTitle = dialog.bookTitle,
+                onDismiss = onDismissDialog,
+                onConfirm = { onConfirmEdit(dialog.bookId) },
+            )
+            BookDialogType.DELETE -> DeleteBookDialog(
+                bookTitle = dialog.bookTitle,
+                onDismiss = onDismissDialog,
+                onConfirm = onConfirmDelete,
             )
         }
     }
@@ -179,12 +184,11 @@ private fun HeaderSection(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun BookCard(
     book: Book,
-    isSelected: Boolean,
-    onLongPress: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val progress = if (book.numPages > 0) {
@@ -193,17 +197,12 @@ private fun BookCard(
         0f
     }
     val color = bookColor(book.bookId)
-    val cardBackground = if (isSelected) color_track else color_surface_variant
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(cardBackground)
-            .combinedClickable(
-                onClick = { },
-                onLongClick = onLongPress,
-            )
+            .background(color_surface_variant)
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -287,18 +286,61 @@ private fun BookCard(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Clock action button
-        IconButton(
-            onClick = { },
-            modifier = Modifier
-                .size(35.dp)
-                .clip(CircleShape)
-                .background(color_primary),
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            ClockIcon(tint = color_surface)
+            Box(
+                modifier = Modifier
+                    .size(BookRowActionButtonSize)
+                    .clip(CircleShape)
+                    .background(color_chip)
+                    .clickable(onClick = onEditClick),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = stringResource(
+                        R.string.book_collection_edit_icon_content_description
+                    ),
+                    tint = color_primary,
+                    modifier = Modifier.size(12.dp),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(BookRowActionButtonSize)
+                    .clip(CircleShape)
+                    .background(color_error_container)
+                    .clickable(onClick = onDeleteClick),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(
+                        R.string.book_collection_delete_icon_content_description
+                    ),
+                    tint = color_primary,
+                    modifier = Modifier.size(12.dp),
+                )
+            }
+
+            // Clock action button
+            Box(
+                modifier = Modifier
+                    .size(BookRowActionButtonSize)
+                    .clip(CircleShape)
+                    .background(color_primary)
+                    .clickable(onClick = { }),
+                contentAlignment = Alignment.Center,
+            ) {
+                ClockIcon(tint = color_surface, iconSize = 16.dp)
+            }
         }
     }
 }
+
+private val BookRowActionButtonSize = 32.dp
 
 private fun bookColor(bookId: Int): Color {
     return when (bookId % 3) {
@@ -309,26 +351,76 @@ private fun bookColor(bookId: Int): Color {
 }
 
 @Composable
-private fun BookActionsDialog(
-    title: String,
+private fun EditBookDialog(
+    bookTitle: String,
     onDismiss: () -> Unit,
-    onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    BookConfirmationDialog(
+        icon = Icons.Default.Edit,
+        iconContainerColor = color_chip,
+        title = stringResource(R.string.book_collection_edit_dialog_title),
+        message = stringResource(R.string.book_collection_edit_dialog_message, bookTitle),
+        confirmLabel = stringResource(R.string.book_collection_edit),
+        onDismiss = onDismiss,
+        onConfirm = onConfirm,
+    )
+}
+
+@Composable
+private fun DeleteBookDialog(
+    bookTitle: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    BookConfirmationDialog(
+        icon = Icons.Default.Delete,
+        iconContainerColor = color_error_container,
+        title = stringResource(R.string.book_collection_delete_dialog_title),
+        message = stringResource(R.string.book_collection_delete_dialog_message, bookTitle),
+        confirmLabel = stringResource(R.string.book_collection_delete),
+        onDismiss = onDismiss,
+        onConfirm = onConfirm,
+    )
+}
+
+@Composable
+private fun BookConfirmationDialog(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconContainerColor: Color,
+    title: String,
+    message: String,
+    confirmLabel: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(24.dp),
             color = color_surface,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.widthIn(max = 320.dp),
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.padding(start = 24.dp, top = 28.dp, end = 24.dp, bottom = 22.dp),
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(iconContainerColor),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = color_primary,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
                     Text(
                         text = title,
                         fontFamily = FontFamily.Serif,
@@ -336,31 +428,51 @@ private fun BookActionsDialog(
                         fontSize = 20.sp,
                         color = color_on_surface,
                     )
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(
-                                R.string.book_collection_close_dialog_content_description
-                            ),
-                            tint = color_on_surface_variant,
+                }
+                Spacer(modifier = Modifier.height(18.dp))
+                Text(
+                    text = message,
+                    fontSize = 14.sp,
+                    color = color_on_surface_variant,
+                    lineHeight = 20.sp,
+                )
+                Row(
+                    modifier = Modifier
+                        .padding(top = 24.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.textButtonColors(contentColor = color_on_surface_variant),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.book_collection_cancel),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
                         )
                     }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = onEditClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = color_primary),
-                ) {
-                    Text(text = stringResource(R.string.book_collection_edit))
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = onDeleteClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = color_error),
-                ) {
-                    Text(text = stringResource(R.string.book_collection_delete))
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = color_primary,
+                            contentColor = color_surface,
+                        ),
+                    ) {
+                        Text(
+                            text = confirmLabel,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                 }
             }
         }
@@ -371,9 +483,10 @@ private fun BookActionsDialog(
 private fun ClockIcon(
     tint: Color,
     modifier: Modifier = Modifier,
+    iconSize: androidx.compose.ui.unit.Dp = 20.dp,
 ) {
     androidx.compose.foundation.Canvas(
-        modifier = modifier.size(20.dp),
+        modifier = modifier.size(iconSize),
     ) {
         val strokeWidth = 1.5.dp.toPx()
         drawCircle(

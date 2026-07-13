@@ -53,24 +53,29 @@ class BookCollectionViewModel @Inject constructor(
         )
     }
 
-    fun selectBook(bookId: Int) {
-        if (_uiState.value.selectedBookId == null) {
-            _uiState.value = _uiState.value.copy(selectedBookId = bookId)
-        }
+    fun onEditIconClick(bookId: Int) {
+        openDialog(bookId, BookDialogType.EDIT)
     }
 
-    fun dismissPopup() {
-        _uiState.value = _uiState.value.copy(selectedBookId = null)
+    fun onDeleteIconClick(bookId: Int) {
+        openDialog(bookId, BookDialogType.DELETE)
     }
 
-    fun onEditClick() {
-        dismissPopup()
+    private fun openDialog(bookId: Int, type: BookDialogType) {
+        val book = _uiState.value.books.find { it.bookId == bookId } ?: return
+        _uiState.value = _uiState.value.copy(
+            activeDialog = BookDialogState(bookId = bookId, bookTitle = book.title, type = type),
+        )
     }
 
-    fun onDeleteClick() {
-        val selectedId = _uiState.value.selectedBookId ?: return
-        val selectedBook = _uiState.value.books.find { it.bookId == selectedId }
-        dismissPopup()
+    fun dismissDialog() {
+        _uiState.value = _uiState.value.copy(activeDialog = null)
+    }
+
+    fun confirmDelete() {
+        val dialog = _uiState.value.activeDialog ?: return
+        val selectedBook = _uiState.value.books.find { it.bookId == dialog.bookId }
+        dismissDialog()
         if (selectedBook != null) {
             viewModelScope.launch {
                 deleteBookUseCase(selectedBook)

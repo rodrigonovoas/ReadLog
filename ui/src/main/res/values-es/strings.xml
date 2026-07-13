@@ -15,6 +15,13 @@
     <string name="book_collection_edit">Editar</string>
     <string name="book_collection_delete">Eliminar</string>
     <string name="book_collection_close_dialog_content_description">Cerrar</string>
+    <string name="book_collection_edit_icon_content_description">Editar libro</string>
+    <string name="book_collection_delete_icon_content_description">Eliminar libro</string>
+    <string name="book_collection_cancel">Cancelar</string>
+    <string name="book_collection_edit_dialog_title">¿Editar este libro?</string>
+    <string name="book_collection_edit_dialog_message">Podrás modificar el título, autor y progreso de «%1$s».</string>
+    <string name="book_collection_delete_dialog_title">¿Eliminar este libro?</string>
+    <string name="book_collection_delete_dialog_message">Se eliminará «%1$s» y todo su historial de sesiones. Esta acción no se puede deshacer.</string>
     <string name="add_book_title">Nuevo Libro</string>
     <string name="add_book_edit_title">Editar libro</string>
     <string name="add_book_save_changes">Guardar cambios</string>

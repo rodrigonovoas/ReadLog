@@ -6,5 +6,16 @@ data class BookCollectionUiState(
     val books: List<Book> = emptyList(),
     val greetingResId: Int = 0,
     val userName: String = "",
-    val selectedBookId: Int? = null,
+    val activeDialog: BookDialogState? = null,
 )
+
+data class BookDialogState(
+    val bookId: Int,
+    val bookTitle: String,
+    val type: BookDialogType,
+)
+
+enum class BookDialogType {
+    EDIT,
+    DELETE,
+}

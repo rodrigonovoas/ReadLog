@@ -35,3 +35,4 @@ val color_transparent = Color.Transparent
 val color_outline = Color(0xFFC9BBA3)
 val color_placeholder = Color(0xFFB9A78E)
 val color_error = Color(0xFFB00020)
+val color_error_container = Color(0xFFF6DCD4)
