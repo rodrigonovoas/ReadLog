@@ -2,11 +2,13 @@ package com.rodrigonovoa.readlog.ui.bookcollection
 
 import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.domain.model.User
+import com.rodrigonovoa.readlog.domain.usecase.DeleteBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBooksUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetTimeOfDayUseCase
 import com.rodrigonovoa.readlog.domain.usecase.InsertMockBooksUseCase
 import com.rodrigonovoa.readlog.domain.usecase.TimeOfDay
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -31,6 +33,7 @@ class BookCollectionViewModelTest {
     private lateinit var insertMockBooksUseCase: InsertMockBooksUseCase
     private lateinit var getCurrentUserUseCase: GetCurrentUserUseCase
     private lateinit var getTimeOfDayUseCase: GetTimeOfDayUseCase
+    private lateinit var deleteBookUseCase: DeleteBookUseCase
     private lateinit var viewModel: BookCollectionViewModel
 
     @Before
@@ -40,6 +43,7 @@ class BookCollectionViewModelTest {
         insertMockBooksUseCase = mockk(relaxed = true)
         getCurrentUserUseCase = mockk()
         getTimeOfDayUseCase = mockk()
+        deleteBookUseCase = mockk(relaxed = true)
         val booksFlow = MutableStateFlow<List<Book>>(emptyList())
         every { getBooksUseCase() } returns booksFlow
         every { getCurrentUserUseCase() } returns null
@@ -49,6 +53,7 @@ class BookCollectionViewModelTest {
             insertMockBooksUseCase = insertMockBooksUseCase,
             getCurrentUserUseCase = getCurrentUserUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
         )
     }
 
@@ -95,6 +100,7 @@ class BookCollectionViewModelTest {
             insertMockBooksUseCase = insertMockBooksUseCase,
             getCurrentUserUseCase = getCurrentUserUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
         )
         advanceUntilIdle()
 
@@ -120,6 +126,7 @@ class BookCollectionViewModelTest {
             insertMockBooksUseCase = insertMockBooksUseCase,
             getCurrentUserUseCase = getCurrentUserUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
         )
         advanceUntilIdle()
 
@@ -138,6 +145,7 @@ class BookCollectionViewModelTest {
             insertMockBooksUseCase = insertMockBooksUseCase,
             getCurrentUserUseCase = getCurrentUserUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
         )
         advanceUntilIdle()
 
@@ -189,7 +197,40 @@ class BookCollectionViewModelTest {
         viewModel.selectBook(1)
 
         viewModel.onDeleteClick()
+        advanceUntilIdle()
 
+        assertEquals(null, viewModel.uiState.value.selectedBookId)
+    }
+
+    @Test
+    fun `onDeleteClick invokes deleteBookUseCase with selected book`() = runTest {
+        val bookToDelete = Book(
+            bookId = 1,
+            title = "Book to delete",
+            author = "Author",
+            genre = "Novel",
+            releaseDate = "2020",
+            numPages = 100,
+            currentPage = 50,
+        )
+        val booksFlow = MutableStateFlow(listOf(bookToDelete))
+        every { getBooksUseCase() } returns booksFlow
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            insertMockBooksUseCase = insertMockBooksUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+        )
+        advanceUntilIdle()
+
+        viewModel.selectBook(1)
+        coEvery { deleteBookUseCase(bookToDelete) } returns Result.success(Unit)
+
+        viewModel.onDeleteClick()
+        advanceUntilIdle()
+
+        coVerify { deleteBookUseCase(bookToDelete) }
         assertEquals(null, viewModel.uiState.value.selectedBookId)
     }
 }

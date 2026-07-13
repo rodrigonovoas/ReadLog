@@ -2,6 +2,7 @@ package com.rodrigonovoa.readlog.ui.bookcollection
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rodrigonovoa.readlog.domain.usecase.DeleteBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBooksUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetTimeOfDayUseCase
@@ -21,6 +22,7 @@ class BookCollectionViewModel @Inject constructor(
     private val insertMockBooksUseCase: InsertMockBooksUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getTimeOfDayUseCase: GetTimeOfDayUseCase,
+    private val deleteBookUseCase: DeleteBookUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BookCollectionUiState())
@@ -66,6 +68,13 @@ class BookCollectionViewModel @Inject constructor(
     }
 
     fun onDeleteClick() {
+        val selectedId = _uiState.value.selectedBookId ?: return
+        val selectedBook = _uiState.value.books.find { it.bookId == selectedId }
         dismissPopup()
+        if (selectedBook != null) {
+            viewModelScope.launch {
+                deleteBookUseCase(selectedBook)
+            }
+        }
     }
 }

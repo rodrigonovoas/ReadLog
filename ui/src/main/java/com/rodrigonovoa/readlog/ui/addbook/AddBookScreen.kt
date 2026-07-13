@@ -83,6 +83,7 @@ fun AddBookScreen(
             .safeDrawingPadding(),
     ) {
         AddBookHeader(
+            isEditMode = state.isEditMode,
             onBackClick = { onIntent(AddBookIntent.OnBackClicked) },
         )
 
@@ -94,10 +95,12 @@ fun AddBookScreen(
                 .padding(start = 24.dp, top = 20.dp, end = 24.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            AddBookModeSelector(
-                selectedMode = state.selectedMode,
-                onModeSelected = { onIntent(AddBookIntent.OnModeSelected(it)) },
-            )
+            if (!state.isEditMode) {
+                AddBookModeSelector(
+                    selectedMode = state.selectedMode,
+                    onModeSelected = { onIntent(AddBookIntent.OnModeSelected(it)) },
+                )
+            }
 
             when (state.selectedMode) {
                 AddBookMode.Manual -> {
@@ -191,8 +194,13 @@ fun AddBookScreen(
                         strokeWidth = 2.dp,
                     )
                 } else {
+                    val buttonTextRes = if (state.isEditMode) {
+                        R.string.add_book_save_changes
+                    } else {
+                        R.string.add_book_submit
+                    }
                     Text(
-                        text = stringResource(R.string.add_book_submit),
+                        text = stringResource(buttonTextRes),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -233,9 +241,11 @@ fun AddBookScreen(
 
 @Composable
 private fun AddBookHeader(
+    isEditMode: Boolean,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val titleRes = if (isEditMode) R.string.add_book_edit_title else R.string.add_book_title
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -260,7 +270,7 @@ private fun AddBookHeader(
         Spacer(modifier = Modifier.width(14.dp))
 
         Text(
-            text = stringResource(R.string.add_book_title),
+            text = stringResource(titleRes),
             fontFamily = FontFamily.Serif,
             fontWeight = FontWeight.SemiBold,
             fontSize = 20.sp,

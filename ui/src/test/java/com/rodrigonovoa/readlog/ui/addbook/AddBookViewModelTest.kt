@@ -1,9 +1,13 @@
 package com.rodrigonovoa.readlog.ui.addbook
 
 import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
+import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.domain.usecase.AddBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CalculateReadingProgressUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CapCurrentPageUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
+import com.rodrigonovoa.readlog.domain.usecase.UpdateBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.ValidateAddBookFormUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -34,6 +38,9 @@ class AddBookViewModelTest {
     private lateinit var validateFormUseCase: ValidateAddBookFormUseCase
     private lateinit var capCurrentPageUseCase: CapCurrentPageUseCase
     private lateinit var calculateProgressUseCase: CalculateReadingProgressUseCase
+    private lateinit var getBookByIdUseCase: GetBookByIdUseCase
+    private lateinit var updateBookUseCase: UpdateBookUseCase
+    private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: AddBookViewModel
 
     @Before
@@ -43,11 +50,21 @@ class AddBookViewModelTest {
         validateFormUseCase = mockk(relaxed = true)
         capCurrentPageUseCase = mockk(relaxed = true)
         calculateProgressUseCase = mockk(relaxed = true)
-        viewModel = AddBookViewModel(
+        getBookByIdUseCase = mockk(relaxed = true)
+        updateBookUseCase = mockk(relaxed = true)
+        savedStateHandle = SavedStateHandle()
+        viewModel = createViewModel()
+    }
+
+    private fun createViewModel(): AddBookViewModel {
+        return AddBookViewModel(
             addBookUseCase = addBookUseCase,
             validateFormUseCase = validateFormUseCase,
             capCurrentPageUseCase = capCurrentPageUseCase,
             calculateProgressUseCase = calculateProgressUseCase,
+            getBookByIdUseCase = getBookByIdUseCase,
+            updateBookUseCase = updateBookUseCase,
+            savedStateHandle = savedStateHandle,
         )
     }
 
@@ -304,5 +321,96 @@ class AddBookViewModelTest {
         collectJob.join()
 
         assertTrue(effect is AddBookEffect.RequestCoverPicker)
+    }
+
+    @Test
+    fun `edit mode pre-fills state from loaded book`() = runTest {
+        val book = Book(
+            bookId = 1,
+            title = "Existing Title",
+            author = "Existing Author",
+            genre = "Novel",
+            releaseDate = "2020",
+            numPages = 300,
+            currentPage = 150,
+        )
+        coEvery { getBookByIdUseCase(1) } returns book
+        every { validateFormUseCase(any(), any(), any()) } returns true
+        savedStateHandle["bookId"] = 1
+        val editViewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = editViewModel.uiState.value
+        assertEquals("Existing Title", state.title)
+        assertEquals("Existing Author", state.author)
+        assertEquals("300", state.pages)
+        assertEquals("150", state.currentPage)
+        assertTrue(state.isSubmitEnabled)
+        assertTrue(state.isEditMode)
+        assertEquals(1, state.bookId)
+    }
+
+    @Test
+    fun `edit mode back click emits navigate back without confirmation`() = runTest {
+        val book = Book(
+            bookId = 1,
+            title = "Existing Title",
+            author = "Existing Author",
+            genre = "Novel",
+            releaseDate = "2020",
+            numPages = 300,
+            currentPage = 150,
+        )
+        coEvery { getBookByIdUseCase(1) } returns book
+        savedStateHandle["bookId"] = 1
+        val editViewModel = createViewModel()
+        advanceUntilIdle()
+
+        var effect: AddBookEffect? = null
+        val collectJob = launch { effect = editViewModel.effect.first() }
+
+        editViewModel.processIntent(AddBookIntent.OnBackClicked)
+        advanceUntilIdle()
+        collectJob.join()
+
+        assertTrue(effect is AddBookEffect.NavigateBack)
+        assertFalse(editViewModel.uiState.value.showExitConfirmation)
+    }
+
+    @Test
+    fun `edit mode submit calls updateBookUseCase and navigates back`() = runTest {
+        val book = Book(
+            bookId = 1,
+            title = "Existing Title",
+            author = "Existing Author",
+            genre = "Novel",
+            releaseDate = "2020",
+            numPages = 300,
+            currentPage = 150,
+        )
+        coEvery { getBookByIdUseCase(1) } returns book
+        savedStateHandle["bookId"] = 1
+        val editViewModel = createViewModel()
+        advanceUntilIdle()
+
+        coEvery { updateBookUseCase(any(), any(), any(), any(), any()) } returns Result.success(Unit)
+
+        var effect: AddBookEffect? = null
+        val collectJob = launch { effect = editViewModel.effect.first() }
+
+        editViewModel.processIntent(AddBookIntent.OnAddBookClicked)
+        advanceUntilIdle()
+        collectJob.join()
+
+        coVerify {
+            updateBookUseCase(
+                book,
+                "Existing Title",
+                "Existing Author",
+                300,
+                150,
+            )
+        }
+        assertTrue(effect is AddBookEffect.NavigateBack)
     }
 }

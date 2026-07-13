@@ -81,11 +81,22 @@ class MainActivity : ComponentActivity() {
                             onAddBookClick = { navController.navigate("addBook") },
                             onBookLongPress = viewModel::selectBook,
                             onDismissPopup = viewModel::dismissPopup,
-                            onEditClick = viewModel::onEditClick,
+                            onEditClick = { bookId ->
+                                viewModel.dismissPopup()
+                                navController.navigate("addBook?bookId=$bookId")
+                            },
                             onDeleteClick = viewModel::onDeleteClick,
                         )
                     }
-                    composable("addBook") {
+                    composable(
+                        "addBook?bookId={bookId}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("bookId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = -1
+                            }
+                        )
+                    ) { backStackEntry ->
                         val viewModel: AddBookViewModel = hiltViewModel()
                         val state by viewModel.uiState.collectAsState()
 

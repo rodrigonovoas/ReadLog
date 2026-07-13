@@ -65,7 +65,7 @@ fun BookCollectionScreen(
     onAddBookClick: () -> Unit = {},
     onBookLongPress: (Int) -> Unit = {},
     onDismissPopup: () -> Unit = {},
-    onEditClick: () -> Unit = {},
+    onEditClick: (Int) -> Unit = {},
     onDeleteClick: () -> Unit = {},
 ) {
     val books = uiState.books
@@ -123,7 +123,7 @@ fun BookCollectionScreen(
             BookActionsDialog(
                 title = selectedBook.title,
                 onDismiss = onDismissPopup,
-                onEditClick = onEditClick,
+                onEditClick = { onEditClick(selectedBook.bookId) },
                 onDeleteClick = onDeleteClick,
             )
         }

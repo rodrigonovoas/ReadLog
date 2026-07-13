@@ -1,10 +1,14 @@
 package com.rodrigonovoa.readlog.ui.addbook
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.domain.usecase.AddBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CalculateReadingProgressUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CapCurrentPageUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
+import com.rodrigonovoa.readlog.domain.usecase.UpdateBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.ValidateAddBookFormUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,6 +26,9 @@ class AddBookViewModel @Inject constructor(
     private val validateFormUseCase: ValidateAddBookFormUseCase,
     private val capCurrentPageUseCase: CapCurrentPageUseCase,
     private val calculateProgressUseCase: CalculateReadingProgressUseCase,
+    private val getBookByIdUseCase: GetBookByIdUseCase,
+    private val updateBookUseCase: UpdateBookUseCase,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddBookUiState())
@@ -29,6 +36,37 @@ class AddBookViewModel @Inject constructor(
 
     private val _effect = MutableSharedFlow<AddBookEffect>()
     val effect: SharedFlow<AddBookEffect> = _effect.asSharedFlow()
+
+    private var originalBook: Book? = null
+
+    init {
+        val bookId = savedStateHandle.get<Int>("bookId") ?: -1
+        if (bookId != -1) {
+            viewModelScope.launch {
+                val book = getBookByIdUseCase(bookId)
+                book?.let { b ->
+                    originalBook = b
+                    _uiState.value = AddBookUiState(
+                        title = b.title,
+                        author = b.author,
+                        pages = b.numPages.toString(),
+                        currentPage = b.currentPage.toString(),
+                        progressPercentage = calculateProgressUseCase(
+                            currentPageStr = b.currentPage.toString(),
+                            pagesStr = b.numPages.toString(),
+                        ),
+                        isSubmitEnabled = validateFormUseCase(
+                            title = b.title,
+                            pages = b.numPages.toString(),
+                            currentPage = b.currentPage.toString(),
+                        ),
+                        isEditMode = true,
+                        bookId = b.bookId,
+                    )
+                }
+            }
+        }
+    }
 
     fun processIntent(intent: AddBookIntent) {
         when (intent) {
@@ -94,15 +132,19 @@ class AddBookViewModel @Inject constructor(
             }
             is AddBookIntent.OnBackClicked -> {
                 val state = _uiState.value
-                val hasData = state.title.isNotEmpty() ||
-                    state.author.isNotEmpty() ||
-                    state.pages.isNotEmpty() ||
-                    state.currentPage.isNotEmpty() ||
-                    state.coverUri != null
-                if (hasData) {
-                    _uiState.value = state.copy(showExitConfirmation = true)
-                } else {
+                if (state.isEditMode) {
                     viewModelScope.launch { _effect.emit(AddBookEffect.NavigateBack) }
+                } else {
+                    val hasData = state.title.isNotEmpty() ||
+                        state.author.isNotEmpty() ||
+                        state.pages.isNotEmpty() ||
+                        state.currentPage.isNotEmpty() ||
+                        state.coverUri != null
+                    if (hasData) {
+                        _uiState.value = state.copy(showExitConfirmation = true)
+                    } else {
+                        viewModelScope.launch { _effect.emit(AddBookEffect.NavigateBack) }
+                    }
                 }
             }
             is AddBookIntent.OnConfirmExitClicked -> {
@@ -129,12 +171,22 @@ class AddBookViewModel @Inject constructor(
         _uiState.value = state.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
-            val result = addBookUseCase(
-                title = state.title,
-                author = state.author,
-                numPages = numPages,
-                currentPage = currentPage,
-            )
+            val result = if (state.isEditMode && originalBook != null) {
+                updateBookUseCase(
+                    original = originalBook!!,
+                    title = state.title,
+                    author = state.author,
+                    numPages = numPages,
+                    currentPage = currentPage,
+                )
+            } else {
+                addBookUseCase(
+                    title = state.title,
+                    author = state.author,
+                    numPages = numPages,
+                    currentPage = currentPage,
+                )
+            }
 
             if (result.isSuccess) {
                 _uiState.value = _uiState.value.copy(isLoading = false)
@@ -142,7 +194,7 @@ class AddBookViewModel @Inject constructor(
             } else {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = result.exceptionOrNull()?.message ?: "Failed to add book",
+                    errorMessage = result.exceptionOrNull()?.message ?: "Failed to save book",
                 )
             }
         }
