@@ -44,4 +44,13 @@
     <string name="add_book_exit_dialog_message">You have unsaved data. Are you sure you want to leave?</string>
     <string name="add_book_exit_dialog_yes">Yes</string>
     <string name="add_book_exit_dialog_no">No</string>
+    <string name="book_session_back_content_description">Back</string>
+    <string name="book_session_reading_time_label">Reading time</string>
+    <string name="book_session_stop">Stop</string>
+    <string name="book_session_pause">Pause</string>
+    <string name="book_session_annotations_label">Annotations</string>
+    <string name="book_session_annotation_placeholder">Anything to note about this session?</string>
+    <string name="book_session_music_on_content_description">Music on</string>
+    <string name="book_session_music_off_content_description">Music off</string>
+    <string name="book_session_send_annotation_content_description">Send annotation</string>
 </resources>

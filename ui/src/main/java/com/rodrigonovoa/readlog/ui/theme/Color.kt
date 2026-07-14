@@ -12,6 +12,8 @@ val color_on_surface = Color(0xFF3A2E27)
 val color_on_surface_variant = Color(0xFF8A7864)
 val color_primary = Color(0xFFB5472C)
 val color_secondary = Color(0xFFD98E4A)
+val color_session_background_top = Color(0xFFFBF6EF)
+val color_session_background_bottom = Color(0xFFF1EAE0)
 
 /* ─── Dark palette ─── */
 val color_primary_dark = Color(0xFFE07A5F)
@@ -26,6 +28,7 @@ val color_surface_dark = Color(0xFF2A231F)
 val color_on_surface_dark = Color(0xFFF0E4D2)
 val color_surface_variant_dark = Color(0xFF3A2E27)
 val color_on_surface_variant_dark = Color(0xFFC4B5A5)
+val color_session_background_dark = Color(0xFF201B18)
 
 /* ─── Common / utility ─── */
 val color_white = Color(0xFFFFFFFF)

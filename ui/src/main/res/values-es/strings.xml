@@ -44,4 +44,13 @@
     <string name="add_book_exit_dialog_message">Tienes datos sin guardar. ¿Estás seguro de que quieres salir?</string>
     <string name="add_book_exit_dialog_yes">Sí</string>
     <string name="add_book_exit_dialog_no">No</string>
+    <string name="book_session_back_content_description">Atrás</string>
+    <string name="book_session_reading_time_label">Tiempo de lectura</string>
+    <string name="book_session_stop">Detener</string>
+    <string name="book_session_pause">Pausar</string>
+    <string name="book_session_annotations_label">Anotaciones</string>
+    <string name="book_session_annotation_placeholder">¿Algo que anotar sobre esta sesión?</string>
+    <string name="book_session_music_on_content_description">Música activada</string>
+    <string name="book_session_music_off_content_description">Música desactivada</string>
+    <string name="book_session_send_annotation_content_description">Enviar anotación</string>
 </resources>

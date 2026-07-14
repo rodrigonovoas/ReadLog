@@ -66,6 +66,7 @@ fun BookCollectionScreen(
     onAddBookClick: () -> Unit = {},
     onEditIconClick: (Int) -> Unit = {},
     onDeleteIconClick: (Int) -> Unit = {},
+    onSessionClick: () -> Unit = {},
     onDismissDialog: () -> Unit = {},
     onConfirmEdit: (Int) -> Unit = {},
     onConfirmDelete: () -> Unit = {},
@@ -106,6 +107,7 @@ fun BookCollectionScreen(
                         book = book,
                         onEditClick = { onEditIconClick(book.bookId) },
                         onDeleteClick = { onDeleteIconClick(book.bookId) },
+                        onSessionClick = onSessionClick,
                     )
                 }
             }
@@ -189,6 +191,7 @@ private fun BookCard(
     book: Book,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    onSessionClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val progress = if (book.numPages > 0) {
@@ -331,7 +334,7 @@ private fun BookCard(
                     .size(BookRowActionButtonSize)
                     .clip(CircleShape)
                     .background(color_primary)
-                    .clickable(onClick = { }),
+                    .clickable(onClick = onSessionClick),
                 contentAlignment = Alignment.Center,
             ) {
                 ClockIcon(tint = color_surface, iconSize = 16.dp)

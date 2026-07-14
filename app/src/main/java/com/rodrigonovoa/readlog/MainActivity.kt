@@ -22,6 +22,7 @@ import com.rodrigonovoa.readlog.ui.addbook.AddBookScreen
 import com.rodrigonovoa.readlog.ui.addbook.AddBookViewModel
 import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionScreen
 import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionViewModel
+import com.rodrigonovoa.readlog.ui.booksession.BookSessionScreen
 import com.rodrigonovoa.readlog.ui.login.LoginEffect
 import com.rodrigonovoa.readlog.ui.login.LoginScreen
 import com.rodrigonovoa.readlog.ui.login.LoginViewModel
@@ -81,12 +82,19 @@ class MainActivity : ComponentActivity() {
                             onAddBookClick = { navController.navigate("addBook") },
                             onEditIconClick = viewModel::onEditIconClick,
                             onDeleteIconClick = viewModel::onDeleteIconClick,
+                            onSessionClick = { navController.navigate("bookSession") },
                             onDismissDialog = viewModel::dismissDialog,
                             onConfirmEdit = { bookId ->
                                 viewModel.dismissDialog()
                                 navController.navigate("addBook?bookId=$bookId")
                             },
                             onConfirmDelete = viewModel::confirmDelete,
+                        )
+                    }
+                    composable("bookSession") {
+                        BookSessionScreen(
+                            modifier = Modifier.fillMaxSize(),
+                            onBackClick = { navController.popBackStack() },
                         )
                     }
                     composable(
