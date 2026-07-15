@@ -22,7 +22,9 @@ import com.rodrigonovoa.readlog.ui.addbook.AddBookScreen
 import com.rodrigonovoa.readlog.ui.addbook.AddBookViewModel
 import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionScreen
 import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionViewModel
+import com.rodrigonovoa.readlog.ui.booksession.BookSessionEffect
 import com.rodrigonovoa.readlog.ui.booksession.BookSessionScreen
+import com.rodrigonovoa.readlog.ui.booksession.BookSessionViewModel
 import com.rodrigonovoa.readlog.ui.login.LoginEffect
 import com.rodrigonovoa.readlog.ui.login.LoginScreen
 import com.rodrigonovoa.readlog.ui.login.LoginViewModel
@@ -92,8 +94,23 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("bookSession") {
+                        val viewModel: BookSessionViewModel = hiltViewModel()
+                        val uiState by viewModel.uiState.collectAsState()
+
+                        LaunchedEffect(Unit) {
+                            viewModel.effect.collect { effect ->
+                                when (effect) {
+                                    is BookSessionEffect.NavigateBack -> {
+                                        navController.popBackStack()
+                                    }
+                                }
+                            }
+                        }
+
                         BookSessionScreen(
                             modifier = Modifier.fillMaxSize(),
+                            uiState = uiState,
+                            onIntent = viewModel::processIntent,
                             onBackClick = { navController.popBackStack() },
                         )
                     }

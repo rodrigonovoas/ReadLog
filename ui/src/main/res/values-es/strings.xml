@@ -48,6 +48,10 @@
     <string name="book_session_reading_time_label">Tiempo de lectura</string>
     <string name="book_session_stop">Detener</string>
     <string name="book_session_pause">Pausar</string>
+    <string name="book_session_play">Reproducir</string>
+    <string name="book_session_end_dialog_title">¿Desea terminar la sesión?</string>
+    <string name="book_session_end_dialog_yes">Sí</string>
+    <string name="book_session_end_dialog_no">No</string>
     <string name="book_session_annotations_label">Anotaciones</string>
     <string name="book_session_annotation_placeholder">¿Algo que anotar sobre esta sesión?</string>
     <string name="book_session_music_on_content_description">Música activada</string>

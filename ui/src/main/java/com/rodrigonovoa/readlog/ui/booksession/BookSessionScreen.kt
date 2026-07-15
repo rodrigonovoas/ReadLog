@@ -23,12 +23,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,10 +45,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -70,7 +76,8 @@ import com.rodrigonovoa.readlog.ui.theme.color_track
 fun BookSessionScreen(
     modifier: Modifier = Modifier,
     bookTitle: String = "Cien años de soledad",
-    elapsedTime: String = "24:18",
+    uiState: BookSessionUiState = BookSessionUiState(),
+    onIntent: (BookSessionIntent) -> Unit = {},
     onBackClick: () -> Unit = {},
 ) {
     var isMusicOn by remember { mutableStateOf(true) }
@@ -135,7 +142,7 @@ fun BookSessionScreen(
                     color = color_on_surface_variant,
                 )
                 Text(
-                    text = elapsedTime,
+                    text = formatElapsedTime(uiState.elapsedSeconds),
                     fontFamily = FontFamily.Serif,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 64.sp,
@@ -153,6 +160,7 @@ fun BookSessionScreen(
                         label = stringResource(R.string.book_session_stop),
                         buttonSize = 52.dp,
                         containerColor = Color.White.copy(alpha = 0.6f),
+                        onClick = { onIntent(BookSessionIntent.OnStopClicked) },
                     ) {
                         Box(
                             modifier = Modifier
@@ -162,25 +170,37 @@ fun BookSessionScreen(
                         )
                     }
                     SessionActionButton(
-                        label = stringResource(R.string.book_session_pause),
+                        label = stringResource(
+                            if (uiState.isRunning) R.string.book_session_pause else R.string.book_session_play
+                        ),
                         buttonSize = 76.dp,
                         containerColor = color_primary,
                         elevated = true,
+                        onClick = { onIntent(BookSessionIntent.OnPlayPauseClicked) },
                     ) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Box(
-                                modifier = Modifier
-                                    .width(4.dp)
-                                    .height(14.dp)
-                                    .clip(RoundedCornerShape(1.5.dp))
-                                    .background(color_surface),
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .width(4.dp)
-                                    .height(14.dp)
-                                    .clip(RoundedCornerShape(1.5.dp))
-                                    .background(color_surface),
+                        if (uiState.isRunning) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(4.dp)
+                                        .height(14.dp)
+                                        .clip(RoundedCornerShape(1.5.dp))
+                                        .background(color_surface),
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .width(4.dp)
+                                        .height(14.dp)
+                                        .clip(RoundedCornerShape(1.5.dp))
+                                        .background(color_surface),
+                                )
+                            }
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                tint = color_surface,
+                                modifier = Modifier.size(28.dp),
                             )
                         }
                     }
@@ -190,6 +210,38 @@ fun BookSessionScreen(
             SessionAnnotationsSheet()
         }
     }
+
+    if (uiState.showEndSessionDialog) {
+        AlertDialog(
+            onDismissRequest = { onIntent(BookSessionIntent.OnDismissEndSessionDialogClicked) },
+            title = {
+                Text(
+                    text = stringResource(R.string.book_session_end_dialog_title),
+                    fontWeight = FontWeight.SemiBold,
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { onIntent(BookSessionIntent.OnConfirmEndSessionClicked) },
+                ) {
+                    Text(text = stringResource(R.string.book_session_end_dialog_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { onIntent(BookSessionIntent.OnDismissEndSessionDialogClicked) },
+                ) {
+                    Text(text = stringResource(R.string.book_session_end_dialog_no))
+                }
+            },
+        )
+    }
+}
+
+private fun formatElapsedTime(totalSeconds: Long): String {
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%02d:%02d".format(minutes, seconds)
 }
 
 @Composable
@@ -347,6 +399,7 @@ private fun SessionActionButton(
     containerColor: Color,
     modifier: Modifier = Modifier,
     elevated: Boolean = false,
+    onClick: () -> Unit = {},
     icon: @Composable () -> Unit,
 ) {
     Column(
@@ -365,7 +418,8 @@ private fun SessionActionButton(
                     }
                 }
                 .clip(CircleShape)
-                .background(containerColor),
+                .background(containerColor)
+                .clickable(onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {
             icon()
@@ -381,6 +435,8 @@ private fun SessionActionButton(
 
 @Composable
 private fun SessionAnnotationsSheet(modifier: Modifier = Modifier) {
+    var annotationText by remember { mutableStateOf("") }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -410,28 +466,22 @@ private fun SessionAnnotationsSheet(modifier: Modifier = Modifier) {
                     .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.CenterStart,
             ) {
-                Text(
-                    text = stringResource(R.string.book_session_annotation_placeholder),
-                    fontSize = 13.sp,
-                    color = color_placeholder,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(color_primary),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = stringResource(
-                        R.string.book_session_send_annotation_content_description
-                    ),
-                    tint = color_surface,
-                    modifier = Modifier.size(16.dp),
+                if (annotationText.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.book_session_annotation_placeholder),
+                        fontSize = 13.sp,
+                        color = color_placeholder,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                BasicTextField(
+                    value = annotationText,
+                    onValueChange = { annotationText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    textStyle = TextStyle(fontSize = 13.sp, color = color_on_surface),
+                    cursorBrush = SolidColor(color_on_surface),
                 )
             }
         }

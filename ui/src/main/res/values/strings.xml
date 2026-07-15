@@ -48,6 +48,10 @@
     <string name="book_session_reading_time_label">Reading time</string>
     <string name="book_session_stop">Stop</string>
     <string name="book_session_pause">Pause</string>
+    <string name="book_session_play">Play</string>
+    <string name="book_session_end_dialog_title">End this session?</string>
+    <string name="book_session_end_dialog_yes">Yes</string>
+    <string name="book_session_end_dialog_no">No</string>
     <string name="book_session_annotations_label">Annotations</string>
     <string name="book_session_annotation_placeholder">Anything to note about this session?</string>
     <string name="book_session_music_on_content_description">Music on</string>
