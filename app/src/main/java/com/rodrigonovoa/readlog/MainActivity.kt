@@ -26,7 +26,7 @@ import com.rodrigonovoa.readlog.ui.booksession.BookSessionEffect
 import com.rodrigonovoa.readlog.ui.booksession.BookSessionScreen
 import com.rodrigonovoa.readlog.ui.booksession.BookSessionViewModel
 import com.rodrigonovoa.readlog.ui.bookdetail.BookDetailScreen
-import com.rodrigonovoa.readlog.ui.bookdetail.sampleBookDetailUiState
+import com.rodrigonovoa.readlog.ui.bookdetail.BookDetailViewModel
 import com.rodrigonovoa.readlog.ui.login.LoginEffect
 import com.rodrigonovoa.readlog.ui.login.LoginScreen
 import com.rodrigonovoa.readlog.ui.login.LoginViewModel
@@ -138,9 +138,12 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                     ) {
+                        val viewModel: BookDetailViewModel = hiltViewModel()
+                        val uiState by viewModel.uiState.collectAsState()
+
                         BookDetailScreen(
                             modifier = Modifier.fillMaxSize(),
-                            uiState = sampleBookDetailUiState,
+                            uiState = uiState,
                             onBackClick = { navController.popBackStack() },
                         )
                     }

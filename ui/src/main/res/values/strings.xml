@@ -58,10 +58,10 @@
     <string name="book_session_music_off_content_description">Music off</string>
     <string name="book_session_send_annotation_content_description">Send annotation</string>
     <string name="book_detail_back_content_description">Back</string>
-    <string name="book_detail_menu_content_description">Options</string>
     <string name="book_detail_reading_since">Reading since %1$s</string>
     <string name="book_detail_stat_sessions">SESSIONS</string>
     <string name="book_detail_stat_total_time">TOTAL TIME</string>
     <string name="book_detail_stat_days">DAYS READING</string>
     <string name="book_detail_recent_sessions_title">Recent sessions</string>
+    <string name="book_detail_no_sessions">You haven\'t logged any sessions for this book yet.</string>
 </resources>

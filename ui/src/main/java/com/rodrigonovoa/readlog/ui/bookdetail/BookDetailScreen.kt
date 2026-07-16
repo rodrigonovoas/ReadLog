@@ -13,13 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -50,9 +48,8 @@ import com.rodrigonovoa.readlog.ui.theme.color_track
 @Composable
 fun BookDetailScreen(
     modifier: Modifier = Modifier,
-    uiState: BookDetailUiState = sampleBookDetailUiState,
+    uiState: BookDetailUiState = BookDetailUiState(),
     onBackClick: () -> Unit = {},
-    onMenuClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -60,10 +57,7 @@ fun BookDetailScreen(
             .background(color_surface)
             .safeDrawingPadding(),
     ) {
-        TopBar(
-            onBackClick = onBackClick,
-            onMenuClick = onMenuClick,
-        )
+        TopBar(onBackClick = onBackClick)
 
         Column(
             modifier = Modifier
@@ -85,7 +79,6 @@ fun BookDetailScreen(
 @Composable
 private fun TopBar(
     onBackClick: () -> Unit,
-    onMenuClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -93,31 +86,19 @@ private fun TopBar(
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
             .padding(top = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
             onClick = onBackClick,
             modifier = Modifier
                 .size(36.dp)
-                .clip(CircleShape)
+                .clip(RoundedCornerShape(18.dp))
                 .background(color_chip),
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Default.ArrowBack,
                 contentDescription = stringResource(R.string.book_detail_back_content_description),
                 tint = color_on_surface,
-                modifier = Modifier.size(18.dp),
-            )
-        }
-        IconButton(
-            onClick = onMenuClick,
-            modifier = Modifier.size(36.dp),
-        ) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = stringResource(R.string.book_detail_menu_content_description),
-                tint = color_on_surface_variant,
                 modifier = Modifier.size(18.dp),
             )
         }
@@ -138,8 +119,20 @@ private fun BookHeaderRow(
                 .width(64.dp)
                 .height(92.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(bookDetailColor(uiState.bookId)),
-        )
+                .background(bookDetailColor(uiState.bookId))
+                .padding(horizontal = 6.dp, vertical = 7.dp),
+        ) {
+            Text(
+                text = uiState.bookTitle,
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 10.sp,
+                lineHeight = 13.sp,
+                color = color_surface,
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         Spacer(modifier = Modifier.width(16.dp))
         Column {
             Text(
@@ -302,9 +295,17 @@ private fun RecentSessionsSection(
             color = color_on_surface,
             modifier = Modifier.padding(bottom = 12.dp),
         )
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            sessions.forEach { session ->
-                RecentSessionCard(session = session)
+        if (sessions.isEmpty()) {
+            Text(
+                text = stringResource(R.string.book_detail_no_sessions),
+                fontSize = 13.sp,
+                color = color_on_surface_variant,
+            )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                sessions.forEach { session ->
+                    RecentSessionCard(session = session)
+                }
             }
         }
     }
