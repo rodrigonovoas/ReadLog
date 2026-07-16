@@ -1,7 +1,11 @@
 package com.rodrigonovoa.readlog.ui.booksession
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rodrigonovoa.readlog.domain.usecase.AddAnnotationUseCase
+import com.rodrigonovoa.readlog.domain.usecase.AddSessionUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -17,7 +21,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class BookSessionViewModel @Inject constructor() : ViewModel() {
+class BookSessionViewModel @Inject constructor(
+    private val getBookByIdUseCase: GetBookByIdUseCase,
+    private val addSessionUseCase: AddSessionUseCase,
+    private val addAnnotationUseCase: AddAnnotationUseCase,
+    savedStateHandle: SavedStateHandle,
+) : ViewModel() {
+
+    private val bookId: Int = savedStateHandle.get<Int>("bookId") ?: -1
 
     private val _uiState = MutableStateFlow(BookSessionUiState())
     val uiState: StateFlow<BookSessionUiState> = _uiState.asStateFlow()
@@ -26,6 +37,15 @@ class BookSessionViewModel @Inject constructor() : ViewModel() {
     val effect: SharedFlow<BookSessionEffect> = _effect.asSharedFlow()
 
     private var timerJob: Job? = null
+
+    init {
+        if (bookId != -1) {
+            viewModelScope.launch {
+                val book = getBookByIdUseCase(bookId)
+                _uiState.update { it.copy(bookTitle = book?.title ?: "") }
+            }
+        }
+    }
 
     fun processIntent(intent: BookSessionIntent) {
         when (intent) {
@@ -42,10 +62,13 @@ class BookSessionViewModel @Inject constructor() : ViewModel() {
             }
             is BookSessionIntent.OnConfirmEndSessionClicked -> {
                 _uiState.update { it.copy(showEndSessionDialog = false) }
-                viewModelScope.launch { _effect.emit(BookSessionEffect.NavigateBack) }
+                saveSession()
             }
             is BookSessionIntent.OnDismissEndSessionDialogClicked -> {
                 _uiState.update { it.copy(showEndSessionDialog = false) }
+            }
+            is BookSessionIntent.OnAnnotationTextChanged -> {
+                _uiState.update { it.copy(annotationText = intent.text) }
             }
         }
     }
@@ -64,5 +87,18 @@ class BookSessionViewModel @Inject constructor() : ViewModel() {
         timerJob?.cancel()
         timerJob = null
         _uiState.update { it.copy(isRunning = false) }
+    }
+
+    private fun saveSession() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            val result = addSessionUseCase(bookId, state.elapsedSeconds)
+            val session = result.getOrNull()
+            val annotationText = state.annotationText.trim()
+            if (session != null && annotationText.isNotEmpty()) {
+                addAnnotationUseCase(session.sessionId, annotationText)
+            }
+            _effect.emit(BookSessionEffect.NavigateBack)
+        }
     }
 }

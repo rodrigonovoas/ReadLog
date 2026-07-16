@@ -75,7 +75,6 @@ import com.rodrigonovoa.readlog.ui.theme.color_track
 @Composable
 fun BookSessionScreen(
     modifier: Modifier = Modifier,
-    bookTitle: String = "Cien años de soledad",
     uiState: BookSessionUiState = BookSessionUiState(),
     onIntent: (BookSessionIntent) -> Unit = {},
     onBackClick: () -> Unit = {},
@@ -120,7 +119,7 @@ fun BookSessionScreen(
                 .windowInsetsPadding(WindowInsets.safeDrawing.exclude(WindowInsets.navigationBars)),
         ) {
             SessionHeader(
-                bookTitle = bookTitle,
+                bookTitle = uiState.bookTitle,
                 isMusicOn = isMusicOn,
                 onToggleMusic = { isMusicOn = !isMusicOn },
                 onBackClick = onBackClick,
@@ -207,7 +206,10 @@ fun BookSessionScreen(
                 }
             }
 
-            SessionAnnotationsSheet()
+            SessionAnnotationsSheet(
+                annotationText = uiState.annotationText,
+                onAnnotationTextChanged = { onIntent(BookSessionIntent.OnAnnotationTextChanged(it)) },
+            )
         }
     }
 
@@ -434,9 +436,11 @@ private fun SessionActionButton(
 }
 
 @Composable
-private fun SessionAnnotationsSheet(modifier: Modifier = Modifier) {
-    var annotationText by remember { mutableStateOf("") }
-
+private fun SessionAnnotationsSheet(
+    annotationText: String,
+    onAnnotationTextChanged: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -477,7 +481,7 @@ private fun SessionAnnotationsSheet(modifier: Modifier = Modifier) {
                 }
                 BasicTextField(
                     value = annotationText,
-                    onValueChange = { annotationText = it },
+                    onValueChange = onAnnotationTextChanged,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     textStyle = TextStyle(fontSize = 13.sp, color = color_on_surface),
@@ -492,6 +496,6 @@ private fun SessionAnnotationsSheet(modifier: Modifier = Modifier) {
 @Composable
 private fun BookSessionScreenPreview() {
     ReadLogTheme {
-        BookSessionScreen()
+        BookSessionScreen(uiState = BookSessionUiState(bookTitle = "Cien años de soledad"))
     }
 }

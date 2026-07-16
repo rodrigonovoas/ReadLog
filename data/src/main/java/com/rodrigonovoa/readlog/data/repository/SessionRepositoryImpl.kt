@@ -40,11 +40,13 @@ class SessionRepositoryImpl @Inject constructor(
         return sessionDao.getByRemoteId(remoteId)?.let { sessionDataMapper.toDomain(it) }
     }
 
-    override suspend fun insertSession(session: Session) {
+    override suspend fun insertSession(session: Session): Session {
         val enrichedSession = enrichSession(session)
         val entity = sessionDataMapper.toEntity(enrichedSession)
-        sessionDao.insert(entity)
-        pushToFirestore(enrichedSession)
+        val generatedId = sessionDao.insert(entity)
+        val savedSession = enrichedSession.copy(sessionId = generatedId.toInt())
+        pushToFirestore(savedSession)
+        return savedSession
     }
 
     override suspend fun updateSession(session: Session) {

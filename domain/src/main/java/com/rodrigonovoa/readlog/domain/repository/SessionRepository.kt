@@ -8,7 +8,7 @@ interface SessionRepository {
     suspend fun getAllSessionsListForBook(bookId: Int): List<Session>
     suspend fun getSessionById(id: Int): Session?
     suspend fun getSessionByRemoteId(remoteId: String): Session?
-    suspend fun insertSession(session: Session)
+    suspend fun insertSession(session: Session): Session
     suspend fun updateSession(session: Session)
     suspend fun deleteSession(session: Session)
 }

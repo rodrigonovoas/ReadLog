@@ -66,7 +66,7 @@ fun BookCollectionScreen(
     onAddBookClick: () -> Unit = {},
     onEditIconClick: (Int) -> Unit = {},
     onDeleteIconClick: (Int) -> Unit = {},
-    onSessionClick: () -> Unit = {},
+    onSessionClick: (Int) -> Unit = {},
     onDismissDialog: () -> Unit = {},
     onConfirmEdit: (Int) -> Unit = {},
     onConfirmDelete: () -> Unit = {},
@@ -107,7 +107,7 @@ fun BookCollectionScreen(
                         book = book,
                         onEditClick = { onEditIconClick(book.bookId) },
                         onDeleteClick = { onDeleteIconClick(book.bookId) },
-                        onSessionClick = onSessionClick,
+                        onSessionClick = { onSessionClick(book.bookId) },
                     )
                 }
             }

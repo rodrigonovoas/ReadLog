@@ -84,7 +84,9 @@ class MainActivity : ComponentActivity() {
                             onAddBookClick = { navController.navigate("addBook") },
                             onEditIconClick = viewModel::onEditIconClick,
                             onDeleteIconClick = viewModel::onDeleteIconClick,
-                            onSessionClick = { navController.navigate("bookSession") },
+                            onSessionClick = { bookId ->
+                                navController.navigate("bookSession?bookId=$bookId")
+                            },
                             onDismissDialog = viewModel::dismissDialog,
                             onConfirmEdit = { bookId ->
                                 viewModel.dismissDialog()
@@ -93,7 +95,15 @@ class MainActivity : ComponentActivity() {
                             onConfirmDelete = viewModel::confirmDelete,
                         )
                     }
-                    composable("bookSession") {
+                    composable(
+                        "bookSession?bookId={bookId}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("bookId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = -1
+                            }
+                        )
+                    ) {
                         val viewModel: BookSessionViewModel = hiltViewModel()
                         val uiState by viewModel.uiState.collectAsState()
 

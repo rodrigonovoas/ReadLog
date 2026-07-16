@@ -1,5 +1,14 @@
 package com.rodrigonovoa.readlog.ui.booksession
 
+import androidx.lifecycle.SavedStateHandle
+import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.Session
+import com.rodrigonovoa.readlog.domain.usecase.AddAnnotationUseCase
+import com.rodrigonovoa.readlog.domain.usecase.AddSessionUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -8,6 +17,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -21,12 +31,34 @@ import org.junit.Test
 class BookSessionViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
+    private lateinit var getBookByIdUseCase: GetBookByIdUseCase
+    private lateinit var addSessionUseCase: AddSessionUseCase
+    private lateinit var addAnnotationUseCase: AddAnnotationUseCase
+    private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: BookSessionViewModel
+
+    private val bookId = 5
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = BookSessionViewModel()
+        getBookByIdUseCase = mockk(relaxed = true)
+        addSessionUseCase = mockk()
+        addAnnotationUseCase = mockk(relaxed = true)
+        savedStateHandle = SavedStateHandle(mapOf("bookId" to bookId))
+        coEvery { addSessionUseCase(any(), any()) } returns Result.success(
+            Session(sessionId = 1, bookId = bookId, time = 0L)
+        )
+        viewModel = createViewModel()
+    }
+
+    private fun createViewModel(): BookSessionViewModel {
+        return BookSessionViewModel(
+            getBookByIdUseCase = getBookByIdUseCase,
+            addSessionUseCase = addSessionUseCase,
+            addAnnotationUseCase = addAnnotationUseCase,
+            savedStateHandle = savedStateHandle,
+        )
     }
 
     @After
@@ -41,6 +73,25 @@ class BookSessionViewModelTest {
         assertEquals(0L, state.elapsedSeconds)
         assertFalse(state.isRunning)
         assertFalse(state.showEndSessionDialog)
+        assertEquals("", state.annotationText)
+    }
+
+    @Test
+    fun `init loads book title from use case`() = runTest {
+        val book = Book(
+            bookId = bookId,
+            title = "Cien años de soledad",
+            author = "Gabriel García Márquez",
+            genre = "Novel",
+            releaseDate = "1967",
+            numPages = 340,
+            currentPage = 231,
+        )
+        coEvery { getBookByIdUseCase(bookId) } returns book
+        val loadedViewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals("Cien años de soledad", loadedViewModel.uiState.value.bookTitle)
     }
 
     @Test
@@ -114,7 +165,19 @@ class BookSessionViewModelTest {
     }
 
     @Test
-    fun `confirming end session closes dialog and emits navigate back`() = runTest {
+    fun `annotation text change updates state`() = runTest {
+        viewModel.processIntent(BookSessionIntent.OnAnnotationTextChanged("Great chapter"))
+        advanceUntilIdle()
+
+        assertEquals("Great chapter", viewModel.uiState.value.annotationText)
+    }
+
+    @Test
+    fun `confirming end session creates a session with bookId and elapsed time`() = runTest {
+        viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
+        advanceTimeBy(4_000)
+        advanceUntilIdle()
+
         viewModel.processIntent(BookSessionIntent.OnStopClicked)
         advanceUntilIdle()
 
@@ -125,7 +188,45 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
         collectJob.join()
 
+        coVerify { addSessionUseCase(bookId, 4L) }
         assertEquals(BookSessionEffect.NavigateBack, effect)
         assertFalse(viewModel.uiState.value.showEndSessionDialog)
+    }
+
+    @Test
+    fun `confirming end session with annotation text saves the annotation`() = runTest {
+        coEvery { addSessionUseCase(any(), any()) } returns Result.success(
+            Session(sessionId = 42, bookId = bookId, time = 0L)
+        )
+
+        viewModel.processIntent(BookSessionIntent.OnAnnotationTextChanged("Great chapter"))
+        viewModel.processIntent(BookSessionIntent.OnStopClicked)
+        advanceUntilIdle()
+
+        var effect: BookSessionEffect? = null
+        val collectJob = launch { effect = viewModel.effect.first() }
+
+        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        advanceUntilIdle()
+        collectJob.join()
+
+        coVerify { addAnnotationUseCase(42, "Great chapter") }
+        assertEquals(BookSessionEffect.NavigateBack, effect)
+    }
+
+    @Test
+    fun `confirming end session without annotation text does not save an annotation`() = runTest {
+        viewModel.processIntent(BookSessionIntent.OnStopClicked)
+        advanceUntilIdle()
+
+        var effect: BookSessionEffect? = null
+        val collectJob = launch { effect = viewModel.effect.first() }
+
+        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        advanceUntilIdle()
+        collectJob.join()
+
+        coVerify(exactly = 0) { addAnnotationUseCase(any(), any()) }
+        assertEquals(BookSessionEffect.NavigateBack, effect)
     }
 }
