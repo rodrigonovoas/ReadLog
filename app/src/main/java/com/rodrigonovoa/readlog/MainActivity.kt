@@ -25,6 +25,8 @@ import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionViewModel
 import com.rodrigonovoa.readlog.ui.booksession.BookSessionEffect
 import com.rodrigonovoa.readlog.ui.booksession.BookSessionScreen
 import com.rodrigonovoa.readlog.ui.booksession.BookSessionViewModel
+import com.rodrigonovoa.readlog.ui.bookdetail.BookDetailScreen
+import com.rodrigonovoa.readlog.ui.bookdetail.sampleBookDetailUiState
 import com.rodrigonovoa.readlog.ui.login.LoginEffect
 import com.rodrigonovoa.readlog.ui.login.LoginScreen
 import com.rodrigonovoa.readlog.ui.login.LoginViewModel
@@ -87,6 +89,9 @@ class MainActivity : ComponentActivity() {
                             onSessionClick = { bookId ->
                                 navController.navigate("bookSession?bookId=$bookId")
                             },
+                            onBookClick = { bookId ->
+                                navController.navigate("bookDetail?bookId=$bookId")
+                            },
                             onDismissDialog = viewModel::dismissDialog,
                             onConfirmEdit = { bookId ->
                                 viewModel.dismissDialog()
@@ -121,6 +126,21 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxSize(),
                             uiState = uiState,
                             onIntent = viewModel::processIntent,
+                            onBackClick = { navController.popBackStack() },
+                        )
+                    }
+                    composable(
+                        "bookDetail?bookId={bookId}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("bookId") {
+                                type = androidx.navigation.NavType.IntType
+                                defaultValue = -1
+                            }
+                        )
+                    ) {
+                        BookDetailScreen(
+                            modifier = Modifier.fillMaxSize(),
+                            uiState = sampleBookDetailUiState,
                             onBackClick = { navController.popBackStack() },
                         )
                     }

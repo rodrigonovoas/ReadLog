@@ -67,6 +67,7 @@ fun BookCollectionScreen(
     onEditIconClick: (Int) -> Unit = {},
     onDeleteIconClick: (Int) -> Unit = {},
     onSessionClick: (Int) -> Unit = {},
+    onBookClick: (Int) -> Unit = {},
     onDismissDialog: () -> Unit = {},
     onConfirmEdit: (Int) -> Unit = {},
     onConfirmDelete: () -> Unit = {},
@@ -108,6 +109,7 @@ fun BookCollectionScreen(
                         onEditClick = { onEditIconClick(book.bookId) },
                         onDeleteClick = { onDeleteIconClick(book.bookId) },
                         onSessionClick = { onSessionClick(book.bookId) },
+                        onCardClick = { onBookClick(book.bookId) },
                     )
                 }
             }
@@ -192,6 +194,7 @@ private fun BookCard(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onSessionClick: () -> Unit,
+    onCardClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val progress = if (book.numPages > 0) {
@@ -206,6 +209,7 @@ private fun BookCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
             .background(color_surface_variant)
+            .clickable(onClick = onCardClick)
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

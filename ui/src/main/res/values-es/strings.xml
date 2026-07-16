@@ -57,4 +57,11 @@
     <string name="book_session_music_on_content_description">Música activada</string>
     <string name="book_session_music_off_content_description">Música desactivada</string>
     <string name="book_session_send_annotation_content_description">Enviar anotación</string>
+    <string name="book_detail_back_content_description">Atrás</string>
+    <string name="book_detail_menu_content_description">Opciones</string>
+    <string name="book_detail_reading_since">Leyendo desde el %1$s</string>
+    <string name="book_detail_stat_sessions">SESIONES</string>
+    <string name="book_detail_stat_total_time">TIEMPO TOTAL</string>
+    <string name="book_detail_stat_days">DÍAS LEYENDO</string>
+    <string name="book_detail_recent_sessions_title">Sesiones recientes</string>
 </resources>
