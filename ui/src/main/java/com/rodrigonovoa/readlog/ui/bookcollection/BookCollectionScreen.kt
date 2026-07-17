@@ -68,6 +68,7 @@ fun BookCollectionScreen(
     onDismissDialog: () -> Unit = {},
     onConfirmEdit: (Int) -> Unit = {},
     onConfirmDelete: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
 ) {
     val books = uiState.books
     Column(
@@ -83,6 +84,7 @@ fun BookCollectionScreen(
             } else {
                 ""
             },
+            onProfileClick = onProfileClick,
         )
 
         if (books.isEmpty()) {
@@ -141,6 +143,7 @@ private fun HeaderSection(
     showTitle: Boolean = true,
     greeting: String,
     modifier: Modifier = Modifier,
+    onProfileClick: () -> Unit = {},
 ) {
     Row(
         modifier = modifier
@@ -172,12 +175,15 @@ private fun HeaderSection(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(color_chip),
+                .background(color_chip)
+                .clickable(onClick = onProfileClick),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Default.Person,
-                contentDescription = null,
+                contentDescription = stringResource(
+                    R.string.book_collection_profile_icon_content_description
+                ),
                 tint = color_on_surface_variant,
                 modifier = Modifier.size(20.dp),
             )

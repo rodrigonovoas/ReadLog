@@ -31,6 +31,8 @@ import com.rodrigonovoa.readlog.ui.login.LoginEffect
 import com.rodrigonovoa.readlog.ui.login.LoginScreen
 import com.rodrigonovoa.readlog.ui.login.LoginViewModel
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
+import com.rodrigonovoa.readlog.ui.userprofile.UserProfileScreen
+import com.rodrigonovoa.readlog.ui.userprofile.sampleUserProfileUiState
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -98,6 +100,14 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("addBook?bookId=$bookId")
                             },
                             onConfirmDelete = viewModel::confirmDelete,
+                            onProfileClick = { navController.navigate("userProfile") },
+                        )
+                    }
+                    composable("userProfile") {
+                        UserProfileScreen(
+                            modifier = Modifier.fillMaxSize(),
+                            uiState = sampleUserProfileUiState,
+                            onBackClick = { navController.popBackStack() },
                         )
                     }
                     composable(

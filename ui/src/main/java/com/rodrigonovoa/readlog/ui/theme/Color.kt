@@ -14,6 +14,7 @@ val color_primary = Color(0xFFB5472C)
 val color_secondary = Color(0xFFD98E4A)
 val color_session_background_top = Color(0xFFFBF6EF)
 val color_session_background_bottom = Color(0xFFF1EAE0)
+val color_on_primary_container = Color(0xFFF3D9CB)
 
 /* ─── Dark palette ─── */
 val color_primary_dark = Color(0xFFE07A5F)
