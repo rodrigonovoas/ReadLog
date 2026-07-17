@@ -1,5 +1,6 @@
 package com.rodrigonovoa.readlog.ui.booksession
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
@@ -26,13 +28,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,6 +58,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodrigonovoa.readlog.ui.R
+import com.rodrigonovoa.readlog.ui.common.ConfirmationDialog
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
@@ -77,9 +77,12 @@ fun BookSessionScreen(
     modifier: Modifier = Modifier,
     uiState: BookSessionUiState = BookSessionUiState(),
     onIntent: (BookSessionIntent) -> Unit = {},
-    onBackClick: () -> Unit = {},
 ) {
     var isMusicOn by remember { mutableStateOf(true) }
+
+    BackHandler(enabled = !uiState.showEndSessionDialog) {
+        onIntent(BookSessionIntent.OnBackClicked)
+    }
 
     Box(
         modifier = modifier
@@ -122,7 +125,7 @@ fun BookSessionScreen(
                 bookTitle = uiState.bookTitle,
                 isMusicOn = isMusicOn,
                 onToggleMusic = { isMusicOn = !isMusicOn },
-                onBackClick = onBackClick,
+                onBackClick = { onIntent(BookSessionIntent.OnBackClicked) },
             )
 
             Column(
@@ -214,28 +217,14 @@ fun BookSessionScreen(
     }
 
     if (uiState.showEndSessionDialog) {
-        AlertDialog(
-            onDismissRequest = { onIntent(BookSessionIntent.OnDismissEndSessionDialogClicked) },
-            title = {
-                Text(
-                    text = stringResource(R.string.book_session_end_dialog_title),
-                    fontWeight = FontWeight.SemiBold,
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { onIntent(BookSessionIntent.OnConfirmEndSessionClicked) },
-                ) {
-                    Text(text = stringResource(R.string.book_session_end_dialog_yes))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { onIntent(BookSessionIntent.OnDismissEndSessionDialogClicked) },
-                ) {
-                    Text(text = stringResource(R.string.book_session_end_dialog_no))
-                }
-            },
+        ConfirmationDialog(
+            title = stringResource(R.string.book_session_end_dialog_title),
+            message = stringResource(R.string.book_session_end_dialog_message),
+            confirmLabel = stringResource(R.string.book_session_end_dialog_yes),
+            dismissLabel = stringResource(R.string.book_session_end_dialog_no),
+            onDismiss = { onIntent(BookSessionIntent.OnDismissEndSessionDialogClicked) },
+            onConfirm = { onIntent(BookSessionIntent.OnConfirmEndSessionClicked) },
+            useAccentConfirmButton = false,
         )
     }
 }
@@ -282,14 +271,6 @@ private fun SessionHeader(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Box(
-                modifier = Modifier
-                    .width(24.dp)
-                    .height(34.dp)
-                    .clip(RoundedCornerShape(5.dp))
-                    .background(color_primary),
-            )
-            Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = bookTitle,
                 fontSize = 13.sp,
@@ -464,10 +445,10 @@ private fun SessionAnnotationsSheet(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(44.dp)
+                    .heightIn(min = 44.dp)
                     .clip(RoundedCornerShape(22.dp))
                     .background(color_surface)
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 if (annotationText.isEmpty()) {
@@ -483,7 +464,7 @@ private fun SessionAnnotationsSheet(
                     value = annotationText,
                     onValueChange = onAnnotationTextChanged,
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
+                    maxLines = 3,
                     textStyle = TextStyle(fontSize = 13.sp, color = color_on_surface),
                     cursorBrush = SolidColor(color_on_surface),
                 )

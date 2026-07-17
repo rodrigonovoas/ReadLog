@@ -126,7 +126,6 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxSize(),
                             uiState = uiState,
                             onIntent = viewModel::processIntent,
-                            onBackClick = { navController.popBackStack() },
                         )
                     }
                     composable(

@@ -50,6 +50,7 @@
     <string name="book_session_pause">Pausar</string>
     <string name="book_session_play">Reproducir</string>
     <string name="book_session_end_dialog_title">¿Desea terminar la sesión?</string>
+    <string name="book_session_end_dialog_message">Perderás tu progreso si sales ahora.</string>
     <string name="book_session_end_dialog_yes">Sí</string>
     <string name="book_session_end_dialog_no">No</string>
     <string name="book_session_annotations_label">Anotaciones</string>

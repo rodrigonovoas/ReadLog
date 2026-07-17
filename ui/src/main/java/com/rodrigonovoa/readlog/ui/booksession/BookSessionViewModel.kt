@@ -20,6 +20,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val MAX_ANNOTATION_LINES = 3
+
 @HiltViewModel
 class BookSessionViewModel @Inject constructor(
     private val getBookByIdUseCase: GetBookByIdUseCase,
@@ -37,6 +39,9 @@ class BookSessionViewModel @Inject constructor(
     val effect: SharedFlow<BookSessionEffect> = _effect.asSharedFlow()
 
     private var timerJob: Job? = null
+    private var hasStartedTimer = false
+    private var dialogTriggeredByBack = false
+    private var resumeTimerOnDismiss = false
 
     init {
         if (bookId != -1) {
@@ -58,22 +63,45 @@ class BookSessionViewModel @Inject constructor(
             }
             is BookSessionIntent.OnStopClicked -> {
                 pauseTimer()
+                dialogTriggeredByBack = false
                 _uiState.update { it.copy(showEndSessionDialog = true) }
+            }
+            is BookSessionIntent.OnBackClicked -> {
+                val hasAnnotations = _uiState.value.annotationText.isNotBlank()
+                if (hasStartedTimer || hasAnnotations) {
+                    resumeTimerOnDismiss = _uiState.value.isRunning
+                    pauseTimer()
+                    dialogTriggeredByBack = true
+                    _uiState.update { it.copy(showEndSessionDialog = true) }
+                } else {
+                    viewModelScope.launch { _effect.emit(BookSessionEffect.NavigateBack) }
+                }
             }
             is BookSessionIntent.OnConfirmEndSessionClicked -> {
                 _uiState.update { it.copy(showEndSessionDialog = false) }
-                saveSession()
+                if (dialogTriggeredByBack) {
+                    viewModelScope.launch { _effect.emit(BookSessionEffect.NavigateBack) }
+                } else {
+                    saveSession()
+                }
             }
             is BookSessionIntent.OnDismissEndSessionDialogClicked -> {
                 _uiState.update { it.copy(showEndSessionDialog = false) }
+                if (dialogTriggeredByBack && resumeTimerOnDismiss) {
+                    startTimer()
+                }
             }
             is BookSessionIntent.OnAnnotationTextChanged -> {
-                _uiState.update { it.copy(annotationText = intent.text) }
+                val lineCount = intent.text.count { it == '\n' } + 1
+                if (lineCount <= MAX_ANNOTATION_LINES) {
+                    _uiState.update { it.copy(annotationText = intent.text) }
+                }
             }
         }
     }
 
     private fun startTimer() {
+        hasStartedTimer = true
         _uiState.update { it.copy(isRunning = true) }
         timerJob = viewModelScope.launch {
             while (isActive) {

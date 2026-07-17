@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -29,9 +28,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,9 +42,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.ui.R
+import com.rodrigonovoa.readlog.ui.common.ConfirmationDialog
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
 import com.rodrigonovoa.readlog.ui.theme.color_error_container
@@ -363,12 +360,13 @@ private fun EditBookDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    BookConfirmationDialog(
+    ConfirmationDialog(
         icon = Icons.Default.Edit,
         iconContainerColor = color_chip,
         title = stringResource(R.string.book_collection_edit_dialog_title),
         message = stringResource(R.string.book_collection_edit_dialog_message, bookTitle),
         confirmLabel = stringResource(R.string.book_collection_edit),
+        dismissLabel = stringResource(R.string.book_collection_cancel),
         onDismiss = onDismiss,
         onConfirm = onConfirm,
     )
@@ -380,110 +378,16 @@ private fun DeleteBookDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    BookConfirmationDialog(
+    ConfirmationDialog(
         icon = Icons.Default.Delete,
         iconContainerColor = color_error_container,
         title = stringResource(R.string.book_collection_delete_dialog_title),
         message = stringResource(R.string.book_collection_delete_dialog_message, bookTitle),
         confirmLabel = stringResource(R.string.book_collection_delete),
+        dismissLabel = stringResource(R.string.book_collection_cancel),
         onDismiss = onDismiss,
         onConfirm = onConfirm,
     )
-}
-
-@Composable
-private fun BookConfirmationDialog(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    iconContainerColor: Color,
-    title: String,
-    message: String,
-    confirmLabel: String,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = color_surface,
-            modifier = Modifier.widthIn(max = 320.dp),
-        ) {
-            Column(
-                modifier = Modifier.padding(start = 24.dp, top = 28.dp, end = 24.dp, bottom = 22.dp),
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(iconContainerColor),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = color_primary,
-                            modifier = Modifier.size(22.dp),
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(14.dp))
-                    Text(
-                        text = title,
-                        fontFamily = FontFamily.Serif,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp,
-                        color = color_on_surface,
-                    )
-                }
-                Spacer(modifier = Modifier.height(18.dp))
-                Text(
-                    text = message,
-                    fontSize = 14.sp,
-                    color = color_on_surface_variant,
-                    lineHeight = 20.sp,
-                )
-                Row(
-                    modifier = Modifier
-                        .padding(top = 24.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    TextButton(
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = ButtonDefaults.textButtonColors(contentColor = color_on_surface_variant),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.book_collection_cancel),
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                    Button(
-                        onClick = onConfirm,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(24.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = color_primary,
-                            contentColor = color_surface,
-                        ),
-                    ) {
-                        Text(
-                            text = confirmLabel,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                }
-            }
-        }
-    }
 }
 
 @Composable
