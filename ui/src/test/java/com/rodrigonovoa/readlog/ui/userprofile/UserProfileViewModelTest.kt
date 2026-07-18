@@ -9,11 +9,13 @@ import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileInfoUseCase
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -92,16 +94,18 @@ class UserProfileViewModelTest {
             weekTimeSeconds = 120L,
             bookCollection = listOf("Cached Book"),
         )
-        coEvery { refreshUserProfileInfoUseCase("uid-1", "Elena") } returns Result.success(
-            UserProfileInfo(userId = "uid-1")
-        )
+        val refreshResult = CompletableDeferred<Result<UserProfileInfo>>()
+        coEvery { refreshUserProfileInfoUseCase("uid-1", "Elena") } coAnswers { refreshResult.await() }
 
         val viewModel = createViewModel()
+        runCurrent()
 
         assertEquals(3, viewModel.uiState.value.followersCount)
         assertEquals(5, viewModel.uiState.value.likesCount)
         assertEquals(2, viewModel.uiState.value.weeklySessionsCount)
         assertEquals(listOf(UserProfileBook(title = "Cached Book")), viewModel.uiState.value.collectionBooks)
+
+        refreshResult.complete(Result.success(UserProfileInfo(userId = "uid-1")))
     }
 
     @Test

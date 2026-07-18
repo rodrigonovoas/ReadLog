@@ -97,21 +97,24 @@ class BookSessionViewModelTest {
     @Test
     fun `play starts the timer and increments every second`() = runTest {
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
-        advanceUntilIdle()
+        runCurrent()
 
         assertTrue(viewModel.uiState.value.isRunning)
 
         advanceTimeBy(3_000)
-        advanceUntilIdle()
+        runCurrent()
 
         assertEquals(3L, viewModel.uiState.value.elapsedSeconds)
+
+        viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
+        runCurrent()
     }
 
     @Test
     fun `pause stops the timer from incrementing`() = runTest {
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceTimeBy(2_000)
-        advanceUntilIdle()
+        runCurrent()
 
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceUntilIdle()
@@ -129,7 +132,7 @@ class BookSessionViewModelTest {
     fun `stop pauses the timer and shows the end session dialog`() = runTest {
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceTimeBy(2_000)
-        advanceUntilIdle()
+        runCurrent()
 
         viewModel.processIntent(BookSessionIntent.OnStopClicked)
         advanceUntilIdle()
@@ -149,7 +152,7 @@ class BookSessionViewModelTest {
     fun `dismissing the end session dialog keeps the timer paused`() = runTest {
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceTimeBy(1_000)
-        advanceUntilIdle()
+        runCurrent()
 
         viewModel.processIntent(BookSessionIntent.OnStopClicked)
         advanceUntilIdle()
@@ -181,7 +184,7 @@ class BookSessionViewModelTest {
     fun `back with the timer running pauses it and shows the end session dialog`() = runTest {
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceTimeBy(2_000)
-        advanceUntilIdle()
+        runCurrent()
 
         viewModel.processIntent(BookSessionIntent.OnBackClicked)
         advanceUntilIdle()
@@ -195,7 +198,7 @@ class BookSessionViewModelTest {
     fun `back after the timer was started and paused also shows the end session dialog`() = runTest {
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceTimeBy(2_000)
-        advanceUntilIdle()
+        runCurrent()
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceUntilIdle()
 
@@ -237,7 +240,7 @@ class BookSessionViewModelTest {
     fun `confirming the dialog after back discards the session and emits NavigateBack`() = runTest {
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceTimeBy(4_000)
-        advanceUntilIdle()
+        runCurrent()
 
         viewModel.processIntent(BookSessionIntent.OnBackClicked)
         advanceUntilIdle()
@@ -258,14 +261,14 @@ class BookSessionViewModelTest {
     fun `dismissing the dialog after back resumes the timer from where it was left`() = runTest {
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceTimeBy(2_000)
-        advanceUntilIdle()
+        runCurrent()
 
         viewModel.processIntent(BookSessionIntent.OnBackClicked)
         advanceUntilIdle()
         val elapsedBeforeResume = viewModel.uiState.value.elapsedSeconds
 
         viewModel.processIntent(BookSessionIntent.OnDismissEndSessionDialogClicked)
-        advanceUntilIdle()
+        runCurrent()
 
         val state = viewModel.uiState.value
         assertFalse(state.showEndSessionDialog)
@@ -273,8 +276,11 @@ class BookSessionViewModelTest {
         assertEquals(elapsedBeforeResume, state.elapsedSeconds)
 
         advanceTimeBy(2_000)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(elapsedBeforeResume + 2L, viewModel.uiState.value.elapsedSeconds)
+
+        viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
+        runCurrent()
     }
 
     @Test
@@ -312,7 +318,7 @@ class BookSessionViewModelTest {
     fun `confirming end session creates a session with bookId and elapsed time`() = runTest {
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceTimeBy(4_000)
-        advanceUntilIdle()
+        runCurrent()
 
         viewModel.processIntent(BookSessionIntent.OnStopClicked)
         advanceUntilIdle()
