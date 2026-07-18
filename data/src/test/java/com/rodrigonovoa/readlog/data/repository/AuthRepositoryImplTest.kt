@@ -82,9 +82,36 @@ class AuthRepositoryImplTest {
 
     @Test
     fun `continueOffline returns success`() = runTest {
+        val task = mockk<Task<AuthResult>>()
+        every { task.addOnSuccessListener(any()) } answers {
+            val listener = firstArg<OnSuccessListener<AuthResult>>()
+            listener.onSuccess(mockk())
+            task
+        }
+        every { task.addOnFailureListener(any()) } returns task
+        every { firebaseAuth.signInAnonymously() } returns task
+
         val result = repository.continueOffline()
 
         assertTrue(result.isSuccess)
+    }
+
+    @Test
+    fun `continueOffline returns failure when task fails`() = runTest {
+        val exception = RuntimeException("Anonymous sign-in failed")
+        val task = mockk<Task<AuthResult>>()
+        every { task.addOnFailureListener(any()) } answers {
+            val listener = firstArg<OnFailureListener>()
+            listener.onFailure(exception)
+            task
+        }
+        every { task.addOnSuccessListener(any()) } returns task
+        every { firebaseAuth.signInAnonymously() } returns task
+
+        val result = repository.continueOffline()
+
+        assertTrue(result.isFailure)
+        assertEquals("Anonymous sign-in failed", result.exceptionOrNull()?.message)
     }
 
     @Test

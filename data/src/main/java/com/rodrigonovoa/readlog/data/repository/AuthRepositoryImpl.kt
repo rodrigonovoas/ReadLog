@@ -31,7 +31,15 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun continueOffline(): Result<Unit> {
-        return Result.success(Unit)
+        return try {
+            suspendCoroutine { continuation ->
+                firebaseAuth.signInAnonymously()
+                    .addOnSuccessListener { continuation.resume(Result.success(Unit)) }
+                    .addOnFailureListener { continuation.resume(Result.failure(it)) }
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override fun getCurrentUser(): User? {
