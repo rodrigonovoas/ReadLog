@@ -65,8 +65,8 @@ fun BookDetailScreen(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
-                .padding(top = 14.dp, bottom = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(top = 20.dp, bottom = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             BookHeaderRow(uiState = uiState)
             StatsRow(uiState = uiState)
@@ -133,7 +133,9 @@ private fun BookHeaderRow(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+
         Spacer(modifier = Modifier.width(16.dp))
+
         Column {
             Text(
                 text = uiState.bookTitle,

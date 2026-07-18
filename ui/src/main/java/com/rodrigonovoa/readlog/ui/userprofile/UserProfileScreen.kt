@@ -105,7 +105,7 @@ private fun TopBar(
             onClick = onBackClick,
             modifier = Modifier
                 .size(36.dp)
-                .clip(CircleShape)
+                .clip(RoundedCornerShape(18.dp))
                 .background(color_chip),
         ) {
             Icon(
@@ -292,7 +292,7 @@ private fun WeeklyStatCard(
     ) {
         Text(
             text = label,
-            fontSize = 11.sp,
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
             color = labelColor,
         )

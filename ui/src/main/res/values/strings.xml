@@ -22,6 +22,7 @@
     <string name="book_collection_edit_dialog_message">You\'ll be able to modify the title, author and progress of «%1$s».</string>
     <string name="book_collection_delete_dialog_title">Delete this book?</string>
     <string name="book_collection_delete_dialog_message">«%1$s» and all its session history will be deleted. This action cannot be undone.</string>
+    <string name="book_collection_added_on">Added on %1$s</string>
     <string name="add_book_title">New Book</string>
     <string name="add_book_edit_title">Edit Book</string>
     <string name="add_book_save_changes">Save changes</string>

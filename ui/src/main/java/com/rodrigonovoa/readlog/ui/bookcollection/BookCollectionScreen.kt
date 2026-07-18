@@ -55,6 +55,13 @@ import com.rodrigonovoa.readlog.ui.theme.color_secondary
 import com.rodrigonovoa.readlog.ui.theme.color_surface
 import com.rodrigonovoa.readlog.ui.theme.color_surface_variant
 import com.rodrigonovoa.readlog.ui.theme.color_track
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+private val addedOnDateFormat = SimpleDateFormat("d MMM yyyy", Locale.getDefault())
+
+private fun formatMillis(format: SimpleDateFormat, millis: Long): String = format.format(Date(millis))
 
 @Composable
 fun BookCollectionScreen(
@@ -213,28 +220,32 @@ private fun BookCard(
             .clip(RoundedCornerShape(20.dp))
             .background(color_surface_variant)
             .clickable(onClick = onCardClick)
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(14.dp)
     ) {
-        // Book spine
-        Box(
-            modifier = Modifier
-                .width(56.dp)
-                .height(80.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(color)
-                .padding(horizontal = 5.dp, vertical = 6.dp),
+        Column(
+            modifier = Modifier.padding(top = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = book.title,
-                fontFamily = FontFamily.Serif,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 9.sp,
-                lineHeight = 12.sp,
-                color = color_surface,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-            )
+            // Book spine
+            Box(
+                modifier = Modifier
+                    .width(56.dp)
+                    .height(80.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(color)
+                    .padding(horizontal = 5.dp, vertical = 6.dp),
+            ) {
+                Text(
+                    text = book.title,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 9.sp,
+                    lineHeight = 12.sp,
+                    color = color_surface,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -244,21 +255,33 @@ private fun BookCard(
             modifier = Modifier.weight(1f),
         ) {
             Text(
+                text = stringResource(
+                    R.string.book_collection_added_on,
+                    formatMillis(addedOnDateFormat, book.creationDate),
+                ),
+                fontSize = 9.sp,
+                color = color_on_surface_variant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Text(
                 text = book.title,
                 fontFamily = FontFamily.Serif,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 17.sp,
                 color = color_on_surface,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                overflow = TextOverflow.Ellipsis
             )
+
             Text(
                 text = book.author,
                 fontSize = 13.sp,
                 color = color_on_surface_variant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
+                modifier = Modifier.padding(top = 2.dp)
             )
 
             // Progress bar
