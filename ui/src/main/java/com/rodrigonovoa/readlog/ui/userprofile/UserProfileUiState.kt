@@ -4,7 +4,6 @@ data class UserProfileUiState(
     val userName: String = "",
     val username: String = "",
     val followersCount: Int = 0,
-    val followingCount: Int = 0,
     val likesCount: Int = 0,
     val weeklySessionsCount: Int = 0,
     val weeklyTimeLabel: String = "",
@@ -16,10 +15,9 @@ data class UserProfileBook(
 )
 
 val sampleUserProfileUiState = UserProfileUiState(
-    userName = "Elena Marín",
+    userName = "Elena",
     username = "@elenalee",
     followersCount = 1204,
-    followingCount = 318,
     likesCount = 2940,
     weeklySessionsCount = 5,
     weeklyTimeLabel = "3h 40m",

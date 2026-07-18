@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rodrigonovoa.readlog.domain.usecase.DeleteBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBooksUseCase
-import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetTimeOfDayUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.TimeOfDay
 import com.rodrigonovoa.readlog.domain.usecase.InsertMockBooksUseCase
 import com.rodrigonovoa.readlog.ui.R
@@ -20,7 +20,7 @@ import javax.inject.Inject
 class BookCollectionViewModel @Inject constructor(
     private val getBooksUseCase: GetBooksUseCase,
     private val insertMockBooksUseCase: InsertMockBooksUseCase,
-    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val getUserDisplayNameUseCase: GetUserDisplayNameUseCase,
     private val getTimeOfDayUseCase: GetTimeOfDayUseCase,
     private val deleteBookUseCase: DeleteBookUseCase,
 ) : ViewModel() {
@@ -39,9 +39,7 @@ class BookCollectionViewModel @Inject constructor(
     }
 
     private fun buildGreeting() {
-        val user = getCurrentUserUseCase()
-        val rawName = user?.displayName?.ifBlank { null }
-        val name = rawName?.split(" ")?.firstOrNull() ?: "reader"
+        val name = getUserDisplayNameUseCase()
         val greetingResId = when (getTimeOfDayUseCase()) {
             TimeOfDay.MORNING -> R.string.book_collection_greeting_morning
             TimeOfDay.AFTERNOON -> R.string.book_collection_greeting_afternoon

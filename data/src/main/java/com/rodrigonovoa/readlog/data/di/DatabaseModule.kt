@@ -6,6 +6,7 @@ import com.rodrigonovoa.readlog.data.db.ReadLogDatabase
 import com.rodrigonovoa.readlog.data.db.dao.AnnotationDao
 import com.rodrigonovoa.readlog.data.db.dao.BookDao
 import com.rodrigonovoa.readlog.data.db.dao.SessionDao
+import com.rodrigonovoa.readlog.data.db.dao.UserProfileInfoDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,7 +28,12 @@ object DatabaseModule {
             ReadLogDatabase::class.java,
             "readlog_database"
         )
-            .addMigrations(ReadLogDatabase.MIGRATION_1_2)
+            .addMigrations(
+                ReadLogDatabase.MIGRATION_1_2,
+                ReadLogDatabase.MIGRATION_2_3,
+                ReadLogDatabase.MIGRATION_3_4,
+                ReadLogDatabase.MIGRATION_4_5,
+            )
             .build()
     }
 
@@ -39,4 +45,8 @@ object DatabaseModule {
 
     @Provides
     fun provideAnnotationDao(database: ReadLogDatabase): AnnotationDao = database.annotationDao()
+
+    @Provides
+    fun provideUserProfileInfoDao(database: ReadLogDatabase): UserProfileInfoDao =
+        database.userProfileInfoDao()
 }

@@ -32,7 +32,7 @@ import com.rodrigonovoa.readlog.ui.login.LoginScreen
 import com.rodrigonovoa.readlog.ui.login.LoginViewModel
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.userprofile.UserProfileScreen
-import com.rodrigonovoa.readlog.ui.userprofile.sampleUserProfileUiState
+import com.rodrigonovoa.readlog.ui.userprofile.UserProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -104,9 +104,12 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("userProfile") {
+                        val viewModel: UserProfileViewModel = hiltViewModel()
+                        val uiState by viewModel.uiState.collectAsState()
+
                         UserProfileScreen(
                             modifier = Modifier.fillMaxSize(),
-                            uiState = sampleUserProfileUiState,
+                            uiState = uiState,
                             onBackClick = { navController.popBackStack() },
                         )
                     }

@@ -29,6 +29,9 @@ interface SessionDao {
     @Query("SELECT * FROM sessions ORDER BY creationDate DESC")
     suspend fun getAllList(): List<SessionEntity>
 
+    @Query("SELECT * FROM sessions WHERE creationDate >= :startOfWeek ORDER BY creationDate DESC")
+    suspend fun getSessionsSince(startOfWeek: Long): List<SessionEntity>
+
     @Query("SELECT * FROM sessions WHERE sessionId = :id")
     suspend fun getById(id: Int): SessionEntity?
 

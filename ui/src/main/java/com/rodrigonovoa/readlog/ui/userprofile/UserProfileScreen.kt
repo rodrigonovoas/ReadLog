@@ -5,8 +5,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,6 +16,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -206,17 +210,6 @@ private fun StatsCard(
                 .background(color_track),
         )
         StatItem(
-            value = uiState.followingCount,
-            label = stringResource(R.string.user_profile_following_label),
-            modifier = Modifier.weight(1f),
-        )
-        Box(
-            modifier = Modifier
-                .width(1.dp)
-                .height(32.dp)
-                .background(color_track),
-        )
-        StatItem(
             value = uiState.likesCount,
             label = stringResource(R.string.user_profile_likes_label),
             modifier = Modifier.weight(1f),
@@ -257,7 +250,9 @@ private fun WeeklyStatsRow(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Max),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         WeeklyStatCard(
@@ -265,14 +260,18 @@ private fun WeeklyStatsRow(
             value = uiState.weeklySessionsCount.toString(),
             containerColor = color_primary,
             labelColor = color_on_primary_container,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
         )
         WeeklyStatCard(
             label = stringResource(R.string.user_profile_time_this_week_label),
             value = uiState.weeklyTimeLabel,
             containerColor = color_on_surface,
             labelColor = color_outline,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
         )
     }
 }
@@ -336,19 +335,17 @@ private fun CollectionSection(
             )
         }
         Spacer(modifier = Modifier.height(14.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            uiState.collectionBooks.forEachIndexed { index, book ->
+            itemsIndexed(uiState.collectionBooks) { index, book ->
                 MiniBookSpine(
                     title = book.title,
                     color = miniBookSpineColor(index),
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxSize(),
+                        .width(90.dp)
+                        .height(150.dp),
                 )
             }
         }

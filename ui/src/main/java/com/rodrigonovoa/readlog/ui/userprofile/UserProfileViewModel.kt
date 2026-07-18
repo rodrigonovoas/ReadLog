@@ -1,0 +1,67 @@
+package com.rodrigonovoa.readlog.ui.userprofile
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
+import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetUserProfileInfoUseCase
+import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileInfoUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class UserProfileViewModel @Inject constructor(
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val getUserDisplayNameUseCase: GetUserDisplayNameUseCase,
+    private val getUserProfileInfoUseCase: GetUserProfileInfoUseCase,
+    private val refreshUserProfileInfoUseCase: RefreshUserProfileInfoUseCase,
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(UserProfileUiState())
+    val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
+
+    init {
+        val currentUser = getCurrentUserUseCase()
+        val userId = currentUser?.uid.orEmpty()
+        _uiState.update {
+            it.copy(
+                userName = getUserDisplayNameUseCase(),
+                username = "",
+            )
+        }
+
+        viewModelScope.launch {
+            applyProfileInfo(getUserProfileInfoUseCase(userId))
+            refreshUserProfileInfoUseCase(userId, currentUser?.displayName).getOrNull()?.let { applyProfileInfo(it) }
+        }
+    }
+
+    private fun applyProfileInfo(info: UserProfileInfo) {
+        _uiState.update {
+            it.copy(
+                followersCount = info.followersCount,
+                likesCount = info.likesCount,
+                weeklySessionsCount = info.sessionsThisWeek,
+                weeklyTimeLabel = formatDuration(info.weekTimeSeconds),
+                collectionBooks = info.bookCollection.map { title -> UserProfileBook(title = title) },
+            )
+        }
+    }
+
+    private fun formatDuration(totalSeconds: Long): String {
+        val minutes = totalSeconds / 60
+        return if (minutes < 60) {
+            "$minutes min"
+        } else {
+            val hours = minutes / 60
+            val remainingMinutes = minutes % 60
+            "%dh %02dmin".format(hours, remainingMinutes)
+        }
+    }
+}
