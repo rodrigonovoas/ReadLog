@@ -9,4 +9,5 @@ interface UserProfileRepository {
         startOfWeekMillis: Long,
         displayName: String?,
     ): Result<UserProfileInfo>
+    suspend fun getRemoteUserProfileInfo(userId: String): Result<UserProfileInfo>
 }

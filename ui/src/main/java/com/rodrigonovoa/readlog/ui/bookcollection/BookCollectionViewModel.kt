@@ -7,7 +7,6 @@ import com.rodrigonovoa.readlog.domain.usecase.GetBooksUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetTimeOfDayUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.TimeOfDay
-import com.rodrigonovoa.readlog.domain.usecase.InsertMockBooksUseCase
 import com.rodrigonovoa.readlog.ui.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +18,6 @@ import javax.inject.Inject
 @HiltViewModel
 class BookCollectionViewModel @Inject constructor(
     private val getBooksUseCase: GetBooksUseCase,
-    private val insertMockBooksUseCase: InsertMockBooksUseCase,
     private val getUserDisplayNameUseCase: GetUserDisplayNameUseCase,
     private val getTimeOfDayUseCase: GetTimeOfDayUseCase,
     private val deleteBookUseCase: DeleteBookUseCase,
@@ -30,7 +28,6 @@ class BookCollectionViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            insertMockBooksUseCase()
             getBooksUseCase().collect { bookList ->
                 _uiState.value = _uiState.value.copy(books = bookList)
             }

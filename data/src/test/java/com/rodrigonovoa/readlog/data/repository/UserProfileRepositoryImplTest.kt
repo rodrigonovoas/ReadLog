@@ -156,4 +156,55 @@ class UserProfileRepositoryImplTest {
         assertEquals(true, result.isFailure)
         assertEquals("db error", result.exceptionOrNull()?.message)
     }
+
+    @Test
+    fun `getRemoteUserProfileInfo caches and returns the downloaded profile`() = runTest {
+        val remoteInfo = UserProfileInfo(
+            userId = "uid",
+            followersCount = 12,
+            likesCount = 34,
+            displayName = "Elena Marín",
+            username = "elena_marin",
+        )
+        coEvery { userProfileInfoFirestoreDataSource.download("uid") } returns Result.success(remoteInfo)
+
+        val result = repository.getRemoteUserProfileInfo("uid")
+
+        assertEquals(true, result.isSuccess)
+        assertEquals(remoteInfo, result.getOrThrow())
+        coVerify { userProfileInfoDao.upsert(any()) }
+    }
+
+    @Test
+    fun `getRemoteUserProfileInfo returns default info when no remote profile exists`() = runTest {
+        coEvery { userProfileInfoFirestoreDataSource.download("uid") } returns Result.success(null)
+
+        val result = repository.getRemoteUserProfileInfo("uid")
+
+        assertEquals(UserProfileInfo(userId = "uid"), result.getOrThrow())
+        coVerify { userProfileInfoDao.upsert(any()) }
+    }
+
+    @Test
+    fun `getRemoteUserProfileInfo returns failure when download fails`() = runTest {
+        val exception = RuntimeException("network error")
+        coEvery { userProfileInfoFirestoreDataSource.download("uid") } returns Result.failure(exception)
+
+        val result = repository.getRemoteUserProfileInfo("uid")
+
+        assertEquals(true, result.isFailure)
+        assertEquals(exception, result.exceptionOrNull())
+    }
+
+    @Test
+    fun `getRemoteUserProfileInfo does not touch local book or session data`() = runTest {
+        coEvery { userProfileInfoFirestoreDataSource.download("uid") } returns Result.success(
+            UserProfileInfo(userId = "uid")
+        )
+
+        repository.getRemoteUserProfileInfo("uid")
+
+        coVerify(exactly = 0) { bookRepository.getAllBooksList() }
+        coVerify(exactly = 0) { sessionRepository.getAllSessionsSince(any()) }
+    }
 }

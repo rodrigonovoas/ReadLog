@@ -1,6 +1,7 @@
 package com.rodrigonovoa.readlog.ui.usersearch
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,7 @@ fun UserSearchScreen(
     modifier: Modifier = Modifier,
     onQueryChange: (String) -> Unit = {},
     onBackClick: () -> Unit = {},
+    onUserClick: (String) -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -69,7 +71,7 @@ fun UserSearchScreen(
             uiState.isLoading -> LoadingState()
             uiState.hasError -> MessageState(stringResource(R.string.user_search_error_state))
             uiState.query.isNotBlank() && uiState.results.isEmpty() -> MessageState(stringResource(R.string.user_search_empty_state))
-            else -> ResultsList(results = uiState.results)
+            else -> ResultsList(results = uiState.results, onUserClick = onUserClick)
         }
     }
 }
@@ -162,7 +164,11 @@ private fun MessageState(message: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ResultsList(results: List<UserSearchResultUi>, modifier: Modifier = Modifier) {
+private fun ResultsList(
+    results: List<UserSearchResultUi>,
+    onUserClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     LazyColumn(
         modifier = modifier
             .fillMaxWidth()
@@ -170,17 +176,22 @@ private fun ResultsList(results: List<UserSearchResultUi>, modifier: Modifier = 
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         items(results, key = { it.userId }) { result ->
-            UserSearchResultRow(result = result)
+            UserSearchResultRow(result = result, onClick = { onUserClick(result.userId) })
         }
     }
 }
 
 @Composable
-private fun UserSearchResultRow(result: UserSearchResultUi, modifier: Modifier = Modifier) {
+private fun UserSearchResultRow(
+    result: UserSearchResultUi,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
             .padding(vertical = 10.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),

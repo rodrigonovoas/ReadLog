@@ -1,9 +1,11 @@
 package com.rodrigonovoa.readlog.ui.userprofile
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
 import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetRemoteUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileInfoUseCase
@@ -17,16 +19,27 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UserProfileViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getUserDisplayNameUseCase: GetUserDisplayNameUseCase,
     private val getUserProfileInfoUseCase: GetUserProfileInfoUseCase,
     private val refreshUserProfileInfoUseCase: RefreshUserProfileInfoUseCase,
+    private val getRemoteUserProfileInfoUseCase: GetRemoteUserProfileInfoUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UserProfileUiState())
     val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
 
     init {
+        val targetUserId = savedStateHandle.get<String>("userId")?.takeIf { it.isNotBlank() }
+        if (targetUserId != null) {
+            loadOtherUserProfile(targetUserId)
+        } else {
+            loadOwnProfile()
+        }
+    }
+
+    private fun loadOwnProfile() {
         val currentUser = getCurrentUserUseCase()
         val userId = currentUser?.uid.orEmpty()
         _uiState.update {
@@ -39,6 +52,26 @@ class UserProfileViewModel @Inject constructor(
         viewModelScope.launch {
             applyProfileInfo(getUserProfileInfoUseCase(userId))
             refreshUserProfileInfoUseCase(userId, currentUser?.displayName).getOrNull()?.let { applyProfileInfo(it) }
+        }
+    }
+
+    private fun loadOtherUserProfile(userId: String) {
+        viewModelScope.launch {
+            applyProfileInfo(getUserProfileInfoUseCase(userId))
+            getRemoteUserProfileInfoUseCase(userId).getOrNull()?.let {
+                applyProfileInfo(it)
+                applyIdentity(it)
+            }
+        }
+    }
+
+    private fun applyIdentity(info: UserProfileInfo) {
+        _uiState.update {
+            it.copy(
+                userName = info.displayName?.split(" ")?.firstOrNull()?.takeIf { name -> name.isNotBlank() }
+                    ?: it.userName,
+                username = info.username?.let { name -> "@$name" } ?: it.username,
+            )
         }
     }
 

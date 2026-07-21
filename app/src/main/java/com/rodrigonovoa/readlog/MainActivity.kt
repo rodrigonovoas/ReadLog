@@ -106,7 +106,15 @@ class MainActivity : ComponentActivity() {
                             onSearchClick = { navController.navigate("userSearch") },
                         )
                     }
-                    composable("userProfile") {
+                    composable(
+                        "userProfile?userId={userId}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("userId") {
+                                type = androidx.navigation.NavType.StringType
+                                defaultValue = ""
+                            }
+                        )
+                    ) {
                         val viewModel: UserProfileViewModel = hiltViewModel()
                         val uiState by viewModel.uiState.collectAsState()
 
@@ -125,6 +133,7 @@ class MainActivity : ComponentActivity() {
                             uiState = uiState,
                             onQueryChange = viewModel::onQueryChange,
                             onBackClick = { navController.popBackStack() },
+                            onUserClick = { userId -> navController.navigate("userProfile?userId=$userId") },
                         )
                     }
                     composable(

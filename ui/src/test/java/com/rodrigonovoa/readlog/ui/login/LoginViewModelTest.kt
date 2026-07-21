@@ -2,8 +2,10 @@ package com.rodrigonovoa.readlog.ui.login
 
 import com.rodrigonovoa.readlog.domain.auth.AuthLauncher
 import com.rodrigonovoa.readlog.domain.model.User
+import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
 import com.rodrigonovoa.readlog.domain.usecase.ContinueOfflineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
+import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SignInWithGoogleUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SyncUserDataUseCase
 import io.mockk.coEvery
@@ -35,6 +37,7 @@ class LoginViewModelTest {
     private lateinit var continueOfflineUseCase: ContinueOfflineUseCase
     private lateinit var getCurrentUserUseCase: GetCurrentUserUseCase
     private lateinit var syncUserDataUseCase: SyncUserDataUseCase
+    private lateinit var refreshUserProfileInfoUseCase: RefreshUserProfileInfoUseCase
     private lateinit var authLauncher: AuthLauncher
     private lateinit var viewModel: LoginViewModel
 
@@ -45,12 +48,14 @@ class LoginViewModelTest {
         continueOfflineUseCase = mockk()
         getCurrentUserUseCase = mockk()
         syncUserDataUseCase = mockk()
+        refreshUserProfileInfoUseCase = mockk()
         authLauncher = mockk()
         viewModel = LoginViewModel(
             signInWithGoogleUseCase = signInUseCase,
             continueOfflineUseCase = continueOfflineUseCase,
             getCurrentUserUseCase = getCurrentUserUseCase,
             syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileInfoUseCase = refreshUserProfileInfoUseCase,
             authLauncher = authLauncher,
         )
     }
@@ -74,6 +79,7 @@ class LoginViewModelTest {
         coEvery { signInUseCase(any()) } returns Result.success(Unit)
         every { getCurrentUserUseCase() } returns User("uid123", "test@test.com", "Test User")
         coEvery { syncUserDataUseCase(any()) } returns Result.success(Unit)
+        coEvery { refreshUserProfileInfoUseCase(any(), any()) } returns Result.success(UserProfileInfo(userId = "uid123"))
 
         var effect: LoginEffect? = null
         val collectJob = launch { effect = viewModel.effect.first() }
@@ -86,6 +92,7 @@ class LoginViewModelTest {
         assertNull(viewModel.uiState.value.errorMessage)
         assertTrue(effect is LoginEffect.NavigateToCollection)
         coVerify { syncUserDataUseCase("uid123") }
+        coVerify { refreshUserProfileInfoUseCase("uid123", "Test User") }
     }
 
     @Test

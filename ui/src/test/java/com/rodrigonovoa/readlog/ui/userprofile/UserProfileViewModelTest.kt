@@ -1,14 +1,18 @@
 package com.rodrigonovoa.readlog.ui.userprofile
 
+import androidx.lifecycle.SavedStateHandle
 import com.rodrigonovoa.readlog.domain.model.User
 import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
 import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetRemoteUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileInfoUseCase
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,6 +35,7 @@ class UserProfileViewModelTest {
     private lateinit var getUserDisplayNameUseCase: GetUserDisplayNameUseCase
     private lateinit var getUserProfileInfoUseCase: GetUserProfileInfoUseCase
     private lateinit var refreshUserProfileInfoUseCase: RefreshUserProfileInfoUseCase
+    private lateinit var getRemoteUserProfileInfoUseCase: GetRemoteUserProfileInfoUseCase
 
     @Before
     fun setup() {
@@ -39,6 +44,7 @@ class UserProfileViewModelTest {
         getUserDisplayNameUseCase = mockk(relaxed = true)
         getUserProfileInfoUseCase = mockk()
         refreshUserProfileInfoUseCase = mockk()
+        getRemoteUserProfileInfoUseCase = mockk()
     }
 
     @After
@@ -46,12 +52,19 @@ class UserProfileViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(): UserProfileViewModel {
+    private fun createViewModel(userId: String? = null): UserProfileViewModel {
+        val savedStateHandle = if (userId != null) {
+            SavedStateHandle(mapOf("userId" to userId))
+        } else {
+            SavedStateHandle()
+        }
         return UserProfileViewModel(
+            savedStateHandle = savedStateHandle,
             getCurrentUserUseCase = getCurrentUserUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getUserProfileInfoUseCase = getUserProfileInfoUseCase,
             refreshUserProfileInfoUseCase = refreshUserProfileInfoUseCase,
+            getRemoteUserProfileInfoUseCase = getRemoteUserProfileInfoUseCase,
         )
     }
 
@@ -165,5 +178,55 @@ class UserProfileViewModelTest {
 
         assertEquals(7, viewModel.uiState.value.followersCount)
         assertEquals(9, viewModel.uiState.value.likesCount)
+    }
+
+    @Test
+    fun `loads other user's profile from cache then remote when userId is provided`() = runTest {
+        coEvery { getUserProfileInfoUseCase("other-uid") } returns UserProfileInfo(
+            userId = "other-uid",
+            followersCount = 3,
+            likesCount = 4,
+        )
+        coEvery { getRemoteUserProfileInfoUseCase("other-uid") } returns Result.success(
+            UserProfileInfo(
+                userId = "other-uid",
+                followersCount = 10,
+                likesCount = 20,
+                sessionsThisWeek = 2,
+                weekTimeSeconds = 120L,
+                bookCollection = listOf("Book A"),
+                displayName = "Elena Marín",
+                username = "elena_marin",
+            )
+        )
+
+        val viewModel = createViewModel(userId = "other-uid")
+        advanceUntilIdle()
+
+        assertEquals(10, viewModel.uiState.value.followersCount)
+        assertEquals(20, viewModel.uiState.value.likesCount)
+        assertEquals(listOf(UserProfileBook(title = "Book A")), viewModel.uiState.value.collectionBooks)
+        assertEquals("Elena", viewModel.uiState.value.userName)
+        assertEquals("@elena_marin", viewModel.uiState.value.username)
+        verify(exactly = 0) { getCurrentUserUseCase() }
+        coVerify(exactly = 0) { refreshUserProfileInfoUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `keeps cached identity when remote fetch fails for other user's profile`() = runTest {
+        coEvery { getUserProfileInfoUseCase("other-uid") } returns UserProfileInfo(
+            userId = "other-uid",
+            followersCount = 3,
+            likesCount = 4,
+        )
+        coEvery { getRemoteUserProfileInfoUseCase("other-uid") } returns Result.failure(RuntimeException("network error"))
+
+        val viewModel = createViewModel(userId = "other-uid")
+        advanceUntilIdle()
+
+        assertEquals(3, viewModel.uiState.value.followersCount)
+        assertEquals(4, viewModel.uiState.value.likesCount)
+        assertEquals("", viewModel.uiState.value.userName)
+        assertEquals("", viewModel.uiState.value.username)
     }
 }

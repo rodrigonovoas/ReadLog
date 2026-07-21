@@ -5,7 +5,6 @@ import com.rodrigonovoa.readlog.domain.usecase.DeleteBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBooksUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetTimeOfDayUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
-import com.rodrigonovoa.readlog.domain.usecase.InsertMockBooksUseCase
 import com.rodrigonovoa.readlog.domain.usecase.TimeOfDay
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -29,7 +28,6 @@ class BookCollectionViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getBooksUseCase: GetBooksUseCase
-    private lateinit var insertMockBooksUseCase: InsertMockBooksUseCase
     private lateinit var getUserDisplayNameUseCase: GetUserDisplayNameUseCase
     private lateinit var getTimeOfDayUseCase: GetTimeOfDayUseCase
     private lateinit var deleteBookUseCase: DeleteBookUseCase
@@ -39,7 +37,6 @@ class BookCollectionViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getBooksUseCase = mockk()
-        insertMockBooksUseCase = mockk(relaxed = true)
         getUserDisplayNameUseCase = mockk()
         getTimeOfDayUseCase = mockk()
         deleteBookUseCase = mockk(relaxed = true)
@@ -49,7 +46,6 @@ class BookCollectionViewModelTest {
         every { getTimeOfDayUseCase() } returns TimeOfDay.AFTERNOON
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
-            insertMockBooksUseCase = insertMockBooksUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
@@ -59,13 +55,6 @@ class BookCollectionViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
-    }
-
-    @Test
-    fun `init calls insert mock books use case`() = runTest {
-        advanceUntilIdle()
-
-        coVerify { insertMockBooksUseCase() }
     }
 
     @Test
@@ -96,7 +85,6 @@ class BookCollectionViewModelTest {
         // Re-create ViewModel so it subscribes to the new flow
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
-            insertMockBooksUseCase = insertMockBooksUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
@@ -122,7 +110,6 @@ class BookCollectionViewModelTest {
 
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
-            insertMockBooksUseCase = insertMockBooksUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
@@ -141,7 +128,6 @@ class BookCollectionViewModelTest {
 
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
-            insertMockBooksUseCase = insertMockBooksUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
@@ -166,7 +152,6 @@ class BookCollectionViewModelTest {
         every { getBooksUseCase() } returns booksFlow
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
-            insertMockBooksUseCase = insertMockBooksUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
@@ -196,7 +181,6 @@ class BookCollectionViewModelTest {
         every { getBooksUseCase() } returns booksFlow
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
-            insertMockBooksUseCase = insertMockBooksUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
@@ -226,7 +210,6 @@ class BookCollectionViewModelTest {
         every { getBooksUseCase() } returns booksFlow
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
-            insertMockBooksUseCase = insertMockBooksUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
@@ -254,7 +237,6 @@ class BookCollectionViewModelTest {
         every { getBooksUseCase() } returns booksFlow
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
-            insertMockBooksUseCase = insertMockBooksUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
@@ -283,7 +265,6 @@ class BookCollectionViewModelTest {
         every { getBooksUseCase() } returns booksFlow
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
-            insertMockBooksUseCase = insertMockBooksUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,

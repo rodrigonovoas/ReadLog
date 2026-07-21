@@ -59,4 +59,12 @@ class UserProfileRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun getRemoteUserProfileInfo(userId: String): Result<UserProfileInfo> {
+        return userProfileInfoFirestoreDataSource.download(userId).mapCatching { remoteInfo ->
+            val info = remoteInfo ?: UserProfileInfo(userId = userId)
+            userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(info))
+            info
+        }
+    }
 }

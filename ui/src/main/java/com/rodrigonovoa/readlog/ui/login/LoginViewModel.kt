@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.rodrigonovoa.readlog.domain.auth.AuthLauncher
 import com.rodrigonovoa.readlog.domain.usecase.ContinueOfflineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
+import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SignInWithGoogleUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SyncUserDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +24,7 @@ class LoginViewModel @Inject constructor(
     private val continueOfflineUseCase: ContinueOfflineUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val syncUserDataUseCase: SyncUserDataUseCase,
+    private val refreshUserProfileInfoUseCase: RefreshUserProfileInfoUseCase,
     private val authLauncher: AuthLauncher,
 ) : ViewModel() {
 
@@ -41,8 +43,10 @@ class LoginViewModel @Inject constructor(
                     if (tokenResult.isSuccess) {
                         val signInResult = signInWithGoogleUseCase(tokenResult.getOrThrow())
                         if (signInResult.isSuccess) {
-                            getCurrentUserUseCase()?.uid?.let { uid ->
+                            val currentUser = getCurrentUserUseCase()
+                            currentUser?.uid?.let { uid ->
                                 runCatching { syncUserDataUseCase(uid) }
+                                runCatching { refreshUserProfileInfoUseCase(uid, currentUser.displayName) }
                             }
                             _uiState.value = _uiState.value.copy(isLoading = false)
                             _effect.emit(LoginEffect.NavigateToCollection)
