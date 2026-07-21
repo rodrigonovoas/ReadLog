@@ -76,4 +76,10 @@
     <string name="user_profile_time_this_week_label">TIEMPO ESTA SEMANA</string>
     <string name="user_profile_collection_title">Su colección</string>
     <string name="user_profile_collection_count">%1$d libros</string>
+    <string name="book_collection_search_icon_content_description">Buscar usuarios</string>
+    <string name="user_search_title">Buscar usuarios</string>
+    <string name="user_search_back_content_description">Atrás</string>
+    <string name="user_search_placeholder">Buscar por nombre de usuario</string>
+    <string name="user_search_empty_state">No se encontraron usuarios</string>
+    <string name="user_search_error_state">Algo salió mal. Comprueba tu conexión e inténtalo de nuevo.</string>
 </resources>

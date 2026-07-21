@@ -9,4 +9,5 @@ data class UserProfileInfo(
     val bookCollection: List<String> = emptyList(),
     val lastModified: Long = 0L,
     val displayName: String? = null,
+    val username: String? = null,
 )

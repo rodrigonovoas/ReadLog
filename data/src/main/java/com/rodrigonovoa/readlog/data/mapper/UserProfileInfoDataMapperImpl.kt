@@ -15,6 +15,7 @@ class UserProfileInfoDataMapperImpl @Inject constructor() : UserProfileInfoDataM
             bookCollection = entity.bookCollection,
             lastModified = entity.lastModified,
             displayName = entity.displayName,
+            username = entity.username,
         )
     }
 
@@ -28,6 +29,7 @@ class UserProfileInfoDataMapperImpl @Inject constructor() : UserProfileInfoDataM
             bookCollection = domain.bookCollection,
             lastModified = domain.lastModified,
             displayName = domain.displayName,
+            username = domain.username,
         )
     }
 }

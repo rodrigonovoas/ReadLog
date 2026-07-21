@@ -19,6 +19,7 @@ class UserProfileInfoFirestoreMapperImplTest {
             bookCollection = listOf("Book A", "Book B"),
             lastModified = 2000L,
             displayName = "Elena Marín",
+            username = "Elena_Marin",
         )
 
         val map = mapper.toFirestoreMap(stats)
@@ -30,15 +31,19 @@ class UserProfileInfoFirestoreMapperImplTest {
         assertEquals(listOf("Book A", "Book B"), map["bookCollection"])
         assertEquals(2000L, map["lastModified"])
         assertEquals("Elena Marín", map["displayName"])
+        assertEquals("Elena_Marin", map["username"])
+        assertEquals("elena_marin", map["usernameLower"])
     }
 
     @Test
-    fun `toFirestoreMap defaults displayName to empty string when null`() {
+    fun `toFirestoreMap defaults displayName and username to empty string when null`() {
         val stats = UserProfileInfo(userId = "uid-1")
 
         val map = mapper.toFirestoreMap(stats)
 
         assertEquals("", map["displayName"])
+        assertEquals("", map["username"])
+        assertEquals("", map["usernameLower"])
     }
 
     @Test
@@ -60,17 +65,19 @@ class UserProfileInfoFirestoreMapperImplTest {
                 bookCollection = emptyList(),
                 lastModified = 0L,
                 displayName = null,
+                username = null,
             ),
             stats
         )
     }
 
     @Test
-    fun `fromFirestoreMap reconstructs displayName when present`() {
-        val map = mapOf("displayName" to "Elena Marín")
+    fun `fromFirestoreMap reconstructs displayName and username when present`() {
+        val map = mapOf("displayName" to "Elena Marín", "username" to "elena_marin")
 
         val stats = mapper.fromFirestoreMap(map, "uid-2")
 
         assertEquals("Elena Marín", stats.displayName)
+        assertEquals("elena_marin", stats.username)
     }
 }

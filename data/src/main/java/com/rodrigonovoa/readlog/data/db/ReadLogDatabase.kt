@@ -14,7 +14,7 @@ import com.rodrigonovoa.readlog.data.db.entity.UserProfileInfoEntity
 
 @Database(
     entities = [BookEntity::class, SessionEntity::class, AnnotationEntity::class, UserProfileInfoEntity::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -63,6 +63,10 @@ abstract class ReadLogDatabase : RoomDatabase() {
 
         val MIGRATION_4_5 = androidx.room.migration.Migration(4, 5) { database ->
             database.execSQL("ALTER TABLE user_profile_stats RENAME TO user_profile_info")
+        }
+
+        val MIGRATION_5_6 = androidx.room.migration.Migration(5, 6) { database ->
+            database.execSQL("ALTER TABLE user_profile_info ADD COLUMN username TEXT")
         }
     }
 }

@@ -76,4 +76,10 @@
     <string name="user_profile_time_this_week_label">TIME THIS WEEK</string>
     <string name="user_profile_collection_title">Your collection</string>
     <string name="user_profile_collection_count">%1$d books</string>
+    <string name="book_collection_search_icon_content_description">Search users</string>
+    <string name="user_search_title">Search users</string>
+    <string name="user_search_back_content_description">Back</string>
+    <string name="user_search_placeholder">Search by username</string>
+    <string name="user_search_empty_state">No users found</string>
+    <string name="user_search_error_state">Something went wrong. Check your connection and try again.</string>
 </resources>

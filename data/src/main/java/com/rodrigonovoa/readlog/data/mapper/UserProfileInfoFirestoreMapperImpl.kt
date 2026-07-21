@@ -14,6 +14,8 @@ class UserProfileInfoFirestoreMapperImpl @Inject constructor() : UserProfileInfo
             "bookCollection" to info.bookCollection,
             "lastModified" to info.lastModified,
             "displayName" to info.displayName.orEmpty(),
+            "username" to info.username.orEmpty(),
+            "usernameLower" to info.username.orEmpty().lowercase(),
         )
     }
 
@@ -28,6 +30,7 @@ class UserProfileInfoFirestoreMapperImpl @Inject constructor() : UserProfileInfo
             bookCollection = (map["bookCollection"] as? List<String>) ?: emptyList(),
             lastModified = (map["lastModified"] as? Number)?.toLong() ?: 0L,
             displayName = (map["displayName"] as? String)?.ifBlank { null },
+            username = (map["username"] as? String)?.ifBlank { null },
         )
     }
 }

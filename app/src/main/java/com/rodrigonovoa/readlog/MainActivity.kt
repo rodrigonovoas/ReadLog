@@ -33,6 +33,8 @@ import com.rodrigonovoa.readlog.ui.login.LoginViewModel
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.userprofile.UserProfileScreen
 import com.rodrigonovoa.readlog.ui.userprofile.UserProfileViewModel
+import com.rodrigonovoa.readlog.ui.usersearch.UserSearchScreen
+import com.rodrigonovoa.readlog.ui.usersearch.UserSearchViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -101,6 +103,7 @@ class MainActivity : ComponentActivity() {
                             },
                             onConfirmDelete = viewModel::confirmDelete,
                             onProfileClick = { navController.navigate("userProfile") },
+                            onSearchClick = { navController.navigate("userSearch") },
                         )
                     }
                     composable("userProfile") {
@@ -110,6 +113,17 @@ class MainActivity : ComponentActivity() {
                         UserProfileScreen(
                             modifier = Modifier.fillMaxSize(),
                             uiState = uiState,
+                            onBackClick = { navController.popBackStack() },
+                        )
+                    }
+                    composable("userSearch") {
+                        val viewModel: UserSearchViewModel = hiltViewModel()
+                        val uiState by viewModel.uiState.collectAsState()
+
+                        UserSearchScreen(
+                            modifier = Modifier.fillMaxSize(),
+                            uiState = uiState,
+                            onQueryChange = viewModel::onQueryChange,
                             onBackClick = { navController.popBackStack() },
                         )
                     }

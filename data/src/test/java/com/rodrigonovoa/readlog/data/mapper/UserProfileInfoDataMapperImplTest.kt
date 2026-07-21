@@ -20,6 +20,7 @@ class UserProfileInfoDataMapperImplTest {
             bookCollection = listOf("Book A", "Book B"),
             lastModified = 11111111L,
             displayName = "Elena Marín",
+            username = "elena_marin",
         )
 
         val result = mapper.toDomain(entity)
@@ -34,6 +35,7 @@ class UserProfileInfoDataMapperImplTest {
                 bookCollection = listOf("Book A", "Book B"),
                 lastModified = 11111111L,
                 displayName = "Elena Marín",
+                username = "elena_marin",
             ),
             result
         )
@@ -50,6 +52,7 @@ class UserProfileInfoDataMapperImplTest {
             bookCollection = listOf("Book C"),
             lastModified = 22222222L,
             displayName = "Diego Pérez",
+            username = "diego_perez",
         )
 
         val result = mapper.toEntity(domain)
@@ -64,6 +67,7 @@ class UserProfileInfoDataMapperImplTest {
                 bookCollection = listOf("Book C"),
                 lastModified = 22222222L,
                 displayName = "Diego Pérez",
+                username = "diego_perez",
             ),
             result
         )
@@ -80,6 +84,7 @@ class UserProfileInfoDataMapperImplTest {
             bookCollection = listOf("Book D", "Book E", "Book F"),
             lastModified = 33333333L,
             displayName = "Elena Marín",
+            username = "elena_marin",
         )
 
         val entity = mapper.toEntity(original)

@@ -9,6 +9,7 @@ import com.rodrigonovoa.readlog.domain.model.Session
 import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
 import com.rodrigonovoa.readlog.domain.repository.BookRepository
 import com.rodrigonovoa.readlog.domain.repository.SessionRepository
+import com.rodrigonovoa.readlog.domain.usecase.GenerateUsernameUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -37,6 +38,7 @@ class UserProfileRepositoryImplTest {
             sessionRepository = sessionRepository,
             userProfileInfoDataMapper = UserProfileInfoDataMapperImpl(),
             userProfileInfoFirestoreDataSource = userProfileInfoFirestoreDataSource,
+            generateUsernameUseCase = GenerateUsernameUseCase(),
         )
     }
 
@@ -97,8 +99,23 @@ class UserProfileRepositoryImplTest {
         assertEquals(300L, info.weekTimeSeconds)
         assertEquals(listOf("Book A", "Book B"), info.bookCollection)
         assertEquals("Elena Marín", info.displayName)
+        assertEquals("elena_marin", info.username)
         coVerify { userProfileInfoDao.upsert(any()) }
         coVerify { userProfileInfoFirestoreDataSource.upload("uid", any()) }
+    }
+
+    @Test
+    fun `refreshUserProfileInfo keeps the existing remote username instead of regenerating it`() = runTest {
+        coEvery { sessionRepository.getAllSessionsSince(500L) } returns emptyList()
+        coEvery { bookRepository.getAllBooksList() } returns emptyList()
+        coEvery { userProfileInfoFirestoreDataSource.download("uid") } returns Result.success(
+            UserProfileInfo(userId = "uid", username = "already_set")
+        )
+        coEvery { userProfileInfoFirestoreDataSource.upload("uid", any()) } returns Result.success(Unit)
+
+        val result = repository.refreshUserProfileInfo("uid", 500L, "Different Name")
+
+        assertEquals("already_set", result.getOrThrow().username)
     }
 
     @Test

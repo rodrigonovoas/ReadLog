@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -76,6 +77,7 @@ fun BookCollectionScreen(
     onConfirmEdit: (Int) -> Unit = {},
     onConfirmDelete: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
 ) {
     val books = uiState.books
     Column(
@@ -92,6 +94,7 @@ fun BookCollectionScreen(
                 ""
             },
             onProfileClick = onProfileClick,
+            onSearchClick = onSearchClick,
         )
 
         if (books.isEmpty()) {
@@ -151,6 +154,7 @@ private fun HeaderSection(
     greeting: String,
     modifier: Modifier = Modifier,
     onProfileClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
 ) {
     Row(
         modifier = modifier
@@ -178,22 +182,41 @@ private fun HeaderSection(
             }
         }
 
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(color_chip)
-                .clickable(onClick = onProfileClick),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = stringResource(
-                    R.string.book_collection_profile_icon_content_description
-                ),
-                tint = color_on_surface_variant,
-                modifier = Modifier.size(20.dp),
-            )
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(color_chip)
+                    .clickable(onClick = onSearchClick),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = stringResource(
+                        R.string.book_collection_search_icon_content_description
+                    ),
+                    tint = color_on_surface_variant,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(color_chip)
+                    .clickable(onClick = onProfileClick),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = stringResource(
+                        R.string.book_collection_profile_icon_content_description
+                    ),
+                    tint = color_on_surface_variant,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
     }
 }
