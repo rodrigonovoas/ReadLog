@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.rodrigonovoa.readlog.domain.usecase.AddAnnotationUseCase
 import com.rodrigonovoa.readlog.domain.usecase.AddSessionUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
+import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -27,6 +28,7 @@ class BookSessionViewModel @Inject constructor(
     private val getBookByIdUseCase: GetBookByIdUseCase,
     private val addSessionUseCase: AddSessionUseCase,
     private val addAnnotationUseCase: AddAnnotationUseCase,
+    private val refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -123,8 +125,11 @@ class BookSessionViewModel @Inject constructor(
             val result = addSessionUseCase(bookId, state.elapsedSeconds)
             val session = result.getOrNull()
             val annotationText = state.annotationText.trim()
-            if (session != null && annotationText.isNotEmpty()) {
-                addAnnotationUseCase(session.sessionId, annotationText)
+            if (session != null) {
+                if (annotationText.isNotEmpty()) {
+                    addAnnotationUseCase(session.sessionId, annotationText)
+                }
+                refreshUserProfileIfOnlineUseCase()
             }
             _effect.emit(BookSessionEffect.NavigateBack)
         }

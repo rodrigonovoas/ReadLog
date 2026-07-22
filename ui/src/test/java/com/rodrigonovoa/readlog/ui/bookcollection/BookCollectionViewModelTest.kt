@@ -1,10 +1,15 @@
 package com.rodrigonovoa.readlog.ui.bookcollection
 
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.User
 import com.rodrigonovoa.readlog.domain.usecase.DeleteBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBooksUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetTimeOfDayUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
+import com.rodrigonovoa.readlog.domain.usecase.IsOnlineUseCase
+import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
+import com.rodrigonovoa.readlog.domain.usecase.SyncUserDataUseCase
 import com.rodrigonovoa.readlog.domain.usecase.TimeOfDay
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -31,6 +36,10 @@ class BookCollectionViewModelTest {
     private lateinit var getUserDisplayNameUseCase: GetUserDisplayNameUseCase
     private lateinit var getTimeOfDayUseCase: GetTimeOfDayUseCase
     private lateinit var deleteBookUseCase: DeleteBookUseCase
+    private lateinit var getCurrentUserUseCase: GetCurrentUserUseCase
+    private lateinit var syncUserDataUseCase: SyncUserDataUseCase
+    private lateinit var refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase
+    private lateinit var isOnlineUseCase: IsOnlineUseCase
     private lateinit var viewModel: BookCollectionViewModel
 
     @Before
@@ -40,15 +49,25 @@ class BookCollectionViewModelTest {
         getUserDisplayNameUseCase = mockk()
         getTimeOfDayUseCase = mockk()
         deleteBookUseCase = mockk(relaxed = true)
+        getCurrentUserUseCase = mockk()
+        syncUserDataUseCase = mockk(relaxed = true)
+        refreshUserProfileIfOnlineUseCase = mockk(relaxed = true)
+        isOnlineUseCase = mockk()
         val booksFlow = MutableStateFlow<List<Book>>(emptyList())
         every { getBooksUseCase() } returns booksFlow
         every { getUserDisplayNameUseCase() } returns "reader"
         every { getTimeOfDayUseCase() } returns TimeOfDay.AFTERNOON
+        every { getCurrentUserUseCase() } returns null
+        every { isOnlineUseCase() } returns true
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
         )
     }
 
@@ -88,6 +107,10 @@ class BookCollectionViewModelTest {
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
         )
         advanceUntilIdle()
 
@@ -113,6 +136,10 @@ class BookCollectionViewModelTest {
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
         )
         advanceUntilIdle()
 
@@ -131,6 +158,10 @@ class BookCollectionViewModelTest {
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
         )
         advanceUntilIdle()
 
@@ -155,6 +186,10 @@ class BookCollectionViewModelTest {
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
         )
         advanceUntilIdle()
 
@@ -184,6 +219,10 @@ class BookCollectionViewModelTest {
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
         )
         advanceUntilIdle()
 
@@ -213,6 +252,10 @@ class BookCollectionViewModelTest {
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
         )
         advanceUntilIdle()
         viewModel.onEditIconClick(1)
@@ -240,6 +283,10 @@ class BookCollectionViewModelTest {
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
         )
         advanceUntilIdle()
         viewModel.onDeleteIconClick(1)
@@ -268,6 +315,10 @@ class BookCollectionViewModelTest {
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getTimeOfDayUseCase = getTimeOfDayUseCase,
             deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
         )
         advanceUntilIdle()
 
@@ -278,5 +329,102 @@ class BookCollectionViewModelTest {
         advanceUntilIdle()
 
         coVerify { deleteBookUseCase(bookToDelete) }
+    }
+
+    @Test
+    fun `init syncs and refreshes user profile when signed in and online`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Test User")
+        every { isOnlineUseCase() } returns true
+        coEvery { syncUserDataUseCase("uid-1") } returns Result.success(Unit)
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+        )
+        advanceUntilIdle()
+
+        coVerify { syncUserDataUseCase("uid-1") }
+        coVerify { refreshUserProfileIfOnlineUseCase() }
+    }
+
+    @Test
+    fun `init does not sync or refresh when device is offline`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Test User")
+        every { isOnlineUseCase() } returns false
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { syncUserDataUseCase(any()) }
+        coVerify(exactly = 0) { refreshUserProfileIfOnlineUseCase() }
+    }
+
+    @Test
+    fun `init does not sync or refresh when no user is signed in`() = runTest {
+        every { getCurrentUserUseCase() } returns null
+        every { isOnlineUseCase() } returns true
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { syncUserDataUseCase(any()) }
+        coVerify(exactly = 0) { refreshUserProfileIfOnlineUseCase() }
+    }
+
+    @Test
+    fun `confirmDelete refreshes user profile after deleting the book`() = runTest {
+        val bookToDelete = Book(
+            bookId = 1,
+            title = "Book to delete",
+            author = "Author",
+            genre = "Novel",
+            releaseDate = "2020",
+            numPages = 100,
+            currentPage = 50,
+        )
+        val booksFlow = MutableStateFlow(listOf(bookToDelete))
+        every { getBooksUseCase() } returns booksFlow
+        coEvery { deleteBookUseCase(bookToDelete) } returns Result.success(Unit)
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+        )
+        advanceUntilIdle()
+        viewModel.onDeleteIconClick(1)
+
+        viewModel.confirmDelete()
+        advanceUntilIdle()
+
+        coVerify { refreshUserProfileIfOnlineUseCase() }
     }
 }

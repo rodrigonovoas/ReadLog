@@ -8,6 +8,7 @@ import com.rodrigonovoa.readlog.domain.usecase.AddBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CalculateReadingProgressUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CapCurrentPageUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
+import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.UpdateBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.ValidateAddBookFormUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,6 +29,7 @@ class AddBookViewModel @Inject constructor(
     private val calculateProgressUseCase: CalculateReadingProgressUseCase,
     private val getBookByIdUseCase: GetBookByIdUseCase,
     private val updateBookUseCase: UpdateBookUseCase,
+    private val refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -189,6 +191,7 @@ class AddBookViewModel @Inject constructor(
             }
 
             if (result.isSuccess) {
+                refreshUserProfileIfOnlineUseCase()
                 _uiState.value = _uiState.value.copy(isLoading = false)
                 _effect.emit(AddBookEffect.NavigateBack)
             } else {

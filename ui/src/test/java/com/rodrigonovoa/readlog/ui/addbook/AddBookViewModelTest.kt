@@ -7,6 +7,7 @@ import com.rodrigonovoa.readlog.domain.usecase.AddBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CalculateReadingProgressUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CapCurrentPageUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
+import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.UpdateBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.ValidateAddBookFormUseCase
 import io.mockk.coEvery
@@ -40,6 +41,7 @@ class AddBookViewModelTest {
     private lateinit var calculateProgressUseCase: CalculateReadingProgressUseCase
     private lateinit var getBookByIdUseCase: GetBookByIdUseCase
     private lateinit var updateBookUseCase: UpdateBookUseCase
+    private lateinit var refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: AddBookViewModel
 
@@ -52,6 +54,7 @@ class AddBookViewModelTest {
         calculateProgressUseCase = mockk(relaxed = true)
         getBookByIdUseCase = mockk(relaxed = true)
         updateBookUseCase = mockk(relaxed = true)
+        refreshUserProfileIfOnlineUseCase = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle()
         viewModel = createViewModel()
     }
@@ -64,6 +67,7 @@ class AddBookViewModelTest {
             calculateProgressUseCase = calculateProgressUseCase,
             getBookByIdUseCase = getBookByIdUseCase,
             updateBookUseCase = updateBookUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             savedStateHandle = savedStateHandle,
         )
     }
@@ -168,6 +172,7 @@ class AddBookViewModelTest {
         collectJob.join()
 
         coVerify { addBookUseCase("Title", "Author", 100, 0) }
+        coVerify { refreshUserProfileIfOnlineUseCase() }
         assertTrue(effect is AddBookEffect.NavigateBack)
     }
 
@@ -192,13 +197,14 @@ class AddBookViewModelTest {
         collectJob.join()
 
         coVerify { addBookUseCase("Title", "Author", 100, 50) }
+        coVerify { refreshUserProfileIfOnlineUseCase() }
         assertTrue(effect is AddBookEffect.NavigateBack)
         assertFalse(viewModel.uiState.value.isLoading)
         assertNull(viewModel.uiState.value.errorMessage)
     }
 
     @Test
-    fun `add book failure shows error`() = runTest {
+    fun `add book failure shows error and does not refresh profile`() = runTest {
         coEvery { addBookUseCase(any(), any(), any(), any()) } returns Result.failure(RuntimeException("Insert error"))
 
         viewModel.processIntent(AddBookIntent.OnTitleChanged("Title"))
@@ -210,6 +216,7 @@ class AddBookViewModelTest {
 
         assertFalse(viewModel.uiState.value.isLoading)
         assertEquals("Insert error", viewModel.uiState.value.errorMessage)
+        coVerify(exactly = 0) { refreshUserProfileIfOnlineUseCase() }
     }
 
     @Test
@@ -411,6 +418,7 @@ class AddBookViewModelTest {
                 150,
             )
         }
+        coVerify { refreshUserProfileIfOnlineUseCase() }
         assertTrue(effect is AddBookEffect.NavigateBack)
     }
 }

@@ -1,5 +1,6 @@
 package com.rodrigonovoa.readlog.data.di
 
+import com.rodrigonovoa.readlog.data.connectivity.ConnectivityRepositoryImpl
 import com.rodrigonovoa.readlog.data.firestore.AnnotationFirestoreDataSource
 import com.rodrigonovoa.readlog.data.firestore.AnnotationFirestoreDataSourceImpl
 import com.rodrigonovoa.readlog.data.firestore.BookFirestoreDataSource
@@ -40,6 +41,7 @@ import com.rodrigonovoa.readlog.data.repository.UserSearchRepositoryImpl
 import com.rodrigonovoa.readlog.domain.repository.AnnotationRepository
 import com.rodrigonovoa.readlog.domain.repository.AuthRepository
 import com.rodrigonovoa.readlog.domain.repository.BookRepository
+import com.rodrigonovoa.readlog.domain.repository.ConnectivityRepository
 import com.rodrigonovoa.readlog.domain.repository.SessionRepository
 import com.rodrigonovoa.readlog.domain.repository.SyncRepository
 import com.rodrigonovoa.readlog.domain.repository.UserProfileRepository
@@ -175,4 +177,10 @@ abstract class DataModule {
     abstract fun bindUserSearchFirestoreDataSource(
         impl: UserSearchFirestoreDataSourceImpl
     ): UserSearchFirestoreDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindConnectivityRepository(
+        impl: ConnectivityRepositoryImpl
+    ): ConnectivityRepository
 }

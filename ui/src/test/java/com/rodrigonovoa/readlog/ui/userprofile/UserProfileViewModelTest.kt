@@ -7,19 +7,15 @@ import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetRemoteUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserProfileInfoUseCase
-import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileInfoUseCase
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -34,7 +30,6 @@ class UserProfileViewModelTest {
     private lateinit var getCurrentUserUseCase: GetCurrentUserUseCase
     private lateinit var getUserDisplayNameUseCase: GetUserDisplayNameUseCase
     private lateinit var getUserProfileInfoUseCase: GetUserProfileInfoUseCase
-    private lateinit var refreshUserProfileInfoUseCase: RefreshUserProfileInfoUseCase
     private lateinit var getRemoteUserProfileInfoUseCase: GetRemoteUserProfileInfoUseCase
 
     @Before
@@ -43,7 +38,6 @@ class UserProfileViewModelTest {
         getCurrentUserUseCase = mockk()
         getUserDisplayNameUseCase = mockk(relaxed = true)
         getUserProfileInfoUseCase = mockk()
-        refreshUserProfileInfoUseCase = mockk()
         getRemoteUserProfileInfoUseCase = mockk()
     }
 
@@ -63,7 +57,6 @@ class UserProfileViewModelTest {
             getCurrentUserUseCase = getCurrentUserUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
             getUserProfileInfoUseCase = getUserProfileInfoUseCase,
-            refreshUserProfileInfoUseCase = refreshUserProfileInfoUseCase,
             getRemoteUserProfileInfoUseCase = getRemoteUserProfileInfoUseCase,
         )
     }
@@ -73,7 +66,6 @@ class UserProfileViewModelTest {
         every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena Marín")
         every { getUserDisplayNameUseCase() } returns "Elena"
         coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(userId = "uid-1")
-        coEvery { refreshUserProfileInfoUseCase("uid-1", "Elena Marín") } returns Result.success(UserProfileInfo(userId = "uid-1"))
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -87,7 +79,6 @@ class UserProfileViewModelTest {
         every { getCurrentUserUseCase() } returns null
         every { getUserDisplayNameUseCase() } returns "reader"
         coEvery { getUserProfileInfoUseCase("") } returns UserProfileInfo(userId = "")
-        coEvery { refreshUserProfileInfoUseCase("", null) } returns Result.success(UserProfileInfo(userId = ""))
 
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -97,43 +88,15 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `init paints cached local stats before the refresh completes`() = runTest {
+    fun `uiState reflects cached stats returned by getUserProfileInfoUseCase`() = runTest {
         every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena")
         coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(
             userId = "uid-1",
-            followersCount = 3,
-            likesCount = 5,
-            sessionsThisWeek = 2,
-            weekTimeSeconds = 120L,
-            bookCollection = listOf("Cached Book"),
-        )
-        val refreshResult = CompletableDeferred<Result<UserProfileInfo>>()
-        coEvery { refreshUserProfileInfoUseCase("uid-1", "Elena") } coAnswers { refreshResult.await() }
-
-        val viewModel = createViewModel()
-        runCurrent()
-
-        assertEquals(3, viewModel.uiState.value.followersCount)
-        assertEquals(5, viewModel.uiState.value.likesCount)
-        assertEquals(2, viewModel.uiState.value.weeklySessionsCount)
-        assertEquals(listOf(UserProfileBook(title = "Cached Book")), viewModel.uiState.value.collectionBooks)
-
-        refreshResult.complete(Result.success(UserProfileInfo(userId = "uid-1")))
-    }
-
-    @Test
-    fun `uiState reflects refreshed stats once refresh succeeds`() = runTest {
-        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena")
-        coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(userId = "uid-1")
-        coEvery { refreshUserProfileInfoUseCase("uid-1", "Elena") } returns Result.success(
-            UserProfileInfo(
-                userId = "uid-1",
-                followersCount = 10,
-                likesCount = 20,
-                sessionsThisWeek = 4,
-                weekTimeSeconds = 3900L,
-                bookCollection = listOf("Book A", "Book B"),
-            )
+            followersCount = 10,
+            likesCount = 20,
+            sessionsThisWeek = 4,
+            weekTimeSeconds = 3900L,
+            bookCollection = listOf("Book A", "Book B"),
         )
 
         val viewModel = createViewModel()
@@ -152,32 +115,14 @@ class UserProfileViewModelTest {
     @Test
     fun `weeklyTimeLabel formats durations under an hour in minutes`() = runTest {
         every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena")
-        coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(userId = "uid-1")
-        coEvery { refreshUserProfileInfoUseCase("uid-1", "Elena") } returns Result.success(
-            UserProfileInfo(userId = "uid-1", weekTimeSeconds = 1800L)
+        coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(
+            userId = "uid-1", weekTimeSeconds = 1800L
         )
 
         val viewModel = createViewModel()
         advanceUntilIdle()
 
         assertEquals("30 min", viewModel.uiState.value.weeklyTimeLabel)
-    }
-
-    @Test
-    fun `uiState keeps cached stats when refresh fails`() = runTest {
-        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena")
-        coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(
-            userId = "uid-1",
-            followersCount = 7,
-            likesCount = 9,
-        )
-        coEvery { refreshUserProfileInfoUseCase("uid-1", "Elena") } returns Result.failure(RuntimeException("network error"))
-
-        val viewModel = createViewModel()
-        advanceUntilIdle()
-
-        assertEquals(7, viewModel.uiState.value.followersCount)
-        assertEquals(9, viewModel.uiState.value.likesCount)
     }
 
     @Test
@@ -209,7 +154,6 @@ class UserProfileViewModelTest {
         assertEquals("Elena", viewModel.uiState.value.userName)
         assertEquals("@elena_marin", viewModel.uiState.value.username)
         verify(exactly = 0) { getCurrentUserUseCase() }
-        coVerify(exactly = 0) { refreshUserProfileInfoUseCase(any(), any()) }
     }
 
     @Test

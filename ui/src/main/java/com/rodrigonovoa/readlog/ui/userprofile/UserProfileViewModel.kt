@@ -8,7 +8,6 @@ import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetRemoteUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserProfileInfoUseCase
-import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileInfoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +22,6 @@ class UserProfileViewModel @Inject constructor(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getUserDisplayNameUseCase: GetUserDisplayNameUseCase,
     private val getUserProfileInfoUseCase: GetUserProfileInfoUseCase,
-    private val refreshUserProfileInfoUseCase: RefreshUserProfileInfoUseCase,
     private val getRemoteUserProfileInfoUseCase: GetRemoteUserProfileInfoUseCase,
 ) : ViewModel() {
 
@@ -51,7 +49,6 @@ class UserProfileViewModel @Inject constructor(
 
         viewModelScope.launch {
             applyProfileInfo(getUserProfileInfoUseCase(userId))
-            refreshUserProfileInfoUseCase(userId, currentUser?.displayName).getOrNull()?.let { applyProfileInfo(it) }
         }
     }
 

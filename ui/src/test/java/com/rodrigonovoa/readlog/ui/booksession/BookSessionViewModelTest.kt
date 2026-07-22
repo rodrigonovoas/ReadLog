@@ -6,6 +6,7 @@ import com.rodrigonovoa.readlog.domain.model.Session
 import com.rodrigonovoa.readlog.domain.usecase.AddAnnotationUseCase
 import com.rodrigonovoa.readlog.domain.usecase.AddSessionUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
+import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -34,6 +35,7 @@ class BookSessionViewModelTest {
     private lateinit var getBookByIdUseCase: GetBookByIdUseCase
     private lateinit var addSessionUseCase: AddSessionUseCase
     private lateinit var addAnnotationUseCase: AddAnnotationUseCase
+    private lateinit var refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: BookSessionViewModel
 
@@ -45,6 +47,7 @@ class BookSessionViewModelTest {
         getBookByIdUseCase = mockk(relaxed = true)
         addSessionUseCase = mockk()
         addAnnotationUseCase = mockk(relaxed = true)
+        refreshUserProfileIfOnlineUseCase = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf("bookId" to bookId))
         coEvery { addSessionUseCase(any(), any()) } returns Result.success(
             Session(sessionId = 1, bookId = bookId, time = 0L)
@@ -57,6 +60,7 @@ class BookSessionViewModelTest {
             getBookByIdUseCase = getBookByIdUseCase,
             addSessionUseCase = addSessionUseCase,
             addAnnotationUseCase = addAnnotationUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             savedStateHandle = savedStateHandle,
         )
     }
@@ -253,6 +257,7 @@ class BookSessionViewModelTest {
         collectJob.join()
 
         coVerify(exactly = 0) { addSessionUseCase(any(), any()) }
+        coVerify(exactly = 0) { refreshUserProfileIfOnlineUseCase() }
         assertEquals(BookSessionEffect.NavigateBack, effect)
         assertFalse(viewModel.uiState.value.showEndSessionDialog)
     }
@@ -331,6 +336,7 @@ class BookSessionViewModelTest {
         collectJob.join()
 
         coVerify { addSessionUseCase(bookId, 4L) }
+        coVerify { refreshUserProfileIfOnlineUseCase() }
         assertEquals(BookSessionEffect.NavigateBack, effect)
         assertFalse(viewModel.uiState.value.showEndSessionDialog)
     }
