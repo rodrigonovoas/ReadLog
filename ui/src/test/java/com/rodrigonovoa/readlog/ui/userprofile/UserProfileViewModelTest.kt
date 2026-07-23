@@ -88,6 +88,20 @@ class UserProfileViewModelTest {
     }
 
     @Test
+    fun `own profile shows the username once it has been set`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena Marín")
+        every { getUserDisplayNameUseCase() } returns "Elena"
+        coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(
+            userId = "uid-1", username = "elena_marin"
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals("@elena_marin", viewModel.uiState.value.username)
+    }
+
+    @Test
     fun `uiState reflects cached stats returned by getUserProfileInfoUseCase`() = runTest {
         every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena")
         coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(

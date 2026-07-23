@@ -4,6 +4,13 @@
     <string name="login_continue_google">Continuar con cuenta de Google</string>
     <string name="login_continue_offline">Continuar sin conexión</string>
     <string name="login_error_generic">Error de autenticación. Inténtalo de nuevo.</string>
+    <string name="username_setup_title">Elige tu nombre de usuario</string>
+    <string name="username_setup_description">Elige un nombre de usuario para que otros lectores puedan encontrarte.</string>
+    <string name="username_setup_label">Nombre de usuario</string>
+    <string name="username_setup_confirm">Aceptar</string>
+    <string name="username_setup_error_invalid">Usa solo letras, números y guiones bajos (3-20 caracteres)</string>
+    <string name="username_setup_error_taken">Este nombre de usuario ya existe. Prueba con otro.</string>
+    <string name="username_setup_error_generic">No se pudo verificar el nombre de usuario. Inténtalo de nuevo.</string>
     <string name="book_collection_greeting_morning">Buenos días, %1$s</string>
     <string name="book_collection_greeting_afternoon">Buenas tardes, %1$s</string>
     <string name="book_collection_greeting_evening">Buenas noches, %1$s</string>

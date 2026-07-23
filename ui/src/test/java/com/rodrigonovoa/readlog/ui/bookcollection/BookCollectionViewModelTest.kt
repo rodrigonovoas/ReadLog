@@ -2,6 +2,9 @@ package com.rodrigonovoa.readlog.ui.bookcollection
 
 import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.domain.model.User
+import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
+import com.rodrigonovoa.readlog.domain.usecase.ClaimUsernameResult
+import com.rodrigonovoa.readlog.domain.usecase.ClaimUsernameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.DeleteBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBooksUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
@@ -9,6 +12,7 @@ import com.rodrigonovoa.readlog.domain.usecase.GetTimeOfDayUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.IsOnlineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
+import com.rodrigonovoa.readlog.domain.usecase.RequireUsernameSetupUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SyncUserDataUseCase
 import com.rodrigonovoa.readlog.domain.usecase.TimeOfDay
 import io.mockk.coEvery
@@ -25,6 +29,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -40,6 +46,8 @@ class BookCollectionViewModelTest {
     private lateinit var syncUserDataUseCase: SyncUserDataUseCase
     private lateinit var refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase
     private lateinit var isOnlineUseCase: IsOnlineUseCase
+    private lateinit var requireUsernameSetupUseCase: RequireUsernameSetupUseCase
+    private lateinit var claimUsernameUseCase: ClaimUsernameUseCase
     private lateinit var viewModel: BookCollectionViewModel
 
     @Before
@@ -53,12 +61,15 @@ class BookCollectionViewModelTest {
         syncUserDataUseCase = mockk(relaxed = true)
         refreshUserProfileIfOnlineUseCase = mockk(relaxed = true)
         isOnlineUseCase = mockk()
+        requireUsernameSetupUseCase = mockk()
+        claimUsernameUseCase = mockk()
         val booksFlow = MutableStateFlow<List<Book>>(emptyList())
         every { getBooksUseCase() } returns booksFlow
         every { getUserDisplayNameUseCase() } returns "reader"
         every { getTimeOfDayUseCase() } returns TimeOfDay.AFTERNOON
         every { getCurrentUserUseCase() } returns null
         every { isOnlineUseCase() } returns true
+        coEvery { requireUsernameSetupUseCase(any(), any(), any()) } returns null
         viewModel = BookCollectionViewModel(
             getBooksUseCase = getBooksUseCase,
             getUserDisplayNameUseCase = getUserDisplayNameUseCase,
@@ -68,6 +79,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
     }
 
@@ -111,6 +124,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
 
@@ -140,6 +155,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
 
@@ -162,6 +179,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
 
@@ -190,6 +209,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
 
@@ -223,6 +244,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
 
@@ -256,6 +279,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
         viewModel.onEditIconClick(1)
@@ -287,6 +312,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
         viewModel.onDeleteIconClick(1)
@@ -319,6 +346,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
 
@@ -346,6 +375,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
 
@@ -367,6 +398,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
 
@@ -388,6 +421,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
 
@@ -418,6 +453,8 @@ class BookCollectionViewModelTest {
             syncUserDataUseCase = syncUserDataUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
         )
         advanceUntilIdle()
         viewModel.onDeleteIconClick(1)
@@ -426,5 +463,146 @@ class BookCollectionViewModelTest {
         advanceUntilIdle()
 
         coVerify { refreshUserProfileIfOnlineUseCase() }
+    }
+
+    @Test
+    fun `init shows username setup dialog when signed in online and username missing`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Test User")
+        every { isOnlineUseCase() } returns true
+        coEvery { syncUserDataUseCase("uid-1") } returns Result.success(Unit)
+        coEvery {
+            requireUsernameSetupUseCase("uid-1", "test@test.com", "Test User")
+        } returns "test_user"
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
+        )
+        advanceUntilIdle()
+
+        assertEquals("test_user", viewModel.uiState.value.usernameSetup?.username)
+    }
+
+    @Test
+    fun `init does not show username setup dialog when username is already set`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Test User")
+        every { isOnlineUseCase() } returns true
+        coEvery { syncUserDataUseCase("uid-1") } returns Result.success(Unit)
+        coEvery {
+            requireUsernameSetupUseCase("uid-1", "test@test.com", "Test User")
+        } returns null
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
+        )
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.usernameSetup)
+    }
+
+    @Test
+    fun `init does not check username setup when offline`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Test User")
+        every { isOnlineUseCase() } returns false
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
+        )
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.usernameSetup)
+        coVerify(exactly = 0) { requireUsernameSetupUseCase(any(), any(), any()) }
+    }
+
+    @Test
+    fun `onUsernameConfirmClicked with available username clears the dialog`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Test User")
+        every { isOnlineUseCase() } returns true
+        coEvery { syncUserDataUseCase("uid-1") } returns Result.success(Unit)
+        coEvery {
+            requireUsernameSetupUseCase("uid-1", "test@test.com", "Test User")
+        } returns "test_user"
+        coEvery { claimUsernameUseCase("uid-1", "free_name") } returns ClaimUsernameResult.Success(
+            UserProfileInfo(userId = "uid-1", username = "free_name")
+        )
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
+        )
+        advanceUntilIdle()
+
+        viewModel.onUsernameChanged("free_name")
+        viewModel.onUsernameConfirmClicked()
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.usernameSetup)
+    }
+
+    @Test
+    fun `onUsernameConfirmClicked with taken username shows error and keeps dialog open`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Test User")
+        every { isOnlineUseCase() } returns true
+        coEvery { syncUserDataUseCase("uid-1") } returns Result.success(Unit)
+        coEvery {
+            requireUsernameSetupUseCase("uid-1", "test@test.com", "Test User")
+        } returns "test_user"
+        coEvery { claimUsernameUseCase("uid-1", "taken_name") } returns ClaimUsernameResult.AlreadyTaken
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
+        )
+        advanceUntilIdle()
+
+        viewModel.onUsernameChanged("taken_name")
+        viewModel.onUsernameConfirmClicked()
+        advanceUntilIdle()
+
+        val usernameSetup = viewModel.uiState.value.usernameSetup
+        assertTrue(usernameSetup != null)
+        assertEquals("taken_name", usernameSetup?.username)
     }
 }

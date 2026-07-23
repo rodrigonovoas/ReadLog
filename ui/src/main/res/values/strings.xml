@@ -4,6 +4,13 @@
     <string name="login_continue_google">Continue with Google account</string>
     <string name="login_continue_offline">Continue offline</string>
     <string name="login_error_generic">Authentication failed. Please try again.</string>
+    <string name="username_setup_title">Choose your username</string>
+    <string name="username_setup_description">Pick a username so other readers can find you.</string>
+    <string name="username_setup_label">Username</string>
+    <string name="username_setup_confirm">Accept</string>
+    <string name="username_setup_error_invalid">Use only letters, numbers, and underscores (3-20 characters)</string>
+    <string name="username_setup_error_taken">This username is already taken. Try another one.</string>
+    <string name="username_setup_error_generic">Couldn\'t verify the username. Try again.</string>
     <string name="book_collection_greeting_morning">Good morning, %1$s</string>
     <string name="book_collection_greeting_afternoon">Good afternoon, %1$s</string>
     <string name="book_collection_greeting_evening">Good evening, %1$s</string>

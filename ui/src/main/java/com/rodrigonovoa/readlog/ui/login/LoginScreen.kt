@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodrigonovoa.readlog.ui.R
+import com.rodrigonovoa.readlog.ui.common.UsernameSetupDialog
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_error
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
@@ -162,6 +163,14 @@ fun LoginScreen(
                     )
                 }
             }
+        }
+
+        state.usernameSetup?.let { usernameSetupState ->
+            UsernameSetupDialog(
+                state = usernameSetupState,
+                onUsernameChange = { onIntent(LoginIntent.OnUsernameChanged(it)) },
+                onConfirm = { onIntent(LoginIntent.OnUsernameConfirmClicked) },
+            )
         }
     }
 }

@@ -35,4 +35,18 @@ class UserSearchFirestoreDataSourceImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun existsByUsername(usernameLower: String): Result<Boolean> {
+        return try {
+            val snapshot = firestore
+                .collectionGroup("profile")
+                .whereEqualTo("usernameLower", usernameLower)
+                .limit(1)
+                .get()
+                .await()
+            Result.success(!snapshot.isEmpty)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

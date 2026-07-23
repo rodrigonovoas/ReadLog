@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.common.ConfirmationDialog
+import com.rodrigonovoa.readlog.ui.common.UsernameSetupDialog
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
 import com.rodrigonovoa.readlog.ui.theme.color_error_container
@@ -78,6 +79,8 @@ fun BookCollectionScreen(
     onConfirmDelete: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
+    onUsernameChange: (String) -> Unit = {},
+    onUsernameConfirm: () -> Unit = {},
 ) {
     val books = uiState.books
     Column(
@@ -145,6 +148,14 @@ fun BookCollectionScreen(
                 onConfirm = onConfirmDelete,
             )
         }
+    }
+
+    uiState.usernameSetup?.let { usernameSetupState ->
+        UsernameSetupDialog(
+            state = usernameSetupState,
+            onUsernameChange = onUsernameChange,
+            onConfirm = onUsernameConfirm,
+        )
     }
 }
 

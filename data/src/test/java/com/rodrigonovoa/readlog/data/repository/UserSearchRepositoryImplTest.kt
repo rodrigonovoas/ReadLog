@@ -38,4 +38,22 @@ class UserSearchRepositoryImplTest {
 
         assertEquals(true, result.isFailure)
     }
+
+    @Test
+    fun `delegates username existence check to the firestore data source`() = runTest {
+        coEvery { userSearchFirestoreDataSource.existsByUsername("elena_marin") } returns Result.success(true)
+
+        val result = repository.isUsernameTaken("elena_marin")
+
+        assertEquals(true, result.getOrThrow())
+    }
+
+    @Test
+    fun `propagates failure from the firestore data source when checking username existence`() = runTest {
+        coEvery { userSearchFirestoreDataSource.existsByUsername("elena_marin") } returns Result.failure(RuntimeException("offline"))
+
+        val result = repository.isUsernameTaken("elena_marin")
+
+        assertEquals(true, result.isFailure)
+    }
 }

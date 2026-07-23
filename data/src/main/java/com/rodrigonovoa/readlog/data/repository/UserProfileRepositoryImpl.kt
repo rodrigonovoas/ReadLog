@@ -7,7 +7,6 @@ import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
 import com.rodrigonovoa.readlog.domain.repository.BookRepository
 import com.rodrigonovoa.readlog.domain.repository.SessionRepository
 import com.rodrigonovoa.readlog.domain.repository.UserProfileRepository
-import com.rodrigonovoa.readlog.domain.usecase.GenerateUsernameUseCase
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,7 +17,6 @@ class UserProfileRepositoryImpl @Inject constructor(
     private val sessionRepository: SessionRepository,
     private val userProfileInfoDataMapper: UserProfileInfoDataMapper,
     private val userProfileInfoFirestoreDataSource: UserProfileInfoFirestoreDataSource,
-    private val generateUsernameUseCase: GenerateUsernameUseCase,
 ) : UserProfileRepository {
 
     override suspend fun getUserProfileInfo(userId: String): UserProfileInfo {
@@ -37,8 +35,6 @@ class UserProfileRepositoryImpl @Inject constructor(
             val books = bookRepository.getAllBooksList()
             val remoteInfo = userProfileInfoFirestoreDataSource.download(userId).getOrNull()
             val resolvedDisplayName = displayName ?: remoteInfo?.displayName
-            val username = remoteInfo?.username?.ifBlank { null }
-                ?: generateUsernameUseCase(resolvedDisplayName, userId)
 
             val merged = UserProfileInfo(
                 userId = userId,
@@ -49,7 +45,7 @@ class UserProfileRepositoryImpl @Inject constructor(
                 bookCollection = books.map { it.title },
                 lastModified = System.currentTimeMillis(),
                 displayName = resolvedDisplayName,
-                username = username,
+                username = remoteInfo?.username?.ifBlank { null },
             )
 
             userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(merged))
@@ -65,6 +61,22 @@ class UserProfileRepositoryImpl @Inject constructor(
             val info = remoteInfo ?: UserProfileInfo(userId = userId)
             userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(info))
             info
+        }
+    }
+
+    override suspend fun setUsername(userId: String, username: String): Result<UserProfileInfo> {
+        return try {
+            val current = getUserProfileInfo(userId)
+            val updated = current.copy(
+                userId = userId,
+                username = username,
+                lastModified = System.currentTimeMillis(),
+            )
+            userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(updated))
+            userProfileInfoFirestoreDataSource.upload(userId, updated)
+            Result.success(updated)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }

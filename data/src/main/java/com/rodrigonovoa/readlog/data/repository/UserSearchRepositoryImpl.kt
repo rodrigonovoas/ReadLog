@@ -14,4 +14,8 @@ class UserSearchRepositoryImpl @Inject constructor(
     override suspend fun searchByUsername(query: String, limit: Int): Result<List<UserSearchResult>> {
         return userSearchFirestoreDataSource.searchByUsernamePrefix(query, limit)
     }
+
+    override suspend fun isUsernameTaken(usernameLower: String): Result<Boolean> {
+        return userSearchFirestoreDataSource.existsByUsername(usernameLower)
+    }
 }

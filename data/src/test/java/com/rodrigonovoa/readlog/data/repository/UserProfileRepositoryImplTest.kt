@@ -9,7 +9,6 @@ import com.rodrigonovoa.readlog.domain.model.Session
 import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
 import com.rodrigonovoa.readlog.domain.repository.BookRepository
 import com.rodrigonovoa.readlog.domain.repository.SessionRepository
-import com.rodrigonovoa.readlog.domain.usecase.GenerateUsernameUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -38,7 +37,6 @@ class UserProfileRepositoryImplTest {
             sessionRepository = sessionRepository,
             userProfileInfoDataMapper = UserProfileInfoDataMapperImpl(),
             userProfileInfoFirestoreDataSource = userProfileInfoFirestoreDataSource,
-            generateUsernameUseCase = GenerateUsernameUseCase(),
         )
     }
 
@@ -99,7 +97,7 @@ class UserProfileRepositoryImplTest {
         assertEquals(300L, info.weekTimeSeconds)
         assertEquals(listOf("Book A", "Book B"), info.bookCollection)
         assertEquals("Elena Marín", info.displayName)
-        assertEquals("elena_marin", info.username)
+        assertEquals(null, info.username)
         coVerify { userProfileInfoDao.upsert(any()) }
         coVerify { userProfileInfoFirestoreDataSource.upload("uid", any()) }
     }
@@ -206,5 +204,51 @@ class UserProfileRepositoryImplTest {
 
         coVerify(exactly = 0) { bookRepository.getAllBooksList() }
         coVerify(exactly = 0) { sessionRepository.getAllSessionsSince(any()) }
+    }
+
+    @Test
+    fun `setUsername stores the new username locally and remotely`() = runTest {
+        coEvery { userProfileInfoDao.getByUserId("uid") } returns null
+        coEvery { userProfileInfoFirestoreDataSource.upload("uid", any()) } returns Result.success(Unit)
+
+        val result = repository.setUsername("uid", "elena_marin")
+
+        assertEquals(true, result.isSuccess)
+        val info = result.getOrThrow()
+        assertEquals("uid", info.userId)
+        assertEquals("elena_marin", info.username)
+        coVerify { userProfileInfoDao.upsert(any()) }
+        coVerify { userProfileInfoFirestoreDataSource.upload("uid", any()) }
+    }
+
+    @Test
+    fun `setUsername keeps existing profile stats while updating the username`() = runTest {
+        coEvery { userProfileInfoDao.getByUserId("uid") } returns UserProfileInfoEntity(
+            userId = "uid",
+            followersCount = 3,
+            likesCount = 7,
+            sessionsThisWeek = 2,
+            weekTimeSeconds = 600L,
+            bookCollection = listOf("Book A"),
+            lastModified = 1000L,
+        )
+        coEvery { userProfileInfoFirestoreDataSource.upload("uid", any()) } returns Result.success(Unit)
+
+        val result = repository.setUsername("uid", "elena_marin")
+
+        val info = result.getOrThrow()
+        assertEquals(3, info.followersCount)
+        assertEquals(7, info.likesCount)
+        assertEquals("elena_marin", info.username)
+    }
+
+    @Test
+    fun `setUsername returns failure when persisting locally throws`() = runTest {
+        coEvery { userProfileInfoDao.getByUserId("uid") } throws RuntimeException("db error")
+
+        val result = repository.setUsername("uid", "elena_marin")
+
+        assertEquals(true, result.isFailure)
+        assertEquals("db error", result.exceptionOrNull()?.message)
     }
 }

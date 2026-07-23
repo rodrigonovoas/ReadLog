@@ -10,4 +10,5 @@ interface UserProfileRepository {
         displayName: String?,
     ): Result<UserProfileInfo>
     suspend fun getRemoteUserProfileInfo(userId: String): Result<UserProfileInfo>
+    suspend fun setUsername(userId: String, username: String): Result<UserProfileInfo>
 }

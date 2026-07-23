@@ -48,7 +48,11 @@ class UserProfileViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            applyProfileInfo(getUserProfileInfoUseCase(userId))
+            val info = getUserProfileInfoUseCase(userId)
+            applyProfileInfo(info)
+            _uiState.update {
+                it.copy(username = info.username?.let { name -> "@$name" } ?: it.username)
+            }
         }
     }
 

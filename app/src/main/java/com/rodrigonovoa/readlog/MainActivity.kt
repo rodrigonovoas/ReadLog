@@ -104,6 +104,8 @@ class MainActivity : ComponentActivity() {
                             onConfirmDelete = viewModel::confirmDelete,
                             onProfileClick = { navController.navigate("userProfile") },
                             onSearchClick = { navController.navigate("userSearch") },
+                            onUsernameChange = viewModel::onUsernameChanged,
+                            onUsernameConfirm = viewModel::onUsernameConfirmClicked,
                         )
                     }
                     composable(
