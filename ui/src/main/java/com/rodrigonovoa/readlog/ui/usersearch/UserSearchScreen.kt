@@ -40,8 +40,11 @@ import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant
+import com.rodrigonovoa.readlog.ui.theme.color_outline
+import com.rodrigonovoa.readlog.ui.theme.color_placeholder
 import com.rodrigonovoa.readlog.ui.theme.color_primary
 import com.rodrigonovoa.readlog.ui.theme.color_surface
+import com.rodrigonovoa.readlog.ui.theme.color_transparent
 
 @Composable
 fun UserSearchScreen(
@@ -133,7 +136,17 @@ private fun SearchField(
             )
         },
         shape = RoundedCornerShape(16.dp),
-        colors = OutlinedTextFieldDefaults.colors(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = color_on_surface,
+            unfocusedTextColor = color_on_surface,
+            cursorColor = color_primary,
+            focusedBorderColor = color_primary,
+            unfocusedBorderColor = color_outline,
+            focusedContainerColor = color_transparent,
+            unfocusedContainerColor = color_transparent,
+            focusedPlaceholderColor = color_placeholder,
+            unfocusedPlaceholderColor = color_placeholder,
+        ),
     )
 }
 
