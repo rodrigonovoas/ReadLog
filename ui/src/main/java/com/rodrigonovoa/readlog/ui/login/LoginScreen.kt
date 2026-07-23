@@ -126,6 +126,7 @@ fun LoginScreen(
                         fontFamily = FontFamily.SansSerif,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center
                     )
                 }
 
