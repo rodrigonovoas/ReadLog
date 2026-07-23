@@ -124,6 +124,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxSize(),
                             uiState = uiState,
                             onBackClick = { navController.popBackStack() },
+                            onLikeClick = viewModel::onLikeClick,
                         )
                     }
                     composable("userSearch") {

@@ -1,5 +1,6 @@
 package com.rodrigonovoa.readlog.data.firestore
 
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.rodrigonovoa.readlog.data.mapper.UserProfileInfoFirestoreMapper
 import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
@@ -41,6 +42,21 @@ class UserProfileInfoFirestoreDataSourceImpl @Inject constructor(
                 userProfileInfoFirestoreMapper.fromFirestoreMap(snapshot.data ?: emptyMap(), userId)
             } else null
             Result.success(info)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun incrementLikesCount(userId: String, delta: Int): Result<Unit> {
+        return try {
+            firestore
+                .collection("users")
+                .document(userId)
+                .collection("profile")
+                .document("info")
+                .update("likesCount", FieldValue.increment(delta.toLong()))
+                .await()
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

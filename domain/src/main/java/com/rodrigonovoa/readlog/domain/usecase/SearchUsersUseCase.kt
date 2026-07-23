@@ -6,12 +6,16 @@ import javax.inject.Inject
 
 class SearchUsersUseCase @Inject constructor(
     private val userSearchRepository: UserSearchRepository,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
 ) {
     suspend operator fun invoke(query: String): Result<List<UserSearchResult>> {
         val normalizedQuery = query.trim().lowercase()
         if (normalizedQuery.isEmpty()) {
             return Result.success(emptyList())
         }
-        return userSearchRepository.searchByUsername(normalizedQuery)
+        val currentUserId = getCurrentUserUseCase()?.uid
+        return userSearchRepository.searchByUsername(normalizedQuery).map { results ->
+            currentUserId?.let { uid -> results.filter { it.userId != uid } } ?: results
+        }
     }
 }

@@ -14,7 +14,7 @@ import com.rodrigonovoa.readlog.data.db.entity.UserProfileInfoEntity
 
 @Database(
     entities = [BookEntity::class, SessionEntity::class, AnnotationEntity::class, UserProfileInfoEntity::class],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -67,6 +67,34 @@ abstract class ReadLogDatabase : RoomDatabase() {
 
         val MIGRATION_5_6 = androidx.room.migration.Migration(5, 6) { database ->
             database.execSQL("ALTER TABLE user_profile_info ADD COLUMN username TEXT")
+        }
+
+        val MIGRATION_6_7 = androidx.room.migration.Migration(6, 7) { database ->
+            database.execSQL(
+                """
+                CREATE TABLE user_profile_info_new (
+                    userId TEXT NOT NULL PRIMARY KEY,
+                    likesCount INTEGER NOT NULL DEFAULT 0,
+                    sessionsThisWeek INTEGER NOT NULL DEFAULT 0,
+                    weekTimeSeconds INTEGER NOT NULL DEFAULT 0,
+                    bookCollection TEXT NOT NULL DEFAULT '',
+                    lastModified INTEGER NOT NULL DEFAULT 0,
+                    displayName TEXT,
+                    username TEXT,
+                    followeds TEXT NOT NULL DEFAULT ''
+                )
+                """.trimIndent()
+            )
+            database.execSQL(
+                """
+                INSERT INTO user_profile_info_new
+                    (userId, likesCount, sessionsThisWeek, weekTimeSeconds, bookCollection, lastModified, displayName, username, followeds)
+                SELECT userId, likesCount, sessionsThisWeek, weekTimeSeconds, bookCollection, lastModified, displayName, username, ''
+                FROM user_profile_info
+                """.trimIndent()
+            )
+            database.execSQL("DROP TABLE user_profile_info")
+            database.execSQL("ALTER TABLE user_profile_info_new RENAME TO user_profile_info")
         }
     }
 }

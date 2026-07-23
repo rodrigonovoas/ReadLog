@@ -77,7 +77,8 @@
     <string name="user_profile_title">Profile</string>
     <string name="user_profile_back_content_description">Back</string>
     <string name="user_profile_favorite_content_description">Favorite</string>
-    <string name="user_profile_followers_label">FOLLOWERS</string>
+    <string name="user_profile_unfavorite_content_description">Unlike</string>
+    <string name="user_profile_like_error_message">Couldn\'t update. Check your connection and try again.</string>
     <string name="user_profile_likes_label">LIKES</string>
     <string name="user_profile_sessions_this_week_label">SESSIONS THIS WEEK</string>
     <string name="user_profile_time_this_week_label">TIME THIS WEEK</string>

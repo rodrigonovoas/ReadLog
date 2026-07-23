@@ -2,7 +2,6 @@ package com.rodrigonovoa.readlog.domain.model
 
 data class UserProfileInfo(
     val userId: String = "",
-    val followersCount: Int = 0,
     val likesCount: Int = 0,
     val sessionsThisWeek: Int = 0,
     val weekTimeSeconds: Long = 0L,
@@ -10,4 +9,5 @@ data class UserProfileInfo(
     val lastModified: Long = 0L,
     val displayName: String? = null,
     val username: String? = null,
+    val followeds: List<String> = emptyList(),
 )

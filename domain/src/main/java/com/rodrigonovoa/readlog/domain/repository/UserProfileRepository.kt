@@ -11,4 +11,5 @@ interface UserProfileRepository {
     ): Result<UserProfileInfo>
     suspend fun getRemoteUserProfileInfo(userId: String): Result<UserProfileInfo>
     suspend fun setUsername(userId: String, username: String): Result<UserProfileInfo>
+    suspend fun setLiked(currentUserId: String, targetUserId: String, liked: Boolean): Result<Unit>
 }

@@ -12,7 +12,6 @@ class UserProfileInfoFirestoreMapperImplTest {
     fun `toFirestoreMap produces correct map`() {
         val stats = UserProfileInfo(
             userId = "uid-1",
-            followersCount = 5,
             likesCount = 10,
             sessionsThisWeek = 3,
             weekTimeSeconds = 3600L,
@@ -20,11 +19,11 @@ class UserProfileInfoFirestoreMapperImplTest {
             lastModified = 2000L,
             displayName = "Elena Marín",
             username = "Elena_Marin",
+            followeds = listOf("uid-2", "uid-3"),
         )
 
         val map = mapper.toFirestoreMap(stats)
 
-        assertEquals(5, map["followersCount"])
         assertEquals(10, map["likesCount"])
         assertEquals(3, map["sessionsThisWeek"])
         assertEquals(3600L, map["weekTimeSeconds"])
@@ -33,6 +32,7 @@ class UserProfileInfoFirestoreMapperImplTest {
         assertEquals("Elena Marín", map["displayName"])
         assertEquals("Elena_Marin", map["username"])
         assertEquals("elena_marin", map["usernameLower"])
+        assertEquals(listOf("uid-2", "uid-3"), map["followeds"])
     }
 
     @Test
@@ -44,12 +44,12 @@ class UserProfileInfoFirestoreMapperImplTest {
         assertEquals("", map["displayName"])
         assertEquals("", map["username"])
         assertEquals("", map["usernameLower"])
+        assertEquals(emptyList<String>(), map["followeds"])
     }
 
     @Test
     fun `fromFirestoreMap reconstructs UserProfileInfo with defaults for missing fields`() {
         val map = mapOf(
-            "followersCount" to 5,
             "likesCount" to 10,
         )
 
@@ -58,7 +58,6 @@ class UserProfileInfoFirestoreMapperImplTest {
         assertEquals(
             UserProfileInfo(
                 userId = "uid-2",
-                followersCount = 5,
                 likesCount = 10,
                 sessionsThisWeek = 0,
                 weekTimeSeconds = 0L,
@@ -66,6 +65,7 @@ class UserProfileInfoFirestoreMapperImplTest {
                 lastModified = 0L,
                 displayName = null,
                 username = null,
+                followeds = emptyList(),
             ),
             stats
         )
@@ -79,5 +79,14 @@ class UserProfileInfoFirestoreMapperImplTest {
 
         assertEquals("Elena Marín", stats.displayName)
         assertEquals("elena_marin", stats.username)
+    }
+
+    @Test
+    fun `fromFirestoreMap reconstructs followeds when present`() {
+        val map = mapOf("followeds" to listOf("uid-7", "uid-8"))
+
+        val stats = mapper.fromFirestoreMap(map, "uid-2")
+
+        assertEquals(listOf("uid-7", "uid-8"), stats.followeds)
     }
 }

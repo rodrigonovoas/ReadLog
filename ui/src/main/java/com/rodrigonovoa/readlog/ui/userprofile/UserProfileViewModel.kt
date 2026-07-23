@@ -8,6 +8,7 @@ import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetRemoteUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserProfileInfoUseCase
+import com.rodrigonovoa.readlog.domain.usecase.ToggleUserLikeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,13 +24,17 @@ class UserProfileViewModel @Inject constructor(
     private val getUserDisplayNameUseCase: GetUserDisplayNameUseCase,
     private val getUserProfileInfoUseCase: GetUserProfileInfoUseCase,
     private val getRemoteUserProfileInfoUseCase: GetRemoteUserProfileInfoUseCase,
+    private val toggleUserLikeUseCase: ToggleUserLikeUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UserProfileUiState())
     val uiState: StateFlow<UserProfileUiState> = _uiState.asStateFlow()
 
+    private val targetUserId: String? = savedStateHandle.get<String>("userId")?.takeIf { it.isNotBlank() }
+
     init {
-        val targetUserId = savedStateHandle.get<String>("userId")?.takeIf { it.isNotBlank() }
+        val targetUserId = targetUserId
+        _uiState.update { it.copy(isOwnProfile = targetUserId == null) }
         if (targetUserId != null) {
             loadOtherUserProfile(targetUserId)
         } else {
@@ -59,10 +64,38 @@ class UserProfileViewModel @Inject constructor(
     private fun loadOtherUserProfile(userId: String) {
         viewModelScope.launch {
             applyProfileInfo(getUserProfileInfoUseCase(userId))
+            val currentUserId = getCurrentUserUseCase()?.uid
+            if (currentUserId != null) {
+                val ownInfo = getUserProfileInfoUseCase(currentUserId)
+                _uiState.update { it.copy(isLiked = ownInfo.followeds.contains(userId)) }
+            }
             getRemoteUserProfileInfoUseCase(userId).getOrNull()?.let {
                 applyProfileInfo(it)
                 applyIdentity(it)
             }
+        }
+    }
+
+    fun onLikeClick() {
+        val targetId = targetUserId ?: return
+        val currentUser = getCurrentUserUseCase() ?: return
+        if (currentUser.uid == targetId) return
+        val newLikedState = !_uiState.value.isLiked
+        viewModelScope.launch {
+            _uiState.update { it.copy(hasLikeError = false) }
+            toggleUserLikeUseCase(currentUser.uid, targetId, newLikedState).fold(
+                onSuccess = {
+                    _uiState.update {
+                        it.copy(
+                            isLiked = newLikedState,
+                            likesCount = (it.likesCount + if (newLikedState) 1 else -1).coerceAtLeast(0),
+                        )
+                    }
+                },
+                onFailure = {
+                    _uiState.update { it.copy(hasLikeError = true) }
+                },
+            )
         }
     }
 
@@ -79,7 +112,6 @@ class UserProfileViewModel @Inject constructor(
     private fun applyProfileInfo(info: UserProfileInfo) {
         _uiState.update {
             it.copy(
-                followersCount = info.followersCount,
                 likesCount = info.likesCount,
                 weeklySessionsCount = info.sessionsThisWeek,
                 weeklyTimeLabel = formatDuration(info.weekTimeSeconds),

@@ -15,7 +15,7 @@ class GetRemoteUserProfileInfoUseCaseTest {
 
     @Test
     fun `invoke returns info from repository`() = runTest {
-        val info = UserProfileInfo(userId = "uid", followersCount = 3, likesCount = 5)
+        val info = UserProfileInfo(userId = "uid", likesCount = 5)
         coEvery { repository.getRemoteUserProfileInfo("uid") } returns Result.success(info)
 
         val result = useCase("uid")

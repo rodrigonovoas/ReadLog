@@ -3,11 +3,13 @@ package com.rodrigonovoa.readlog.ui.userprofile
 data class UserProfileUiState(
     val userName: String = "",
     val username: String = "",
-    val followersCount: Int = 0,
     val likesCount: Int = 0,
     val weeklySessionsCount: Int = 0,
     val weeklyTimeLabel: String = "",
     val collectionBooks: List<UserProfileBook> = emptyList(),
+    val isOwnProfile: Boolean = false,
+    val isLiked: Boolean = false,
+    val hasLikeError: Boolean = false,
 )
 
 data class UserProfileBook(
@@ -17,7 +19,6 @@ data class UserProfileBook(
 val sampleUserProfileUiState = UserProfileUiState(
     userName = "Elena",
     username = "@elenalee",
-    followersCount = 1204,
     likesCount = 2940,
     weeklySessionsCount = 5,
     weeklyTimeLabel = "3h 40m",
@@ -27,4 +28,6 @@ val sampleUserProfileUiState = UserProfileUiState(
         UserProfileBook(title = "El nombre del viento"),
         UserProfileBook(title = "Norwegian Wood"),
     ),
+    isOwnProfile = false,
+    isLiked = true,
 )

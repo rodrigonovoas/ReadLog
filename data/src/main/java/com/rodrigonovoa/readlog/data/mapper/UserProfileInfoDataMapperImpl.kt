@@ -8,7 +8,6 @@ class UserProfileInfoDataMapperImpl @Inject constructor() : UserProfileInfoDataM
     override fun toDomain(entity: UserProfileInfoEntity): UserProfileInfo {
         return UserProfileInfo(
             userId = entity.userId,
-            followersCount = entity.followersCount,
             likesCount = entity.likesCount,
             sessionsThisWeek = entity.sessionsThisWeek,
             weekTimeSeconds = entity.weekTimeSeconds,
@@ -16,13 +15,13 @@ class UserProfileInfoDataMapperImpl @Inject constructor() : UserProfileInfoDataM
             lastModified = entity.lastModified,
             displayName = entity.displayName,
             username = entity.username,
+            followeds = entity.followeds,
         )
     }
 
     override fun toEntity(domain: UserProfileInfo): UserProfileInfoEntity {
         return UserProfileInfoEntity(
             userId = domain.userId,
-            followersCount = domain.followersCount,
             likesCount = domain.likesCount,
             sessionsThisWeek = domain.sessionsThisWeek,
             weekTimeSeconds = domain.weekTimeSeconds,
@@ -30,6 +29,7 @@ class UserProfileInfoDataMapperImpl @Inject constructor() : UserProfileInfoDataM
             lastModified = domain.lastModified,
             displayName = domain.displayName,
             username = domain.username,
+            followeds = domain.followeds,
         )
     }
 }

@@ -53,7 +53,6 @@ class UserProfileRepositoryImplTest {
     fun `getUserProfileInfo returns mapped cached info`() = runTest {
         coEvery { userProfileInfoDao.getByUserId("uid") } returns UserProfileInfoEntity(
             userId = "uid",
-            followersCount = 3,
             likesCount = 7,
             sessionsThisWeek = 2,
             weekTimeSeconds = 600L,
@@ -63,7 +62,6 @@ class UserProfileRepositoryImplTest {
 
         val result = repository.getUserProfileInfo("uid")
 
-        assertEquals(3, result.followersCount)
         assertEquals(7, result.likesCount)
         assertEquals(2, result.sessionsThisWeek)
         assertEquals(600L, result.weekTimeSeconds)
@@ -83,7 +81,7 @@ class UserProfileRepositoryImplTest {
         coEvery { sessionRepository.getAllSessionsSince(500L) } returns weekSessions
         coEvery { bookRepository.getAllBooksList() } returns books
         coEvery { userProfileInfoFirestoreDataSource.download("uid") } returns Result.success(
-            UserProfileInfo(userId = "uid", followersCount = 4, likesCount = 9)
+            UserProfileInfo(userId = "uid", likesCount = 9, followeds = listOf("uid-2"))
         )
         coEvery { userProfileInfoFirestoreDataSource.upload("uid", any()) } returns Result.success(Unit)
 
@@ -91,13 +89,13 @@ class UserProfileRepositoryImplTest {
 
         assertEquals(true, result.isSuccess)
         val info = result.getOrThrow()
-        assertEquals(4, info.followersCount)
         assertEquals(9, info.likesCount)
         assertEquals(2, info.sessionsThisWeek)
         assertEquals(300L, info.weekTimeSeconds)
         assertEquals(listOf("Book A", "Book B"), info.bookCollection)
         assertEquals("Elena Marín", info.displayName)
         assertEquals(null, info.username)
+        assertEquals(listOf("uid-2"), info.followeds)
         coVerify { userProfileInfoDao.upsert(any()) }
         coVerify { userProfileInfoFirestoreDataSource.upload("uid", any()) }
     }
@@ -141,7 +139,6 @@ class UserProfileRepositoryImplTest {
 
         assertEquals(true, result.isSuccess)
         val info = result.getOrThrow()
-        assertEquals(0, info.followersCount)
         assertEquals(0, info.likesCount)
     }
 
@@ -159,7 +156,6 @@ class UserProfileRepositoryImplTest {
     fun `getRemoteUserProfileInfo caches and returns the downloaded profile`() = runTest {
         val remoteInfo = UserProfileInfo(
             userId = "uid",
-            followersCount = 12,
             likesCount = 34,
             displayName = "Elena Marín",
             username = "elena_marin",
@@ -225,7 +221,6 @@ class UserProfileRepositoryImplTest {
     fun `setUsername keeps existing profile stats while updating the username`() = runTest {
         coEvery { userProfileInfoDao.getByUserId("uid") } returns UserProfileInfoEntity(
             userId = "uid",
-            followersCount = 3,
             likesCount = 7,
             sessionsThisWeek = 2,
             weekTimeSeconds = 600L,
@@ -237,7 +232,6 @@ class UserProfileRepositoryImplTest {
         val result = repository.setUsername("uid", "elena_marin")
 
         val info = result.getOrThrow()
-        assertEquals(3, info.followersCount)
         assertEquals(7, info.likesCount)
         assertEquals("elena_marin", info.username)
     }
@@ -250,5 +244,78 @@ class UserProfileRepositoryImplTest {
 
         assertEquals(true, result.isFailure)
         assertEquals("db error", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `setLiked returns failure when liking own profile`() = runTest {
+        val result = repository.setLiked("me", "me", true)
+
+        assertEquals(true, result.isFailure)
+        coVerify(exactly = 0) { userProfileInfoFirestoreDataSource.incrementLikesCount(any(), any()) }
+    }
+
+    @Test
+    fun `setLiked adds target userId to own followeds when liking`() = runTest {
+        coEvery { userProfileInfoFirestoreDataSource.incrementLikesCount("target", 1) } returns Result.success(Unit)
+        coEvery { userProfileInfoDao.getByUserId("target") } returns null
+        coEvery { userProfileInfoDao.getByUserId("me") } returns null
+        coEvery { userProfileInfoFirestoreDataSource.upload("me", any()) } returns Result.success(Unit)
+
+        val result = repository.setLiked("me", "target", true)
+
+        assertEquals(true, result.isSuccess)
+        coVerify {
+            userProfileInfoFirestoreDataSource.upload(
+                "me",
+                withArg { assertEquals(listOf("target"), it.followeds) },
+            )
+        }
+    }
+
+    @Test
+    fun `setLiked removes target userId from own followeds when unliking`() = runTest {
+        coEvery { userProfileInfoFirestoreDataSource.incrementLikesCount("target", -1) } returns Result.success(Unit)
+        coEvery { userProfileInfoDao.getByUserId("target") } returns null
+        coEvery { userProfileInfoDao.getByUserId("me") } returns UserProfileInfoEntity(
+            userId = "me",
+            followeds = listOf("target", "other"),
+        )
+        coEvery { userProfileInfoFirestoreDataSource.upload("me", any()) } returns Result.success(Unit)
+
+        val result = repository.setLiked("me", "target", false)
+
+        assertEquals(true, result.isSuccess)
+        coVerify {
+            userProfileInfoFirestoreDataSource.upload(
+                "me",
+                withArg { assertEquals(listOf("other"), it.followeds) },
+            )
+        }
+    }
+
+    @Test
+    fun `setLiked returns failure and makes no local writes when remote increment fails`() = runTest {
+        val exception = RuntimeException("network error")
+        coEvery { userProfileInfoFirestoreDataSource.incrementLikesCount("target", 1) } returns Result.failure(exception)
+
+        val result = repository.setLiked("me", "target", true)
+
+        assertEquals(true, result.isFailure)
+        assertEquals(exception, result.exceptionOrNull())
+        coVerify(exactly = 0) { userProfileInfoFirestoreDataSource.upload(any(), any()) }
+    }
+
+    @Test
+    fun `setLiked reverts the remote increment when updating own profile fails`() = runTest {
+        coEvery { userProfileInfoFirestoreDataSource.incrementLikesCount("target", 1) } returns Result.success(Unit)
+        coEvery { userProfileInfoFirestoreDataSource.incrementLikesCount("target", -1) } returns Result.success(Unit)
+        coEvery { userProfileInfoDao.getByUserId("target") } returns null
+        coEvery { userProfileInfoDao.getByUserId("me") } returns null
+        coEvery { userProfileInfoFirestoreDataSource.upload("me", any()) } returns Result.failure(RuntimeException("upload failed"))
+
+        val result = repository.setLiked("me", "target", true)
+
+        assertEquals(true, result.isFailure)
+        coVerify { userProfileInfoFirestoreDataSource.incrementLikesCount("target", -1) }
     }
 }

@@ -38,7 +38,6 @@ class UserProfileRepositoryImpl @Inject constructor(
 
             val merged = UserProfileInfo(
                 userId = userId,
-                followersCount = remoteInfo?.followersCount ?: 0,
                 likesCount = remoteInfo?.likesCount ?: 0,
                 sessionsThisWeek = weekSessions.size,
                 weekTimeSeconds = weekSessions.sumOf { it.time },
@@ -46,6 +45,7 @@ class UserProfileRepositoryImpl @Inject constructor(
                 lastModified = System.currentTimeMillis(),
                 displayName = resolvedDisplayName,
                 username = remoteInfo?.username?.ifBlank { null },
+                followeds = remoteInfo?.followeds ?: emptyList(),
             )
 
             userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(merged))
@@ -78,5 +78,58 @@ class UserProfileRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override suspend fun setLiked(
+        currentUserId: String,
+        targetUserId: String,
+        liked: Boolean,
+    ): Result<Unit> {
+        if (currentUserId == targetUserId) {
+            return Result.failure(IllegalArgumentException("Cannot like own profile"))
+        }
+        val delta = if (liked) 1 else -1
+
+        val incrementResult = userProfileInfoFirestoreDataSource.incrementLikesCount(targetUserId, delta)
+        if (incrementResult.isFailure) {
+            return Result.failure(incrementResult.exceptionOrNull()!!)
+        }
+
+        runCatching {
+            val cachedTarget = getUserProfileInfo(targetUserId)
+            val patched = cachedTarget.copy(likesCount = (cachedTarget.likesCount + delta).coerceAtLeast(0))
+            userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(patched))
+        }
+
+        val ownUpdateResult = try {
+            val ownInfo = getUserProfileInfo(currentUserId)
+            val updatedFolloweds = if (liked) {
+                (ownInfo.followeds + targetUserId).distinct()
+            } else {
+                ownInfo.followeds - targetUserId
+            }
+            val updatedOwn = ownInfo.copy(
+                userId = currentUserId,
+                followeds = updatedFolloweds,
+                lastModified = System.currentTimeMillis(),
+            )
+            userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(updatedOwn))
+            userProfileInfoFirestoreDataSource.upload(currentUserId, updatedOwn).getOrThrow()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+        if (ownUpdateResult.isFailure) {
+            userProfileInfoFirestoreDataSource.incrementLikesCount(targetUserId, -delta)
+            runCatching {
+                val cachedTarget = getUserProfileInfo(targetUserId)
+                val reverted = cachedTarget.copy(likesCount = (cachedTarget.likesCount - delta).coerceAtLeast(0))
+                userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(reverted))
+            }
+            return Result.failure(ownUpdateResult.exceptionOrNull()!!)
+        }
+
+        return Result.success(Unit)
     }
 }

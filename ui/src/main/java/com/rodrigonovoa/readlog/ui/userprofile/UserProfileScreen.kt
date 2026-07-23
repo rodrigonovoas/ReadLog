@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
+import com.rodrigonovoa.readlog.ui.theme.color_error
 import com.rodrigonovoa.readlog.ui.theme.color_on_primary_container
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant
@@ -54,7 +56,6 @@ import com.rodrigonovoa.readlog.ui.theme.color_primary
 import com.rodrigonovoa.readlog.ui.theme.color_secondary
 import com.rodrigonovoa.readlog.ui.theme.color_surface
 import com.rodrigonovoa.readlog.ui.theme.color_surface_variant
-import com.rodrigonovoa.readlog.ui.theme.color_track
 import java.util.Locale
 
 @Composable
@@ -62,6 +63,7 @@ fun UserProfileScreen(
     uiState: UserProfileUiState,
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
+    onLikeClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -80,7 +82,7 @@ fun UserProfileScreen(
                 .padding(top = 20.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(26.dp),
         ) {
-            AvatarSection(uiState = uiState)
+            AvatarSection(uiState = uiState, onLikeClick = onLikeClick)
             StatsCard(uiState = uiState)
             WeeklyStatsRow(uiState = uiState)
             CollectionSection(uiState = uiState)
@@ -129,6 +131,7 @@ private fun TopBar(
 private fun AvatarSection(
     uiState: UserProfileUiState,
     modifier: Modifier = Modifier,
+    onLikeClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -166,14 +169,25 @@ private fun AvatarSection(
                 fontSize = 22.sp,
                 color = color_on_surface,
             )
-            /*
-            Icon(
-                imageVector = Icons.Outlined.FavoriteBorder,
-                contentDescription = stringResource(R.string.user_profile_favorite_content_description),
-                tint = color_on_surface_variant,
-                modifier = Modifier.size(18.dp),
-            )
-             */
+            if (!uiState.isOwnProfile) {
+                IconButton(
+                    onClick = onLikeClick,
+                    modifier = Modifier.size(32.dp),
+                ) {
+                    Icon(
+                        imageVector = if (uiState.isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = stringResource(
+                            if (uiState.isLiked) {
+                                R.string.user_profile_unfavorite_content_description
+                            } else {
+                                R.string.user_profile_favorite_content_description
+                            },
+                        ),
+                        tint = if (uiState.isLiked) color_error else color_on_surface_variant,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
         }
         Text(
             text = uiState.username,
@@ -181,6 +195,14 @@ private fun AvatarSection(
             color = color_on_surface_variant,
             modifier = Modifier.padding(top = 2.dp),
         )
+        if (uiState.hasLikeError) {
+            Text(
+                text = stringResource(R.string.user_profile_like_error_message),
+                fontSize = 11.sp,
+                color = color_error,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
     }
 }
 
@@ -198,17 +220,6 @@ private fun StatsCard(
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        StatItem(
-            value = uiState.followersCount,
-            label = stringResource(R.string.user_profile_followers_label),
-            modifier = Modifier.weight(1f),
-        )
-        Box(
-            modifier = Modifier
-                .width(1.dp)
-                .height(32.dp)
-                .background(color_track),
-        )
         StatItem(
             value = uiState.likesCount,
             label = stringResource(R.string.user_profile_likes_label),
