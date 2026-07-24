@@ -7,8 +7,8 @@ import javax.inject.Inject
 class AddSessionUseCase @Inject constructor(
     private val sessionRepository: SessionRepository
 ) {
-    suspend operator fun invoke(bookId: Int, time: Long): Result<Session> {
-        val session = Session(bookId = bookId, time = time)
+    suspend operator fun invoke(bookId: Int, time: Long, creationDate: Long = System.currentTimeMillis()): Result<Session> {
+        val session = Session(bookId = bookId, time = time, creationDate = creationDate)
         return runCatching { sessionRepository.insertSession(session) }
     }
 }

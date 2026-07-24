@@ -49,7 +49,7 @@ class BookSessionViewModelTest {
         addAnnotationUseCase = mockk(relaxed = true)
         refreshUserProfileIfOnlineUseCase = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf("bookId" to bookId))
-        coEvery { addSessionUseCase(any(), any()) } returns Result.success(
+        coEvery { addSessionUseCase(any(), any(), any()) } returns Result.success(
             Session(sessionId = 1, bookId = bookId, time = 0L)
         )
         viewModel = createViewModel()
@@ -256,7 +256,7 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
         collectJob.join()
 
-        coVerify(exactly = 0) { addSessionUseCase(any(), any()) }
+        coVerify(exactly = 0) { addSessionUseCase(any(), any(), any()) }
         coVerify(exactly = 0) { refreshUserProfileIfOnlineUseCase() }
         assertEquals(BookSessionEffect.NavigateBack, effect)
         assertFalse(viewModel.uiState.value.showEndSessionDialog)
@@ -335,7 +335,7 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
         collectJob.join()
 
-        coVerify { addSessionUseCase(bookId, 4L) }
+        coVerify { addSessionUseCase(bookId, 4L, any()) }
         coVerify { refreshUserProfileIfOnlineUseCase() }
         assertEquals(BookSessionEffect.NavigateBack, effect)
         assertFalse(viewModel.uiState.value.showEndSessionDialog)
@@ -343,7 +343,7 @@ class BookSessionViewModelTest {
 
     @Test
     fun `confirming end session with annotation text saves the annotation`() = runTest {
-        coEvery { addSessionUseCase(any(), any()) } returns Result.success(
+        coEvery { addSessionUseCase(any(), any(), any()) } returns Result.success(
             Session(sessionId = 42, bookId = bookId, time = 0L)
         )
 
@@ -375,6 +375,61 @@ class BookSessionViewModelTest {
         collectJob.join()
 
         coVerify(exactly = 0) { addAnnotationUseCase(any(), any()) }
+        assertEquals(BookSessionEffect.NavigateBack, effect)
+    }
+
+    @Test
+    fun `confirming manual time updates elapsed seconds, annotation, date and pauses the timer`() = runTest {
+        viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
+        advanceTimeBy(2_000)
+        runCurrent()
+
+        val manualDate = 1_700_000_000_000L
+        viewModel.processIntent(
+            BookSessionIntent.OnConfirmManualTimeClicked(
+                hours = 1,
+                minutes = 30,
+                dateMillis = manualDate,
+                annotation = "Manual note",
+            )
+        )
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(5_400L, state.elapsedSeconds)
+        assertEquals("Manual note", state.annotationText)
+        assertEquals(manualDate, state.sessionDate)
+        assertFalse(state.isRunning)
+
+        advanceTimeBy(3_000)
+        advanceUntilIdle()
+        assertEquals(5_400L, viewModel.uiState.value.elapsedSeconds)
+    }
+
+    @Test
+    fun `confirming end session after manual time entry saves the manual values`() = runTest {
+        val manualDate = 1_700_000_000_000L
+        viewModel.processIntent(
+            BookSessionIntent.OnConfirmManualTimeClicked(
+                hours = 1,
+                minutes = 30,
+                dateMillis = manualDate,
+                annotation = "Manual note",
+            )
+        )
+        advanceUntilIdle()
+
+        viewModel.processIntent(BookSessionIntent.OnStopClicked)
+        advanceUntilIdle()
+
+        var effect: BookSessionEffect? = null
+        val collectJob = launch { effect = viewModel.effect.first() }
+
+        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        advanceUntilIdle()
+        collectJob.join()
+
+        coVerify { addSessionUseCase(bookId, 5_400L, manualDate) }
         assertEquals(BookSessionEffect.NavigateBack, effect)
     }
 }

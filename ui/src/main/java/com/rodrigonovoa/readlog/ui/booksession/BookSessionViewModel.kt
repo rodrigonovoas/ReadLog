@@ -99,6 +99,17 @@ class BookSessionViewModel @Inject constructor(
                     _uiState.update { it.copy(annotationText = intent.text) }
                 }
             }
+            is BookSessionIntent.OnConfirmManualTimeClicked -> {
+                pauseTimer()
+                hasStartedTimer = true
+                _uiState.update {
+                    it.copy(
+                        elapsedSeconds = intent.hours * 3600L + intent.minutes * 60L,
+                        annotationText = intent.annotation,
+                        sessionDate = intent.dateMillis,
+                    )
+                }
+            }
         }
     }
 
@@ -122,7 +133,7 @@ class BookSessionViewModel @Inject constructor(
     private fun saveSession() {
         viewModelScope.launch {
             val state = _uiState.value
-            val result = addSessionUseCase(bookId, state.elapsedSeconds)
+            val result = addSessionUseCase(bookId, state.elapsedSeconds, state.sessionDate)
             val session = result.getOrNull()
             val annotationText = state.annotationText.trim()
             if (session != null) {

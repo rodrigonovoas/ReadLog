@@ -27,16 +27,22 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +64,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -79,6 +87,7 @@ import com.rodrigonovoa.readlog.ui.theme.color_surface
 import com.rodrigonovoa.readlog.ui.theme.color_surface_variant
 import com.rodrigonovoa.readlog.ui.theme.color_track
 import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
@@ -134,6 +143,7 @@ fun BookSessionScreen(
         ) {
             SessionHeader(
                 bookTitle = uiState.bookTitle,
+                sessionDateLabel = formatSessionDate(uiState.sessionDate),
                 isMusicOn = isMusicOn,
                 onToggleMusic = { isMusicOn = !isMusicOn },
                 onBackClick = { onIntent(BookSessionIntent.OnBackClicked) },
@@ -241,7 +251,16 @@ fun BookSessionScreen(
     }
 
     if (showManualTimeDialog) {
-        ManualTimeEntryDialog(onDismiss = { showManualTimeDialog = false })
+        ManualTimeEntryDialog(
+            initialElapsedSeconds = uiState.elapsedSeconds,
+            initialAnnotation = uiState.annotationText,
+            initialDateMillis = uiState.sessionDate,
+            onDismiss = { showManualTimeDialog = false },
+            onConfirm = { hours, minutes, dateMillis, annotation ->
+                onIntent(BookSessionIntent.OnConfirmManualTimeClicked(hours, minutes, dateMillis, annotation))
+                showManualTimeDialog = false
+            },
+        )
     }
 }
 
@@ -251,9 +270,13 @@ private fun formatElapsedTime(totalSeconds: Long): String {
     return "%02d:%02d".format(minutes, seconds)
 }
 
+private fun formatSessionDate(millis: Long): String =
+    SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(millis))
+
 @Composable
 private fun SessionHeader(
     bookTitle: String,
+    sessionDateLabel: String,
     isMusicOn: Boolean,
     onToggleMusic: () -> Unit,
     onBackClick: () -> Unit,
@@ -288,14 +311,23 @@ private fun SessionHeader(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Text(
-                text = bookTitle,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = color_on_surface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Column {
+                Text(
+                    text = bookTitle,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = color_on_surface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = sessionDateLabel,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = color_on_surface_variant,
+                    maxLines = 1,
+                )
+            }
         }
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -591,13 +623,24 @@ private fun SessionAnnotationsSheet(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ManualTimeEntryDialog(
+    initialElapsedSeconds: Long,
+    initialAnnotation: String,
+    initialDateMillis: Long,
     onDismiss: () -> Unit,
+    onConfirm: (hours: Int, minutes: Int, dateMillis: Long, annotation: String) -> Unit,
 ) {
-    val formattedDate = remember {
-        DateFormat.getDateInstance(DateFormat.LONG, Locale.getDefault()).format(Date())
+    var hoursText by remember {
+        mutableStateOf((initialElapsedSeconds / 3600).toString().padStart(2, '0'))
     }
+    var minutesText by remember {
+        mutableStateOf(((initialElapsedSeconds % 3600) / 60).toString().padStart(2, '0'))
+    }
+    var annotationText by remember { mutableStateOf(initialAnnotation) }
+    var dateMillis by remember { mutableStateOf(initialDateMillis) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -637,12 +680,14 @@ private fun ManualTimeEntryDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     ManualTimeUnitBox(
-                        value = "00",
+                        value = hoursText,
+                        onValueChange = { hoursText = sanitizeManualTimeInput(it, maxValue = 23) },
                         unit = stringResource(R.string.book_session_manual_time_hours_unit),
                         modifier = Modifier.weight(1f),
                     )
                     ManualTimeUnitBox(
-                        value = "45",
+                        value = minutesText,
+                        onValueChange = { minutesText = sanitizeManualTimeInput(it, maxValue = 59) },
                         unit = stringResource(R.string.book_session_manual_time_minutes_unit),
                         modifier = Modifier.weight(1f),
                     )
@@ -663,13 +708,15 @@ private fun ManualTimeEntryDialog(
                         .height(48.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(color_surface_variant)
+                        .clickable { showDatePicker = true }
                         .padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     CalendarIcon(tint = color_on_surface_variant, modifier = Modifier.size(15.dp))
                     Text(
-                        text = formattedDate,
+                        text = DateFormat.getDateInstance(DateFormat.LONG, Locale.getDefault())
+                            .format(Date(dateMillis)),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = color_on_surface,
@@ -694,12 +741,22 @@ private fun ManualTimeEntryDialog(
                         .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.CenterStart,
                 ) {
-                    Text(
-                        text = stringResource(R.string.book_session_annotation_placeholder),
-                        fontSize = 13.sp,
-                        color = color_placeholder,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                    if (annotationText.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.book_session_annotation_placeholder),
+                            fontSize = 13.sp,
+                            color = color_placeholder,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    BasicTextField(
+                        value = annotationText,
+                        onValueChange = { annotationText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        textStyle = TextStyle(fontSize = 13.sp, color = color_on_surface),
+                        cursorBrush = SolidColor(color_on_surface),
                     )
                 }
 
@@ -724,7 +781,14 @@ private fun ManualTimeEntryDialog(
                         )
                     }
                     Button(
-                        onClick = onDismiss,
+                        onClick = {
+                            onConfirm(
+                                hoursText.toIntOrNull() ?: 0,
+                                minutesText.toIntOrNull() ?: 0,
+                                dateMillis,
+                                annotationText,
+                            )
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp),
@@ -741,11 +805,48 @@ private fun ManualTimeEntryDialog(
             }
         }
     }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = dateMillis,
+            selectableDates = object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                    utcTimeMillis <= System.currentTimeMillis()
+            },
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { dateMillis = it }
+                        showDatePicker = false
+                    },
+                ) {
+                    Text(stringResource(R.string.book_session_manual_time_save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(stringResource(R.string.book_session_manual_time_cancel))
+                }
+            },
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+
+private fun sanitizeManualTimeInput(input: String, maxValue: Int): String {
+    val digitsOnly = input.filter { it.isDigit() }.take(2)
+    val parsed = digitsOnly.toIntOrNull() ?: return digitsOnly
+    return if (parsed > maxValue) maxValue.toString() else digitsOnly
 }
 
 @Composable
 private fun ManualTimeUnitBox(
     value: String,
+    onValueChange: (String) -> Unit,
     unit: String,
     modifier: Modifier = Modifier,
 ) {
@@ -753,16 +854,25 @@ private fun ManualTimeUnitBox(
         modifier = modifier
             .height(52.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(color_surface_variant),
+            .background(color_surface_variant)
+            .padding(horizontal = 12.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = value,
-            fontFamily = FontFamily.Serif,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp,
-            color = color_on_surface,
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.width(30.dp),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            textStyle = TextStyle(
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 20.sp,
+                color = color_on_surface,
+                textAlign = TextAlign.Center,
+            ),
+            cursorBrush = SolidColor(color_on_surface),
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(

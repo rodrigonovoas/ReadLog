@@ -6,4 +6,5 @@ data class BookSessionUiState(
     val isRunning: Boolean = false,
     val showEndSessionDialog: Boolean = false,
     val annotationText: String = "",
+    val sessionDate: Long = System.currentTimeMillis(),
 )

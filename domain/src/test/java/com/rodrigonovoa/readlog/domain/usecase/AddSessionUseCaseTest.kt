@@ -38,4 +38,17 @@ class AddSessionUseCaseTest {
         assertTrue(result.isFailure)
         assertEquals("Insert error", result.exceptionOrNull()?.message)
     }
+
+    @Test
+    fun `invoke propagates an explicit creationDate to the session`() = runTest {
+        val creationDate = 1_600_000_000_000L
+        val savedSession = Session(sessionId = 1, bookId = 5, time = 120L, creationDate = creationDate)
+        coEvery { repository.insertSession(any()) } returns savedSession
+
+        useCase(bookId = 5, time = 120L, creationDate = creationDate)
+
+        coVerify {
+            repository.insertSession(match { it.creationDate == creationDate })
+        }
+    }
 }
