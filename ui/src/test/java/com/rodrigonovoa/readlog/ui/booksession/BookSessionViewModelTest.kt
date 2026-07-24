@@ -348,6 +348,9 @@ class BookSessionViewModelTest {
         )
 
         viewModel.processIntent(BookSessionIntent.OnAnnotationTextChanged("Great chapter"))
+        viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
+        advanceTimeBy(4_000)
+        runCurrent()
         viewModel.processIntent(BookSessionIntent.OnStopClicked)
         advanceUntilIdle()
 
@@ -375,6 +378,51 @@ class BookSessionViewModelTest {
         collectJob.join()
 
         coVerify(exactly = 0) { addAnnotationUseCase(any(), any()) }
+        assertEquals(BookSessionEffect.NavigateBack, effect)
+    }
+
+    @Test
+    fun `confirming end session with zero elapsed time discards the session and emits NavigateBack`() = runTest {
+        viewModel.processIntent(BookSessionIntent.OnStopClicked)
+        advanceUntilIdle()
+
+        var effect: BookSessionEffect? = null
+        val collectJob = launch { effect = viewModel.effect.first() }
+
+        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        advanceUntilIdle()
+        collectJob.join()
+
+        coVerify(exactly = 0) { addSessionUseCase(any(), any(), any()) }
+        coVerify(exactly = 0) { addAnnotationUseCase(any(), any()) }
+        coVerify(exactly = 0) { refreshUserProfileIfOnlineUseCase() }
+        assertEquals(BookSessionEffect.NavigateBack, effect)
+        assertFalse(viewModel.uiState.value.showEndSessionDialog)
+    }
+
+    @Test
+    fun `confirming manual time with zero hours and minutes then ending the session discards it`() = runTest {
+        viewModel.processIntent(
+            BookSessionIntent.OnConfirmManualTimeClicked(
+                hours = 0,
+                minutes = 0,
+                dateMillis = 1_700_000_000_000L,
+                annotation = "Manual note",
+            )
+        )
+        advanceUntilIdle()
+
+        viewModel.processIntent(BookSessionIntent.OnStopClicked)
+        advanceUntilIdle()
+
+        var effect: BookSessionEffect? = null
+        val collectJob = launch { effect = viewModel.effect.first() }
+
+        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        advanceUntilIdle()
+        collectJob.join()
+
+        coVerify(exactly = 0) { addSessionUseCase(any(), any(), any()) }
         assertEquals(BookSessionEffect.NavigateBack, effect)
     }
 

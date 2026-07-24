@@ -133,6 +133,10 @@ class BookSessionViewModel @Inject constructor(
     private fun saveSession() {
         viewModelScope.launch {
             val state = _uiState.value
+            if (state.elapsedSeconds == 0L) {
+                _effect.emit(BookSessionEffect.NavigateBack)
+                return@launch
+            }
             val result = addSessionUseCase(bookId, state.elapsedSeconds, state.sessionDate)
             val session = result.getOrNull()
             val annotationText = state.annotationText.trim()
