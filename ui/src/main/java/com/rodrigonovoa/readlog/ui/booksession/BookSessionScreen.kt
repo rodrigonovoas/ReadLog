@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,9 +30,13 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +51,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -57,6 +63,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.common.ConfirmationDialog
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
@@ -71,6 +78,9 @@ import com.rodrigonovoa.readlog.ui.theme.color_session_background_top
 import com.rodrigonovoa.readlog.ui.theme.color_surface
 import com.rodrigonovoa.readlog.ui.theme.color_surface_variant
 import com.rodrigonovoa.readlog.ui.theme.color_track
+import java.text.DateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun BookSessionScreen(
@@ -79,6 +89,7 @@ fun BookSessionScreen(
     onIntent: (BookSessionIntent) -> Unit = {},
 ) {
     var isMusicOn by remember { mutableStateOf(true) }
+    var showManualTimeDialog by remember { mutableStateOf(false) }
 
     BackHandler(enabled = !uiState.showEndSessionDialog) {
         onIntent(BookSessionIntent.OnBackClicked)
@@ -126,6 +137,7 @@ fun BookSessionScreen(
                 isMusicOn = isMusicOn,
                 onToggleMusic = { isMusicOn = !isMusicOn },
                 onBackClick = { onIntent(BookSessionIntent.OnBackClicked) },
+                onAddManualTimeClick = { showManualTimeDialog = true },
             )
 
             Column(
@@ -227,6 +239,10 @@ fun BookSessionScreen(
             useAccentConfirmButton = false,
         )
     }
+
+    if (showManualTimeDialog) {
+        ManualTimeEntryDialog(onDismiss = { showManualTimeDialog = false })
+    }
 }
 
 private fun formatElapsedTime(totalSeconds: Long): String {
@@ -241,6 +257,7 @@ private fun SessionHeader(
     isMusicOn: Boolean,
     onToggleMusic: () -> Unit,
     onBackClick: () -> Unit,
+    onAddManualTimeClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -283,27 +300,49 @@ private fun SessionHeader(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        val musicToggleContentDescription = stringResource(
-            if (isMusicOn) {
-                R.string.book_session_music_on_content_description
-            } else {
-                R.string.book_session_music_off_content_description
-            }
-        )
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.55f))
-                .clickable(onClick = onToggleMusic)
-                .semantics { contentDescription = musicToggleContentDescription },
-            contentAlignment = Alignment.Center,
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            MusicToggleIcon(
-                isOn = isMusicOn,
-                tint = if (isMusicOn) color_on_surface else color_on_surface_variant,
-                modifier = Modifier.size(16.dp),
+            val addManualTimeContentDescription =
+                stringResource(R.string.book_session_add_manual_time_content_description)
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.55f))
+                    .clickable(onClick = onAddManualTimeClick)
+                    .semantics { contentDescription = addManualTimeContentDescription },
+                contentAlignment = Alignment.Center,
+            ) {
+                StopwatchIcon(
+                    tint = color_on_surface,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+
+            val musicToggleContentDescription = stringResource(
+                if (isMusicOn) {
+                    R.string.book_session_music_on_content_description
+                } else {
+                    R.string.book_session_music_off_content_description
+                }
             )
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.55f))
+                    .clickable(onClick = onToggleMusic)
+                    .semantics { contentDescription = musicToggleContentDescription },
+                contentAlignment = Alignment.Center,
+            ) {
+                MusicToggleIcon(
+                    isOn = isMusicOn,
+                    tint = if (isMusicOn) color_on_surface else color_on_surface_variant,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
         }
     }
 }
@@ -352,6 +391,85 @@ private fun MusicToggleIcon(
                 cap = StrokeCap.Round,
             )
         }
+    }
+}
+
+@Composable
+private fun StopwatchIcon(
+    tint: Color,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier = modifier) {
+        val strokeWidth = 1.4.dp.toPx()
+        val radius = size.minDimension * 0.375f
+        val center = Offset(size.width / 2f, size.height / 2f)
+
+        drawCircle(
+            color = tint,
+            radius = radius,
+            center = center,
+            style = Stroke(width = strokeWidth),
+        )
+        drawLine(
+            color = tint,
+            start = center,
+            end = Offset(center.x, center.y - radius * 0.5f),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round,
+        )
+        drawLine(
+            color = tint,
+            start = center,
+            end = Offset(center.x + radius * 0.37f, center.y + radius * 0.23f),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round,
+        )
+        drawLine(
+            color = tint,
+            start = Offset(size.width * 0.375f, size.height * 0.1f),
+            end = Offset(size.width * 0.625f, size.height * 0.1f),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round,
+        )
+    }
+}
+
+@Composable
+private fun CalendarIcon(
+    tint: Color,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier = modifier) {
+        val strokeWidth = 1.3.dp.toPx()
+        val cornerRadius = size.minDimension * 0.14f
+
+        drawRoundRect(
+            color = tint,
+            topLeft = Offset(size.width * 0.09f, size.height * 0.19f),
+            size = androidx.compose.ui.geometry.Size(size.width * 0.82f, size.height * 0.72f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius, cornerRadius),
+            style = Stroke(width = strokeWidth),
+        )
+        drawLine(
+            color = tint,
+            start = Offset(size.width * 0.09f, size.height * 0.42f),
+            end = Offset(size.width * 0.91f, size.height * 0.42f),
+            strokeWidth = strokeWidth,
+        )
+        drawLine(
+            color = tint,
+            start = Offset(size.width * 0.28f, size.height * 0.1f),
+            end = Offset(size.width * 0.28f, size.height * 0.27f),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round,
+        )
+        drawLine(
+            color = tint,
+            start = Offset(size.width * 0.72f, size.height * 0.1f),
+            end = Offset(size.width * 0.72f, size.height * 0.27f),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round,
+        )
     }
 }
 
@@ -470,6 +588,189 @@ private fun SessionAnnotationsSheet(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ManualTimeEntryDialog(
+    onDismiss: () -> Unit,
+) {
+    val formattedDate = remember {
+        DateFormat.getDateInstance(DateFormat.LONG, Locale.getDefault()).format(Date())
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = color_surface,
+            modifier = Modifier.widthIn(max = 320.dp),
+        ) {
+            Column(modifier = Modifier.padding(start = 24.dp, top = 26.dp, end = 24.dp, bottom = 22.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(color_chip),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        StopwatchIcon(tint = color_primary, modifier = Modifier.size(19.dp))
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Text(
+                        text = stringResource(R.string.book_session_manual_time_dialog_title),
+                        fontFamily = FontFamily.Serif,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 19.sp,
+                        color = color_on_surface,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+                Text(
+                    text = stringResource(R.string.book_session_manual_time_duration_label).uppercase(),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp,
+                    color = color_on_surface_variant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ManualTimeUnitBox(
+                        value = "00",
+                        unit = stringResource(R.string.book_session_manual_time_hours_unit),
+                        modifier = Modifier.weight(1f),
+                    )
+                    ManualTimeUnitBox(
+                        value = "45",
+                        unit = stringResource(R.string.book_session_manual_time_minutes_unit),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.book_session_manual_time_date_label).uppercase(),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp,
+                    color = color_on_surface_variant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(color_surface_variant)
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    CalendarIcon(tint = color_on_surface_variant, modifier = Modifier.size(15.dp))
+                    Text(
+                        text = formattedDate,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = color_on_surface,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.book_session_manual_time_annotation_label).uppercase(),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp,
+                    color = color_on_surface_variant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(color_surface_variant)
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    Text(
+                        text = stringResource(R.string.book_session_annotation_placeholder),
+                        fontSize = 13.sp,
+                        color = color_placeholder,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .padding(top = 24.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.textButtonColors(contentColor = color_on_surface_variant),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.book_session_manual_time_cancel),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = color_primary, contentColor = color_surface),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.book_session_manual_time_save),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ManualTimeUnitBox(
+    value: String,
+    unit: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .height(52.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(color_surface_variant),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = value,
+            fontFamily = FontFamily.Serif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 20.sp,
+            color = color_on_surface,
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = unit,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = color_on_surface_variant,
+        )
     }
 }
 
