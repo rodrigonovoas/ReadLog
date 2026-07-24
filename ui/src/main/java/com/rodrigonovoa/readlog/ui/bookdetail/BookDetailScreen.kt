@@ -3,6 +3,7 @@ package com.rodrigonovoa.readlog.ui.bookdetail
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,15 +23,22 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodrigonovoa.readlog.ui.R
@@ -136,7 +144,7 @@ private fun BookHeaderRow(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
             Text(
                 text = uiState.bookTitle,
                 fontFamily = FontFamily.Serif,
@@ -151,43 +159,49 @@ private fun BookHeaderRow(
                 color = color_on_surface_variant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 4.dp),
             )
             Text(
                 text = stringResource(R.string.book_detail_reading_since, uiState.readingSinceLabel),
                 fontSize = 12.sp,
                 color = color_placeholder,
-                modifier = Modifier.padding(top = 8.dp),
             )
         }
     }
 }
+
+private val StatsRowCompactWidthThreshold = 360.dp
 
 @Composable
 private fun StatsRow(
     uiState: BookDetailUiState,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        StatCard(
-            label = stringResource(R.string.book_detail_stat_sessions),
-            value = uiState.sessionsCount.toString(),
-            modifier = Modifier.weight(1f),
-        )
-        StatCard(
-            label = stringResource(R.string.book_detail_stat_total_time),
-            value = uiState.totalTimeLabel,
-            valueFontSize = 20.sp,
-            modifier = Modifier.weight(1f),
-        )
-        StatCard(
-            label = stringResource(R.string.book_detail_stat_days),
-            value = uiState.daysReadingCount.toString(),
-            modifier = Modifier.weight(1f),
-        )
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val compact = maxWidth < StatsRowCompactWidthThreshold
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 12.dp),
+        ) {
+            StatCard(
+                label = stringResource(R.string.book_detail_stat_sessions),
+                value = uiState.sessionsCount.toString(),
+                compact = compact,
+                modifier = Modifier.weight(1f),
+            )
+            StatCard(
+                label = stringResource(R.string.book_detail_stat_total_time),
+                value = uiState.totalTimeLabel,
+                compact = compact,
+                valueFontSize = if (compact) 17.sp else 20.sp,
+                modifier = Modifier.weight(1f),
+            )
+            StatCard(
+                label = stringResource(R.string.book_detail_stat_days),
+                value = uiState.daysReadingCount.toString(),
+                compact = compact,
+                modifier = Modifier.weight(1f),
+            )
+        }
     }
 }
 
@@ -196,34 +210,66 @@ private fun StatCard(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
-    valueFontSize: androidx.compose.ui.unit.TextUnit = 24.sp,
+    compact: Boolean = false,
+    valueFontSize: TextUnit = if (compact) 20.sp else 24.sp,
 ) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(color_surface_variant)
-            .padding(16.dp),
+            .padding(horizontal = if (compact) 8.dp else 16.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = label,
-            fontSize = 11.sp,
+            fontSize = if (compact) 9.5.sp else 11.sp,
+            lineHeight = if (compact) 11.sp else 13.sp,
             fontWeight = FontWeight.SemiBold,
             color = color_on_surface_variant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
         )
-        Text(
+        AutoSizeText(
             text = value,
             fontFamily = FontFamily.Serif,
             fontWeight = FontWeight.SemiBold,
-            fontSize = valueFontSize,
+            maxFontSize = valueFontSize,
             color = color_on_surface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = 4.dp),
         )
     }
+}
+
+@Composable
+private fun AutoSizeText(
+    text: String,
+    maxFontSize: TextUnit,
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified,
+    fontFamily: FontFamily? = null,
+    fontWeight: FontWeight? = null,
+    minFontSize: TextUnit = 13.sp,
+) {
+    var fontSize by remember(text, maxFontSize) { mutableStateOf(maxFontSize) }
+    var readyToDraw by remember(text, maxFontSize) { mutableStateOf(false) }
+
+    Text(
+        text = text,
+        fontFamily = fontFamily,
+        fontWeight = fontWeight,
+        fontSize = fontSize,
+        color = color,
+        maxLines = 1,
+        softWrap = false,
+        modifier = modifier.drawWithContent { if (readyToDraw) drawContent() },
+        onTextLayout = { result ->
+            if (result.didOverflowWidth && fontSize.value > minFontSize.value) {
+                fontSize = (fontSize.value - 1).sp
+            } else {
+                readyToDraw = true
+            }
+        },
+    )
 }
 
 @Composable

@@ -78,7 +78,10 @@ class BookDetailViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 sessionsCount = sessions.size,
-                totalTimeLabel = formatDuration(sessions.sumOf { session -> session.time }),
+                totalTimeLabel = formatDuration(
+                    totalSeconds = sessions.sumOf { session -> session.time },
+                    minuteUnit = "m.",
+                ),
                 monthLabel = currentMonthLabel(),
                 monthDays = buildMonthDays(sessions),
                 recentSessions = recentSessions,
@@ -136,14 +139,14 @@ class BookDetailViewModel @Inject constructor(
         }
     }
 
-    private fun formatDuration(totalSeconds: Long): String {
+    private fun formatDuration(totalSeconds: Long, minuteUnit: String = "min"): String {
         val minutes = totalSeconds / 60
         return if (minutes < 60) {
-            "$minutes min"
+            "$minutes $minuteUnit"
         } else {
             val hours = minutes / 60
             val remainingMinutes = minutes % 60
-            "%dh %02dmin".format(hours, remainingMinutes)
+            "%dh %02d$minuteUnit".format(hours, remainingMinutes)
         }
     }
 
