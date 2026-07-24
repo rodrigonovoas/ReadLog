@@ -120,6 +120,7 @@ class AuthRepositoryImplTest {
         every { firebaseUser.uid } returns "uid123"
         every { firebaseUser.email } returns "test@example.com"
         every { firebaseUser.displayName } returns "Test User"
+        every { firebaseUser.isAnonymous } returns false
         every { firebaseAuth.currentUser } returns firebaseUser
 
         val user = repository.getCurrentUser()

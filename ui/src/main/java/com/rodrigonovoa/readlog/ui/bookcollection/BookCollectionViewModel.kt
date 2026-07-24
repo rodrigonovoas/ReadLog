@@ -57,7 +57,9 @@ class BookCollectionViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { syncUserDataUseCase(currentUser.uid) }
             refreshUserProfileIfOnlineUseCase()
-            checkUsernameSetup(currentUser)
+            if (!currentUser.isAnonymous) {
+                checkUsernameSetup(currentUser)
+            }
         }
     }
 

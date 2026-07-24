@@ -541,6 +541,32 @@ class BookCollectionViewModelTest {
     }
 
     @Test
+    fun `init does not check username setup for anonymous users`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", null, null, isAnonymous = true)
+        every { isOnlineUseCase() } returns true
+        coEvery { syncUserDataUseCase("uid-1") } returns Result.success(Unit)
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
+        )
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.usernameSetup)
+        coVerify(exactly = 0) { requireUsernameSetupUseCase(any(), any(), any()) }
+        coVerify { syncUserDataUseCase("uid-1") }
+        coVerify { refreshUserProfileIfOnlineUseCase() }
+    }
+
+    @Test
     fun `onUsernameConfirmClicked with available username clears the dialog`() = runTest {
         every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Test User")
         every { isOnlineUseCase() } returns true

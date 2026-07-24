@@ -34,7 +34,10 @@ class UserProfileViewModel @Inject constructor(
 
     init {
         val targetUserId = targetUserId
-        _uiState.update { it.copy(isOwnProfile = targetUserId == null) }
+        val currentUser = getCurrentUserUseCase()
+        _uiState.update {
+            it.copy(isOwnProfile = targetUserId == null, canLike = currentUser?.isAnonymous != true)
+        }
         if (targetUserId != null) {
             loadOtherUserProfile(targetUserId)
         } else {
@@ -80,6 +83,7 @@ class UserProfileViewModel @Inject constructor(
         val targetId = targetUserId ?: return
         val currentUser = getCurrentUserUseCase() ?: return
         if (currentUser.uid == targetId) return
+        if (currentUser.isAnonymous) return
         val newLikedState = !_uiState.value.isLiked
         viewModelScope.launch {
             _uiState.update { it.copy(hasLikeError = false) }

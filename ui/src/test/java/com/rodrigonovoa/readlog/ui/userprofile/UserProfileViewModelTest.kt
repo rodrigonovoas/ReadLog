@@ -273,4 +273,46 @@ class UserProfileViewModelTest {
 
         coVerify(exactly = 0) { toggleUserLikeUseCase(any(), any(), any()) }
     }
+
+    @Test
+    fun `canLike is false when the current user is anonymous`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", null, null, isAnonymous = true)
+        coEvery { getUserProfileInfoUseCase("other-uid") } returns UserProfileInfo(userId = "other-uid")
+        coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(userId = "uid-1")
+        coEvery { getRemoteUserProfileInfoUseCase("other-uid") } returns Result.success(UserProfileInfo(userId = "other-uid"))
+
+        val viewModel = createViewModel(userId = "other-uid")
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.canLike)
+    }
+
+    @Test
+    fun `canLike is true when signed in with Google`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena")
+        coEvery { getUserProfileInfoUseCase("other-uid") } returns UserProfileInfo(userId = "other-uid")
+        coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(userId = "uid-1")
+        coEvery { getRemoteUserProfileInfoUseCase("other-uid") } returns Result.success(UserProfileInfo(userId = "other-uid"))
+
+        val viewModel = createViewModel(userId = "other-uid")
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.canLike)
+    }
+
+    @Test
+    fun `onLikeClick is a no-op for anonymous users`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", null, null, isAnonymous = true)
+        coEvery { getUserProfileInfoUseCase("other-uid") } returns UserProfileInfo(userId = "other-uid")
+        coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(userId = "uid-1")
+        coEvery { getRemoteUserProfileInfoUseCase("other-uid") } returns Result.success(UserProfileInfo(userId = "other-uid"))
+
+        val viewModel = createViewModel(userId = "other-uid")
+        advanceUntilIdle()
+
+        viewModel.onLikeClick()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { toggleUserLikeUseCase(any(), any(), any()) }
+    }
 }

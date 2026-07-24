@@ -169,7 +169,7 @@ private fun AvatarSection(
                 fontSize = 22.sp,
                 color = color_on_surface,
             )
-            if (!uiState.isOwnProfile) {
+            if (!uiState.isOwnProfile && uiState.canLike) {
                 IconButton(
                     onClick = onLikeClick,
                     modifier = Modifier.size(32.dp),
