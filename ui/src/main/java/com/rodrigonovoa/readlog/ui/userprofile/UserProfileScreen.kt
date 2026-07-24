@@ -5,10 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,17 +43,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodrigonovoa.readlog.ui.R
+import com.rodrigonovoa.readlog.ui.common.StatCardItem
+import com.rodrigonovoa.readlog.ui.common.StatCardRow
+import com.rodrigonovoa.readlog.ui.common.StatCardSize
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
 import com.rodrigonovoa.readlog.ui.theme.color_error
-import com.rodrigonovoa.readlog.ui.theme.color_on_primary_container
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant
-import com.rodrigonovoa.readlog.ui.theme.color_outline
 import com.rodrigonovoa.readlog.ui.theme.color_primary
 import com.rodrigonovoa.readlog.ui.theme.color_secondary
 import com.rodrigonovoa.readlog.ui.theme.color_surface
-import com.rodrigonovoa.readlog.ui.theme.color_surface_variant
 import java.util.Locale
 
 @Composable
@@ -83,8 +81,7 @@ fun UserProfileScreen(
             verticalArrangement = Arrangement.spacedBy(26.dp),
         ) {
             AvatarSection(uiState = uiState, onLikeClick = onLikeClick)
-            StatsCard(uiState = uiState)
-            WeeklyStatsRow(uiState = uiState)
+            ProfileStatsRow(uiState = uiState)
             CollectionSection(uiState = uiState)
         }
     }
@@ -207,115 +204,29 @@ private fun AvatarSection(
 }
 
 @Composable
-private fun StatsCard(
+private fun ProfileStatsRow(
     uiState: UserProfileUiState,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(color_surface_variant)
-            .padding(vertical = 16.dp, horizontal = 8.dp),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        StatItem(
-            value = uiState.likesCount,
-            label = stringResource(R.string.user_profile_likes_label),
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun StatItem(
-    value: Int,
-    label: String,
-    modifier: Modifier = Modifier,
-) {
-    Column(
+    StatCardRow(
+        items = listOf(
+            StatCardItem(
+                label = stringResource(R.string.user_profile_likes_label),
+                value = String.format(Locale.getDefault(), "%,d", uiState.likesCount),
+            ),
+            StatCardItem(
+                label = stringResource(R.string.user_profile_sessions_this_week_label),
+                value = uiState.weeklySessionsCount.toString(),
+            ),
+            StatCardItem(
+                label = stringResource(R.string.user_profile_time_this_week_label),
+                value = uiState.weeklyTimeLabel,
+                isLongValue = true,
+            ),
+        ),
+        size = StatCardSize.LARGE,
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = String.format(Locale.getDefault(), "%,d", value),
-            fontFamily = FontFamily.Serif,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 19.sp,
-            color = color_on_surface,
-        )
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = color_on_surface_variant,
-            modifier = Modifier.padding(top = 2.dp),
-        )
-    }
-}
-
-@Composable
-private fun WeeklyStatsRow(
-    uiState: UserProfileUiState,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Max),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        WeeklyStatCard(
-            label = stringResource(R.string.user_profile_sessions_this_week_label),
-            value = uiState.weeklySessionsCount.toString(),
-            containerColor = color_primary,
-            labelColor = color_on_primary_container,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-        )
-        WeeklyStatCard(
-            label = stringResource(R.string.user_profile_time_this_week_label),
-            value = uiState.weeklyTimeLabel,
-            containerColor = color_on_surface,
-            labelColor = color_outline,
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight(),
-        )
-    }
-}
-
-@Composable
-private fun WeeklyStatCard(
-    label: String,
-    value: String,
-    containerColor: Color,
-    labelColor: Color,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
-            .background(containerColor)
-            .padding(16.dp),
-    ) {
-        Text(
-            text = label,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = labelColor,
-        )
-        Text(
-            text = value,
-            fontFamily = FontFamily.Serif,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 28.sp,
-            color = color_surface,
-            modifier = Modifier.padding(top = 6.dp),
-        )
-    }
+    )
 }
 
 @Composable
