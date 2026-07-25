@@ -47,7 +47,8 @@
     <string name="add_book_field_current_page_placeholder">Ex. 20</string>
     <string name="add_book_submit">Add to my collection</string>
     <string name="add_book_scan_empty_title">Scan</string>
-    <string name="add_book_scan_instructions">Point the camera at a book barcode</string>
+    <string name="add_book_scan_title">Scan the barcode to load the book details</string>
+    <string name="add_book_scan_instructions">Point to the barcode</string>
     <string name="add_book_scan_no_permission">Camera permission is required to scan barcodes</string>
     <string name="add_book_scan_grant_permission">Grant permission</string>
     <string name="add_book_scan_searching">Looking up book…</string>
