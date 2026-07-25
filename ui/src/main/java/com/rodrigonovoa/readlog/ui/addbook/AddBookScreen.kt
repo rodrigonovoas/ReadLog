@@ -87,7 +87,11 @@ fun AddBookScreen(
                 context,
                 Manifest.permission.CAMERA,
             ) == PackageManager.PERMISSION_GRANTED
-            onIntent(AddBookIntent.OnCameraPermissionResult(granted))
+            if (granted) {
+                onIntent(AddBookIntent.OnCameraPermissionResult(true))
+            } else {
+                onIntent(AddBookIntent.RequestCameraPermission)
+            }
         }
     }
 
@@ -342,17 +346,20 @@ fun AddBookScreen(
                             contentAlignment = Alignment.Center,
                         ) {
                             Column(
+                                modifier = Modifier.fillMaxWidth(0.8f),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(16.dp),
                             ) {
                                 Text(
                                     text = stringResource(R.string.add_book_scan_no_permission),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = color_on_surface,
                                 )
                                 Button(
-                                    onClick = { onIntent(AddBookIntent.OnScanRetryClicked) },
+                                    onClick = { onIntent(AddBookIntent.RequestCameraPermission) },
                                     shape = RoundedCornerShape(28.dp),
                                 ) {
                                     Text(

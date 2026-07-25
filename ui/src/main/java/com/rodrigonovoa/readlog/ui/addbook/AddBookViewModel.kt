@@ -84,7 +84,9 @@ class AddBookViewModel @Inject constructor(
             }
             is AddBookIntent.OnCameraPermissionResult -> {
                 _uiState.value = _uiState.value.copy(hasCameraPermission = intent.granted)
-                if (!intent.granted && _uiState.value.selectedMode == AddBookMode.Scan) {
+            }
+            is AddBookIntent.RequestCameraPermission -> {
+                if (_uiState.value.selectedMode == AddBookMode.Scan && !_uiState.value.hasCameraPermission) {
                     viewModelScope.launch { _effect.emit(AddBookEffect.RequestCameraPermission) }
                 }
             }

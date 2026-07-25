@@ -441,18 +441,33 @@ class AddBookViewModelTest {
     }
 
     @Test
-    fun `camera permission result denied in scan mode emits request permission effect`() = runTest {
+    fun `camera permission result denied only updates state`() = runTest {
+        viewModel.processIntent(AddBookIntent.OnModeSelected(AddBookMode.Scan))
+        advanceUntilIdle()
+
+        val effects = mutableListOf<AddBookEffect>()
+        val collectJob = launch { viewModel.effect.collect { effects.add(it) } }
+
+        viewModel.processIntent(AddBookIntent.OnCameraPermissionResult(false))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.hasCameraPermission)
+        assertTrue(effects.isEmpty())
+        collectJob.cancel()
+    }
+
+    @Test
+    fun `request camera permission emits effect when permission is missing and in scan mode`() = runTest {
         viewModel.processIntent(AddBookIntent.OnModeSelected(AddBookMode.Scan))
         advanceUntilIdle()
 
         var effect: AddBookEffect? = null
         val collectJob = launch { effect = viewModel.effect.first() }
 
-        viewModel.processIntent(AddBookIntent.OnCameraPermissionResult(false))
+        viewModel.processIntent(AddBookIntent.RequestCameraPermission)
         advanceUntilIdle()
         collectJob.join()
 
-        assertFalse(viewModel.uiState.value.hasCameraPermission)
         assertTrue(effect is AddBookEffect.RequestCameraPermission)
     }
 

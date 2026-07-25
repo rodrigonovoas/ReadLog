@@ -19,6 +19,7 @@ sealed interface AddBookIntent {
     data object LaunchCoverPicker : AddBookIntent
     data object OnConfirmExitClicked : AddBookIntent
     data object OnDismissExitClicked : AddBookIntent
+    data object RequestCameraPermission : AddBookIntent
     data object OnScanRetryClicked : AddBookIntent
     data object OnScanErrorDismissed : AddBookIntent
 }
