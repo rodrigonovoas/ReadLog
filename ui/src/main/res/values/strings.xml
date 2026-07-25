@@ -52,6 +52,9 @@
     <string name="add_book_scan_no_permission">Camera permission is required to scan barcodes</string>
     <string name="add_book_scan_grant_permission">Grant permission</string>
     <string name="add_book_scan_searching">Looking up book…</string>
+    <string name="add_book_scan_isbn_label">Or you can enter the ISBN if you want:</string>
+    <string name="add_book_scan_isbn_placeholder">Ex. 9781234567890</string>
+    <string name="add_book_scan_search_button">Search</string>
     <string name="add_book_scan_book_not_found">Book not found. Try entering it manually.</string>
     <string name="add_book_scan_network_error">Couldn’t fetch book info. Check your connection.</string>
     <string name="add_book_scan_invalid_barcode">No valid ISBN detected. Try again.</string>

@@ -11,6 +11,7 @@ import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.UpdateBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.ValidateAddBookFormUseCase
+import com.rodrigonovoa.readlog.domain.usecase.ValidateIsbnUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -44,6 +45,7 @@ class AddBookViewModelTest {
     private lateinit var updateBookUseCase: UpdateBookUseCase
     private lateinit var refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase
     private lateinit var fetchBookByIsbnUseCase: FetchBookByIsbnUseCase
+    private lateinit var validateIsbnUseCase: ValidateIsbnUseCase
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: AddBookViewModel
 
@@ -58,6 +60,7 @@ class AddBookViewModelTest {
         updateBookUseCase = mockk(relaxed = true)
         refreshUserProfileIfOnlineUseCase = mockk(relaxed = true)
         fetchBookByIsbnUseCase = mockk(relaxed = true)
+        validateIsbnUseCase = ValidateIsbnUseCase()
         savedStateHandle = SavedStateHandle()
         viewModel = createViewModel()
     }
@@ -72,6 +75,7 @@ class AddBookViewModelTest {
             updateBookUseCase = updateBookUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             fetchBookByIsbnUseCase = fetchBookByIsbnUseCase,
+            validateIsbnUseCase = validateIsbnUseCase,
             savedStateHandle = savedStateHandle,
         )
     }
@@ -95,6 +99,8 @@ class AddBookViewModelTest {
         assertFalse(state.isLoading)
         assertNull(state.errorMessage)
         assertEquals(AddBookMode.Manual, state.selectedMode)
+        assertEquals("", state.manualIsbn)
+        assertFalse(state.isManualIsbnSearchEnabled)
     }
 
     @Test
@@ -535,5 +541,63 @@ class AddBookViewModelTest {
         advanceUntilIdle()
 
         assertNull(viewModel.uiState.value.scanError)
+    }
+
+    @Test
+    fun `manual isbn change updates state and enables search only for valid isbn`() = runTest {
+        viewModel.processIntent(AddBookIntent.OnManualIsbnChanged("123"))
+        advanceUntilIdle()
+
+        assertEquals("123", viewModel.uiState.value.manualIsbn)
+        assertFalse(viewModel.uiState.value.isManualIsbnSearchEnabled)
+
+        viewModel.processIntent(AddBookIntent.OnManualIsbnChanged("9781234567890"))
+        advanceUntilIdle()
+
+        assertEquals("9781234567890", viewModel.uiState.value.manualIsbn)
+        assertTrue(viewModel.uiState.value.isManualIsbnSearchEnabled)
+    }
+
+    @Test
+    fun `manual isbn search success fills form and switches to manual tab`() = runTest {
+        val metadata = com.rodrigonovoa.readlog.domain.model.BookMetadata(
+            title = "Manual Title",
+            author = "Manual Author",
+            genre = "Fiction",
+            releaseDate = "2021",
+            numPages = 300,
+        )
+        coEvery { fetchBookByIsbnUseCase("9781234567890") } returns Result.success(metadata)
+        every { capCurrentPageUseCase(any(), any()) } returns ""
+        every { calculateProgressUseCase(any(), any()) } returns 0
+        every { validateFormUseCase(any(), any(), any()) } returns true
+
+        viewModel.processIntent(AddBookIntent.OnManualIsbnChanged("9781234567890"))
+        viewModel.processIntent(AddBookIntent.OnManualIsbnSearchClicked)
+        advanceUntilIdle()
+
+        coVerify { fetchBookByIsbnUseCase("9781234567890") }
+        assertEquals(AddBookMode.Manual, viewModel.uiState.value.selectedMode)
+        assertEquals("Manual Title", viewModel.uiState.value.title)
+        assertEquals("Manual Author", viewModel.uiState.value.author)
+        assertEquals("300", viewModel.uiState.value.pages)
+        assertFalse(viewModel.uiState.value.isScanning)
+        assertNull(viewModel.uiState.value.scanError)
+        assertEquals("", viewModel.uiState.value.manualIsbn)
+        assertFalse(viewModel.uiState.value.isManualIsbnSearchEnabled)
+    }
+
+    @Test
+    fun `manual isbn search not found error shows scan error`() = runTest {
+        coEvery { fetchBookByIsbnUseCase("9781234567890") } returns Result.failure(
+            NoSuchElementException()
+        )
+
+        viewModel.processIntent(AddBookIntent.OnManualIsbnChanged("9781234567890"))
+        viewModel.processIntent(AddBookIntent.OnManualIsbnSearchClicked)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isScanning)
+        assertEquals(ScanError.NotFound, viewModel.uiState.value.scanError)
     }
 }

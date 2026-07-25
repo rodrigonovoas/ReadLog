@@ -12,6 +12,7 @@ import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.UpdateBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.ValidateAddBookFormUseCase
+import com.rodrigonovoa.readlog.domain.usecase.ValidateIsbnUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +33,7 @@ class AddBookViewModel @Inject constructor(
     private val updateBookUseCase: UpdateBookUseCase,
     private val refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase,
     private val fetchBookByIsbnUseCase: FetchBookByIsbnUseCase,
+    private val validateIsbnUseCase: ValidateIsbnUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -89,9 +91,20 @@ class AddBookViewModel @Inject constructor(
             is AddBookIntent.OnBarcodeScanned -> {
                 fetchBookByIsbn(intent.isbn)
             }
+            is AddBookIntent.OnManualIsbnChanged -> {
+                _uiState.value = _uiState.value.copy(
+                    manualIsbn = intent.isbn,
+                    isManualIsbnSearchEnabled = validateIsbnUseCase(intent.isbn),
+                )
+            }
+            is AddBookIntent.OnManualIsbnSearchClicked -> {
+                fetchBookByIsbn(_uiState.value.manualIsbn)
+            }
             is AddBookIntent.OnScanRetryClicked -> {
                 _uiState.value = _uiState.value.copy(scanError = null)
-                viewModelScope.launch { _effect.emit(AddBookEffect.RequestCameraPermission) }
+                if (!_uiState.value.hasCameraPermission) {
+                    viewModelScope.launch { _effect.emit(AddBookEffect.RequestCameraPermission) }
+                }
             }
             is AddBookIntent.OnScanErrorDismissed -> {
                 _uiState.value = _uiState.value.copy(scanError = null)
@@ -206,6 +219,8 @@ class AddBookViewModel @Inject constructor(
                     pages = pages,
                     currentPage = currentPage,
                     isScanning = false,
+                    manualIsbn = "",
+                    isManualIsbnSearchEnabled = false,
                     progressPercentage = calculateProgressUseCase(
                         currentPageStr = currentPage,
                         pagesStr = pages,

@@ -19,4 +19,6 @@ data class AddBookUiState(
     val isScanning: Boolean = false,
     val scanError: ScanError? = null,
     val hasCameraPermission: Boolean = false,
+    val manualIsbn: String = "",
+    val isManualIsbnSearchEnabled: Boolean = false,
 )

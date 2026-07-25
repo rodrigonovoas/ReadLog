@@ -11,6 +11,8 @@ sealed interface AddBookIntent {
     data class OnCoverSelected(val uri: Uri?) : AddBookIntent
     data class OnCameraPermissionResult(val granted: Boolean) : AddBookIntent
     data class OnBarcodeScanned(val isbn: String) : AddBookIntent
+    data class OnManualIsbnChanged(val isbn: String) : AddBookIntent
+    data object OnManualIsbnSearchClicked : AddBookIntent
     data object OnAddBookClicked : AddBookIntent
     data object OnBackClicked : AddBookIntent
     data object DismissError : AddBookIntent

@@ -32,6 +32,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -218,7 +219,9 @@ fun AddBookScreen(
                 ) {
                     if (state.hasCameraPermission) {
                         Column(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState()),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Text(
@@ -293,6 +296,45 @@ fun AddBookScreen(
                                 fontWeight = FontWeight.Medium,
                                 color = color_on_surface_variant,
                             )
+
+                            HorizontalDivider(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 24.dp),
+                                thickness = 1.dp,
+                                color = color_track,
+                            )
+
+                            AddBookTextField(
+                                label = stringResource(R.string.add_book_scan_isbn_label),
+                                value = state.manualIsbn,
+                                placeholder = stringResource(R.string.add_book_scan_isbn_placeholder),
+                                onValueChange = { onIntent(AddBookIntent.OnManualIsbnChanged(it)) },
+                                keyboardType = KeyboardType.Number,
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Button(
+                                onClick = { onIntent(AddBookIntent.OnManualIsbnSearchClicked) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp),
+                                shape = RoundedCornerShape(24.dp),
+                                enabled = state.isManualIsbnSearchEnabled && !state.isScanning,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = color_primary,
+                                    contentColor = color_surface,
+                                    disabledContainerColor = color_primary.copy(alpha = 0.5f),
+                                    disabledContentColor = color_surface.copy(alpha = 0.7f),
+                                ),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.add_book_scan_search_button),
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
                         }
                     } else {
                         Box(

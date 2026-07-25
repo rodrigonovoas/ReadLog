@@ -52,6 +52,9 @@
     <string name="add_book_scan_no_permission">Se necesita permiso de cámara para escanear códigos de barras</string>
     <string name="add_book_scan_grant_permission">Conceder permiso</string>
     <string name="add_book_scan_searching">Buscando libro…</string>
+    <string name="add_book_scan_isbn_label">O puedes introducir el ISBN si deseas:</string>
+    <string name="add_book_scan_isbn_placeholder">Ej. 9781234567890</string>
+    <string name="add_book_scan_search_button">Buscar</string>
     <string name="add_book_scan_book_not_found">No se encontró el libro. Inténtalo manualmente.</string>
     <string name="add_book_scan_network_error">No se pudo obtener la información del libro. Comprueba tu conexión.</string>
     <string name="add_book_scan_invalid_barcode">No se detectó un ISBN válido. Inténtalo de nuevo.</string>
