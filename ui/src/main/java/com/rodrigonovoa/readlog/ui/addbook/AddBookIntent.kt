@@ -9,10 +9,14 @@ sealed interface AddBookIntent {
     data class OnPagesChanged(val pages: String) : AddBookIntent
     data class OnCurrentPageChanged(val currentPage: String) : AddBookIntent
     data class OnCoverSelected(val uri: Uri?) : AddBookIntent
+    data class OnCameraPermissionResult(val granted: Boolean) : AddBookIntent
+    data class OnBarcodeScanned(val isbn: String) : AddBookIntent
     data object OnAddBookClicked : AddBookIntent
     data object OnBackClicked : AddBookIntent
     data object DismissError : AddBookIntent
     data object LaunchCoverPicker : AddBookIntent
     data object OnConfirmExitClicked : AddBookIntent
     data object OnDismissExitClicked : AddBookIntent
+    data object OnScanRetryClicked : AddBookIntent
+    data object OnScanErrorDismissed : AddBookIntent
 }

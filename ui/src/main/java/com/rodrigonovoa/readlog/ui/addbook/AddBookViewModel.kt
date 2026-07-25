@@ -7,6 +7,7 @@ import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.domain.usecase.AddBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CalculateReadingProgressUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CapCurrentPageUseCase
+import com.rodrigonovoa.readlog.domain.usecase.FetchBookByIsbnUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.UpdateBookUseCase
@@ -30,6 +31,7 @@ class AddBookViewModel @Inject constructor(
     private val getBookByIdUseCase: GetBookByIdUseCase,
     private val updateBookUseCase: UpdateBookUseCase,
     private val refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase,
+    private val fetchBookByIsbnUseCase: FetchBookByIsbnUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -73,7 +75,26 @@ class AddBookViewModel @Inject constructor(
     fun processIntent(intent: AddBookIntent) {
         when (intent) {
             is AddBookIntent.OnModeSelected -> {
-                _uiState.value = _uiState.value.copy(selectedMode = intent.mode)
+                _uiState.value = _uiState.value.copy(
+                    selectedMode = intent.mode,
+                    scanError = null,
+                )
+            }
+            is AddBookIntent.OnCameraPermissionResult -> {
+                _uiState.value = _uiState.value.copy(hasCameraPermission = intent.granted)
+                if (!intent.granted && _uiState.value.selectedMode == AddBookMode.Scan) {
+                    viewModelScope.launch { _effect.emit(AddBookEffect.RequestCameraPermission) }
+                }
+            }
+            is AddBookIntent.OnBarcodeScanned -> {
+                fetchBookByIsbn(intent.isbn)
+            }
+            is AddBookIntent.OnScanRetryClicked -> {
+                _uiState.value = _uiState.value.copy(scanError = null)
+                viewModelScope.launch { _effect.emit(AddBookEffect.RequestCameraPermission) }
+            }
+            is AddBookIntent.OnScanErrorDismissed -> {
+                _uiState.value = _uiState.value.copy(scanError = null)
             }
             is AddBookIntent.OnTitleChanged -> {
                 _uiState.value = _uiState.value.copy(
@@ -161,6 +182,55 @@ class AddBookViewModel @Inject constructor(
             }
             is AddBookIntent.LaunchCoverPicker -> {
                 viewModelScope.launch { _effect.emit(AddBookEffect.RequestCoverPicker) }
+            }
+        }
+    }
+
+    private fun fetchBookByIsbn(isbn: String) {
+        val state = _uiState.value
+        _uiState.value = state.copy(isScanning = true, scanError = null)
+
+        viewModelScope.launch {
+            val result = fetchBookByIsbnUseCase(isbn)
+            if (result.isSuccess) {
+                val metadata = result.getOrThrow()
+                val pages = metadata.numPages?.toString().orEmpty()
+                val currentPage = capCurrentPageUseCase(
+                    currentPageStr = state.currentPage,
+                    maxPages = metadata.numPages,
+                )
+                _uiState.value = _uiState.value.copy(
+                    selectedMode = AddBookMode.Manual,
+                    title = metadata.title,
+                    author = metadata.author,
+                    pages = pages,
+                    currentPage = currentPage,
+                    isScanning = false,
+                    progressPercentage = calculateProgressUseCase(
+                        currentPageStr = currentPage,
+                        pagesStr = pages,
+                    ),
+                    isSubmitEnabled = validateFormUseCase(
+                        title = metadata.title,
+                        pages = pages,
+                        currentPage = currentPage,
+                    ),
+                )
+            } else {
+                val exception = result.exceptionOrNull()
+                val scanError = when (exception) {
+                    is java.net.UnknownHostException,
+                    is java.io.IOException ->
+                        ScanError.Network
+                    is NoSuchElementException ->
+                        ScanError.NotFound
+                    else ->
+                        ScanError.Unknown
+                }
+                _uiState.value = _uiState.value.copy(
+                    isScanning = false,
+                    scanError = scanError,
+                )
             }
         }
     }

@@ -6,6 +6,7 @@ import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.domain.usecase.AddBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CalculateReadingProgressUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CapCurrentPageUseCase
+import com.rodrigonovoa.readlog.domain.usecase.FetchBookByIsbnUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.UpdateBookUseCase
@@ -42,6 +43,7 @@ class AddBookViewModelTest {
     private lateinit var getBookByIdUseCase: GetBookByIdUseCase
     private lateinit var updateBookUseCase: UpdateBookUseCase
     private lateinit var refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase
+    private lateinit var fetchBookByIsbnUseCase: FetchBookByIsbnUseCase
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: AddBookViewModel
 
@@ -55,6 +57,7 @@ class AddBookViewModelTest {
         getBookByIdUseCase = mockk(relaxed = true)
         updateBookUseCase = mockk(relaxed = true)
         refreshUserProfileIfOnlineUseCase = mockk(relaxed = true)
+        fetchBookByIsbnUseCase = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle()
         viewModel = createViewModel()
     }
@@ -68,6 +71,7 @@ class AddBookViewModelTest {
             getBookByIdUseCase = getBookByIdUseCase,
             updateBookUseCase = updateBookUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            fetchBookByIsbnUseCase = fetchBookByIsbnUseCase,
             savedStateHandle = savedStateHandle,
         )
     }
@@ -420,5 +424,116 @@ class AddBookViewModelTest {
         }
         coVerify { refreshUserProfileIfOnlineUseCase() }
         assertTrue(effect is AddBookEffect.NavigateBack)
+    }
+
+    @Test
+    fun `camera permission result granted updates state`() = runTest {
+        viewModel.processIntent(AddBookIntent.OnCameraPermissionResult(true))
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.hasCameraPermission)
+    }
+
+    @Test
+    fun `camera permission result denied in scan mode emits request permission effect`() = runTest {
+        viewModel.processIntent(AddBookIntent.OnModeSelected(AddBookMode.Scan))
+        advanceUntilIdle()
+
+        var effect: AddBookEffect? = null
+        val collectJob = launch { effect = viewModel.effect.first() }
+
+        viewModel.processIntent(AddBookIntent.OnCameraPermissionResult(false))
+        advanceUntilIdle()
+        collectJob.join()
+
+        assertFalse(viewModel.uiState.value.hasCameraPermission)
+        assertTrue(effect is AddBookEffect.RequestCameraPermission)
+    }
+
+    @Test
+    fun `barcode scanned success fills form and switches to manual tab`() = runTest {
+        val metadata = com.rodrigonovoa.readlog.domain.model.BookMetadata(
+            title = "Scanned Title",
+            author = "Scanned Author",
+            genre = "Fiction",
+            releaseDate = "2020",
+            numPages = 250,
+        )
+        coEvery { fetchBookByIsbnUseCase("9781234567890") } returns Result.success(metadata)
+        every { capCurrentPageUseCase(any(), any()) } returns ""
+        every { calculateProgressUseCase(any(), any()) } returns 0
+        every { validateFormUseCase(any(), any(), any()) } returns true
+
+        viewModel.processIntent(AddBookIntent.OnBarcodeScanned("9781234567890"))
+        advanceUntilIdle()
+
+        coVerify { fetchBookByIsbnUseCase("9781234567890") }
+        assertEquals(AddBookMode.Manual, viewModel.uiState.value.selectedMode)
+        assertEquals("Scanned Title", viewModel.uiState.value.title)
+        assertEquals("Scanned Author", viewModel.uiState.value.author)
+        assertEquals("250", viewModel.uiState.value.pages)
+        assertFalse(viewModel.uiState.value.isScanning)
+        assertNull(viewModel.uiState.value.scanError)
+    }
+
+    @Test
+    fun `barcode scanned network error shows scan error`() = runTest {
+        coEvery { fetchBookByIsbnUseCase("9781234567890") } returns Result.failure(
+            java.net.UnknownHostException()
+        )
+
+        viewModel.processIntent(AddBookIntent.OnBarcodeScanned("9781234567890"))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isScanning)
+        assertEquals(ScanError.Network, viewModel.uiState.value.scanError)
+    }
+
+    @Test
+    fun `barcode scanned not found error shows scan error`() = runTest {
+        coEvery { fetchBookByIsbnUseCase("9781234567890") } returns Result.failure(
+            NoSuchElementException()
+        )
+
+        viewModel.processIntent(AddBookIntent.OnBarcodeScanned("9781234567890"))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isScanning)
+        assertEquals(ScanError.NotFound, viewModel.uiState.value.scanError)
+    }
+
+    @Test
+    fun `scan retry clicked clears scan error and requests permission`() = runTest {
+        coEvery { fetchBookByIsbnUseCase("9781234567890") } returns Result.failure(
+            NoSuchElementException()
+        )
+        viewModel.processIntent(AddBookIntent.OnBarcodeScanned("9781234567890"))
+        advanceUntilIdle()
+        assertEquals(ScanError.NotFound, viewModel.uiState.value.scanError)
+
+        var effect: AddBookEffect? = null
+        val collectJob = launch { effect = viewModel.effect.first() }
+
+        viewModel.processIntent(AddBookIntent.OnScanRetryClicked)
+        advanceUntilIdle()
+        collectJob.join()
+
+        assertNull(viewModel.uiState.value.scanError)
+        assertTrue(effect is AddBookEffect.RequestCameraPermission)
+    }
+
+    @Test
+    fun `scan error dismissed clears scan error`() = runTest {
+        coEvery { fetchBookByIsbnUseCase("9781234567890") } returns Result.failure(
+            RuntimeException()
+        )
+        viewModel.processIntent(AddBookIntent.OnBarcodeScanned("9781234567890"))
+        advanceUntilIdle()
+        assertEquals(ScanError.Unknown, viewModel.uiState.value.scanError)
+
+        viewModel.processIntent(AddBookIntent.OnScanErrorDismissed)
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.scanError)
     }
 }

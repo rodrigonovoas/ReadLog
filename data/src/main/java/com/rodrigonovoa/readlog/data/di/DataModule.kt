@@ -11,6 +11,10 @@ import com.rodrigonovoa.readlog.data.firestore.UserProfileInfoFirestoreDataSourc
 import com.rodrigonovoa.readlog.data.firestore.UserProfileInfoFirestoreDataSourceImpl
 import com.rodrigonovoa.readlog.data.firestore.UserSearchFirestoreDataSource
 import com.rodrigonovoa.readlog.data.firestore.UserSearchFirestoreDataSourceImpl
+import com.rodrigonovoa.readlog.data.openlibrary.OpenLibraryApi
+import com.rodrigonovoa.readlog.data.openlibrary.OpenLibraryBookMapper
+import com.rodrigonovoa.readlog.data.openlibrary.OpenLibraryBookMapperImpl
+import com.rodrigonovoa.readlog.data.openlibrary.OpenLibraryBookMetadataRepository
 import com.rodrigonovoa.readlog.data.mapper.AnnotationDataMapper
 import com.rodrigonovoa.readlog.data.mapper.AnnotationDataMapperImpl
 import com.rodrigonovoa.readlog.data.mapper.AnnotationFirestoreMapper
@@ -40,6 +44,7 @@ import com.rodrigonovoa.readlog.data.repository.UserProfileRepositoryImpl
 import com.rodrigonovoa.readlog.data.repository.UserSearchRepositoryImpl
 import com.rodrigonovoa.readlog.domain.repository.AnnotationRepository
 import com.rodrigonovoa.readlog.domain.repository.AuthRepository
+import com.rodrigonovoa.readlog.domain.repository.BookMetadataRepository
 import com.rodrigonovoa.readlog.domain.repository.BookRepository
 import com.rodrigonovoa.readlog.domain.repository.ConnectivityRepository
 import com.rodrigonovoa.readlog.domain.repository.SessionRepository
@@ -48,8 +53,11 @@ import com.rodrigonovoa.readlog.domain.repository.UserProfileRepository
 import com.rodrigonovoa.readlog.domain.repository.UserSearchRepository
 import dagger.Binds
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 @Module
@@ -67,6 +75,12 @@ abstract class DataModule {
     abstract fun bindBookRepository(
         impl: BookRepositoryImpl
     ): BookRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBookMetadataRepository(
+        impl: OpenLibraryBookMetadataRepository
+    ): BookMetadataRepository
 
     @Binds
     @Singleton
@@ -112,6 +126,11 @@ abstract class DataModule {
     abstract fun bindBookDataMapper(
         impl: BookDataMapperImpl
     ): BookDataMapper
+
+    @Binds
+    abstract fun bindOpenLibraryBookMapper(
+        impl: OpenLibraryBookMapperImpl
+    ): OpenLibraryBookMapper
 
     @Binds
     abstract fun bindSessionDataMapper(
@@ -183,4 +202,18 @@ abstract class DataModule {
     abstract fun bindConnectivityRepository(
         impl: ConnectivityRepositoryImpl
     ): ConnectivityRepository
+
+    companion object {
+        private const val OPEN_LIBRARY_BASE_URL = "https://openlibrary.org/"
+
+        @Provides
+        @Singleton
+        fun provideOpenLibraryApi(): OpenLibraryApi {
+            return Retrofit.Builder()
+                .baseUrl(OPEN_LIBRARY_BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(OpenLibraryApi::class.java)
+        }
+    }
 }

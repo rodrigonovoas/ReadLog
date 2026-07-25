@@ -1,5 +1,7 @@
 package com.rodrigonovoa.readlog.ui.addbook
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -34,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,6 +55,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
@@ -72,6 +76,18 @@ fun AddBookScreen(
     onIntent: (AddBookIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    LaunchedEffect(state.selectedMode) {
+        if (state.selectedMode == AddBookMode.Scan && !state.isEditMode) {
+            val granted = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA,
+            ) == PackageManager.PERMISSION_GRANTED
+            onIntent(AddBookIntent.OnCameraPermissionResult(granted))
+        }
+    }
+
     BackHandler(enabled = !state.showExitConfirmation) {
         onIntent(AddBookIntent.OnBackClicked)
     }
@@ -87,23 +103,24 @@ fun AddBookScreen(
             onBackClick = { onIntent(AddBookIntent.OnBackClicked) },
         )
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(start = 24.dp, top = 20.dp, end = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            if (!state.isEditMode) {
-                AddBookModeSelector(
-                    selectedMode = state.selectedMode,
-                    onModeSelected = { onIntent(AddBookIntent.OnModeSelected(it)) },
-                )
-            }
+        if (!state.isEditMode) {
+            AddBookModeSelector(
+                modifier = Modifier.padding(start = 24.dp, top = 20.dp, end = 24.dp),
+                selectedMode = state.selectedMode,
+                onModeSelected = { onIntent(AddBookIntent.OnModeSelected(it)) },
+            )
+        }
 
-            when (state.selectedMode) {
-                AddBookMode.Manual -> {
+        when (state.selectedMode) {
+            AddBookMode.Manual -> {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 24.dp, top = 20.dp, end = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                ) {
                     CoverPicker(
                         coverUri = state.coverUri,
                         onClick = { onIntent(AddBookIntent.LaunchCoverPicker) },
@@ -153,57 +170,134 @@ fun AddBookScreen(
                     }
                 }
 
-                AddBookMode.Scan -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
+                Button(
+                    onClick = { onIntent(AddBookIntent.OnAddBookClicked) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 24.dp, top = 20.dp, end = 24.dp, bottom = 28.dp)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    enabled = state.isSubmitEnabled && !state.isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = color_primary,
+                        contentColor = color_surface,
+                        disabledContainerColor = color_primary.copy(alpha = 0.5f),
+                        disabledContentColor = color_surface.copy(alpha = 0.7f),
+                    ),
+                    contentPadding = PaddingValues(horizontal = 24.dp),
+                ) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            color = color_surface,
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        val buttonTextRes = if (state.isEditMode) {
+                            R.string.add_book_save_changes
+                        } else {
+                            R.string.add_book_submit
+                        }
                         Text(
-                            text = stringResource(R.string.add_book_scan_empty_title),
-                            fontFamily = FontFamily.Serif,
+                            text = stringResource(buttonTextRes),
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 20.sp,
-                            color = color_on_surface,
                         )
                     }
                 }
             }
-        }
 
-        if (state.selectedMode == AddBookMode.Manual) {
-            Button(
-                onClick = { onIntent(AddBookIntent.OnAddBookClicked) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 24.dp, top = 20.dp, end = 24.dp, bottom = 28.dp)
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                enabled = state.isSubmitEnabled && !state.isLoading,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = color_primary,
-                    contentColor = color_surface,
-                    disabledContainerColor = color_primary.copy(alpha = 0.5f),
-                    disabledContentColor = color_surface.copy(alpha = 0.7f),
-                ),
-                contentPadding = PaddingValues(horizontal = 24.dp),
-            ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(22.dp),
-                        color = color_surface,
-                        strokeWidth = 2.dp,
-                    )
-                } else {
-                    val buttonTextRes = if (state.isEditMode) {
-                        R.string.add_book_save_changes
+            AddBookMode.Scan -> {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                ) {
+                    if (state.hasCameraPermission) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            BarcodeScanner(
+                                onBarcodeDetected = {
+                                    onIntent(AddBookIntent.OnBarcodeScanned(it))
+                                },
+                                modifier = Modifier.fillMaxSize(),
+                            )
+
+                            Text(
+                                text = stringResource(R.string.add_book_scan_instructions),
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = 24.dp),
+                                fontFamily = FontFamily.Serif,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 18.sp,
+                                color = color_surface,
+                            )
+
+                            if (state.isScanning) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(color_on_surface.copy(alpha = 0.6f)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    ) {
+                                        CircularProgressIndicator(
+                                            color = color_surface,
+                                            strokeWidth = 2.dp,
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.add_book_scan_searching),
+                                            color = color_surface,
+                                            fontSize = 16.sp,
+                                            fontWeight = FontWeight.Medium,
+                                        )
+                                    }
+                                }
+                            }
+
+                            state.scanError?.let { error ->
+                                val messageRes = when (error) {
+                                    ScanError.Network -> R.string.add_book_scan_network_error
+                                    ScanError.NotFound -> R.string.add_book_scan_book_not_found
+                                    ScanError.Unknown -> R.string.add_book_scan_invalid_barcode
+                                }
+                                ScanErrorOverlay(
+                                    message = stringResource(messageRes),
+                                    onRetry = { onIntent(AddBookIntent.OnScanRetryClicked) },
+                                    onDismiss = { onIntent(AddBookIntent.OnScanErrorDismissed) },
+                                )
+                            }
+                        }
                     } else {
-                        R.string.add_book_submit
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.add_book_scan_no_permission),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = color_on_surface,
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = { onIntent(AddBookIntent.OnScanRetryClicked) },
+                                shape = RoundedCornerShape(28.dp),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.add_book_scan_grant_permission),
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                        }
                     }
-                    Text(
-                        text = stringResource(buttonTextRes),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
                 }
             }
         }
@@ -522,6 +616,58 @@ private fun AddCoverIcon(
             strokeWidth = strokeWidth,
             cap = StrokeCap.Round,
         )
+    }
+}
+
+@Composable
+private fun ScanErrorOverlay(
+    message: String,
+    onRetry: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(color_on_surface.copy(alpha = 0.6f))
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(color_surface)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(
+                text = message,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = color_on_surface,
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                TextButton(onClick = onDismiss) {
+                    Text(
+                        text = stringResource(R.string.add_book_exit_dialog_no),
+                        color = color_on_surface_variant,
+                    )
+                }
+                Button(
+                    onClick = onRetry,
+                    shape = RoundedCornerShape(28.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.add_book_scan_retry),
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
     }
 }
 

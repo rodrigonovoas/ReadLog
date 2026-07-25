@@ -47,6 +47,14 @@
     <string name="add_book_field_current_page_placeholder">Ej. 20</string>
     <string name="add_book_submit">Añadir a mi colección</string>
     <string name="add_book_scan_empty_title">Escanear</string>
+    <string name="add_book_scan_instructions">Apunta la cámara al código de barras del libro</string>
+    <string name="add_book_scan_no_permission">Se necesita permiso de cámara para escanear códigos de barras</string>
+    <string name="add_book_scan_grant_permission">Conceder permiso</string>
+    <string name="add_book_scan_searching">Buscando libro…</string>
+    <string name="add_book_scan_book_not_found">No se encontró el libro. Inténtalo manualmente.</string>
+    <string name="add_book_scan_network_error">No se pudo obtener la información del libro. Comprueba tu conexión.</string>
+    <string name="add_book_scan_invalid_barcode">No se detectó un ISBN válido. Inténtalo de nuevo.</string>
+    <string name="add_book_scan_retry">Reintentar</string>
     <string name="add_book_cover_content_description">Portada del libro</string>
     <string name="add_book_exit_dialog_title">Cambios sin guardar</string>
     <string name="add_book_exit_dialog_message">Tienes datos sin guardar. ¿Estás seguro de que quieres salir?</string>

@@ -16,4 +16,7 @@ data class AddBookUiState(
     val showExitConfirmation: Boolean = false,
     val isEditMode: Boolean = false,
     val bookId: Int? = null,
+    val isScanning: Boolean = false,
+    val scanError: ScanError? = null,
+    val hasCameraPermission: Boolean = false,
 )

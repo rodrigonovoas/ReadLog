@@ -203,6 +203,12 @@ class MainActivity : ComponentActivity() {
                             viewModel.processIntent(AddBookIntent.OnCoverSelected(uri))
                         }
 
+                        val cameraPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.RequestPermission(),
+                        ) { isGranted ->
+                            viewModel.processIntent(AddBookIntent.OnCameraPermissionResult(isGranted))
+                        }
+
                         LaunchedEffect(Unit) {
                             viewModel.effect.collect { effect ->
                                 when (effect) {
@@ -213,6 +219,9 @@ class MainActivity : ComponentActivity() {
                                         photoPickerLauncher.launch(
                                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                         )
+                                    }
+                                    is AddBookEffect.RequestCameraPermission -> {
+                                        cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
                                     }
                                 }
                             }
