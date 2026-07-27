@@ -45,6 +45,11 @@
     <string name="add_book_field_pages_placeholder">Ej. 340</string>
     <string name="add_book_field_current_page_label">Página actual</string>
     <string name="add_book_field_current_page_placeholder">Ej. 20</string>
+    <string name="add_book_field_state_label">Estado</string>
+    <string name="book_state_in_progress">En curso</string>
+    <string name="book_state_completed">Completado</string>
+    <string name="book_state_dropped">Abandonado</string>
+    <string name="book_state_paused">Pausado</string>
     <string name="add_book_submit">Añadir a mi colección</string>
     <string name="add_book_scan_empty_title">Escanear</string>
     <string name="add_book_scan_title">Escanee el código de barras para cargar los datos</string>

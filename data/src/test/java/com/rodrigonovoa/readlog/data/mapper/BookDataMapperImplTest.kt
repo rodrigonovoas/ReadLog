@@ -2,6 +2,7 @@ package com.rodrigonovoa.readlog.data.mapper
 
 import com.rodrigonovoa.readlog.data.db.entity.BookEntity
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.BookState
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -20,6 +21,7 @@ class BookDataMapperImplTest {
             releaseDate = "1967",
             numPages = 340,
             currentPage = 231,
+            state = BookState.IN_PROGRESS.name,
             creationDate = 12345678L,
             lastModified = 11111111L,
         )
@@ -36,6 +38,7 @@ class BookDataMapperImplTest {
                 releaseDate = "1967",
                 numPages = 340,
                 currentPage = 231,
+                state = BookState.IN_PROGRESS,
                 creationDate = 12345678L,
                 lastModified = 11111111L,
             ),
@@ -54,6 +57,7 @@ class BookDataMapperImplTest {
             releaseDate = "1966",
             numPages = 300,
             currentPage = 102,
+            state = BookState.PAUSED,
             creationDate = 87654321L,
             lastModified = 22222222L,
         )
@@ -70,6 +74,7 @@ class BookDataMapperImplTest {
                 releaseDate = "1966",
                 numPages = 300,
                 currentPage = 102,
+                state = BookState.PAUSED.name,
                 creationDate = 87654321L,
                 lastModified = 22222222L,
             ),
@@ -88,6 +93,7 @@ class BookDataMapperImplTest {
             releaseDate = "2007",
             numPages = 662,
             currentPage = 80,
+            state = BookState.DROPPED,
             creationDate = 11111111L,
             lastModified = 33333333L,
         )

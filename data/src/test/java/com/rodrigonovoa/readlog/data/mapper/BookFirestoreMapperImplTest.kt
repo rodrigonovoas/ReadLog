@@ -1,6 +1,7 @@
 package com.rodrigonovoa.readlog.data.mapper
 
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.BookState
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -19,6 +20,7 @@ class BookFirestoreMapperImplTest {
             releaseDate = "2024",
             numPages = 300,
             currentPage = 50,
+            state = BookState.PAUSED,
             creationDate = 1000L,
             lastModified = 2000L,
         )
@@ -31,6 +33,7 @@ class BookFirestoreMapperImplTest {
         assertEquals("2024", map["releaseDate"])
         assertEquals(300, map["numPages"])
         assertEquals(50, map["currentPage"])
+        assertEquals(BookState.PAUSED.name, map["state"])
         assertEquals(1000L, map["creationDate"])
         assertEquals(2000L, map["lastModified"])
     }
@@ -57,10 +60,27 @@ class BookFirestoreMapperImplTest {
                 releaseDate = "",
                 numPages = 100,
                 currentPage = 10,
+                state = BookState.IN_PROGRESS,
                 creationDate = 0L,
                 lastModified = 5000L,
             ),
             book
         )
+    }
+
+    @Test
+    fun `fromFirestoreMap reads state when present`() {
+        val map = mapOf(
+            "title" to "Title",
+            "author" to "Author",
+            "numPages" to 100,
+            "currentPage" to 10,
+            "state" to BookState.COMPLETED.name,
+            "lastModified" to 5000L,
+        )
+
+        val book = mapper.fromFirestoreMap(map, "uuid-3")
+
+        assertEquals(BookState.COMPLETED, book.state)
     }
 }

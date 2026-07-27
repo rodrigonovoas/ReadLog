@@ -9,6 +9,7 @@ data class Book(
     val releaseDate: String,
     val numPages: Int,
     val currentPage: Int,
+    val state: BookState = BookState.IN_PROGRESS,
     val creationDate: Long = System.currentTimeMillis(),
     val lastModified: Long = 0L,
 )

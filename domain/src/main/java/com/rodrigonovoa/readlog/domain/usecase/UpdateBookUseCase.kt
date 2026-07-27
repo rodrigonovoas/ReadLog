@@ -1,6 +1,7 @@
 package com.rodrigonovoa.readlog.domain.usecase
 
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.BookState
 import com.rodrigonovoa.readlog.domain.repository.BookRepository
 import javax.inject.Inject
 
@@ -13,12 +14,14 @@ class UpdateBookUseCase @Inject constructor(
         author: String,
         numPages: Int,
         currentPage: Int,
+        state: BookState,
     ): Result<Unit> {
         val updated = original.copy(
             title = title.trim(),
             author = author.trim(),
             numPages = numPages,
             currentPage = currentPage,
+            state = state,
         )
         return runCatching { bookRepository.updateBook(updated) }
     }

@@ -32,13 +32,20 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,7 +67,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
+import com.rodrigonovoa.readlog.domain.model.BookState
 import com.rodrigonovoa.readlog.ui.R
+import com.rodrigonovoa.readlog.ui.common.bookStateStringRes
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
@@ -159,6 +168,11 @@ fun AddBookScreen(
                             placeholder = stringResource(R.string.add_book_field_current_page_placeholder),
                             onValueChange = { onIntent(AddBookIntent.OnCurrentPageChanged(it)) },
                             keyboardType = KeyboardType.Number,
+                        )
+
+                        BookStateDropdown(
+                            selectedState = state.state,
+                            onStateSelected = { onIntent(AddBookIntent.OnStateChanged(it)) },
                         )
                     }
 
@@ -574,6 +588,47 @@ private fun CoverPicker(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BookStateDropdown(
+    selectedState: BookState,
+    onStateSelected: (BookState) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val expanded = remember { mutableStateOf(false) }
+    val options = BookState.entries
+
+    ExposedDropdownMenuBox(
+        expanded = expanded.value,
+        onExpandedChange = { expanded.value = it },
+        modifier = modifier,
+    ) {
+        AddBookTextField(
+            label = stringResource(R.string.add_book_field_state_label),
+            value = stringResource(bookStateStringRes(selectedState)),
+            placeholder = "",
+            onValueChange = {},
+            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, true),
+            readOnly = true,
+        )
+        ExposedDropdownMenu(
+            expanded = expanded.value,
+            onDismissRequest = { expanded.value = false },
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(bookStateStringRes(option))) },
+                    onClick = {
+                        onStateSelected(option)
+                        expanded.value = false
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun AddBookTextField(
     label: String,
@@ -582,6 +637,7 @@ private fun AddBookTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Text,
+    readOnly: Boolean = false,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
@@ -616,6 +672,7 @@ private fun AddBookTextField(
                 fontWeight = FontWeight.Normal,
             ),
             singleLine = true,
+            readOnly = readOnly,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             decorationBox = { innerTextField ->
                 Row(

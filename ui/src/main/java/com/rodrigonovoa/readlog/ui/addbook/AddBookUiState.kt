@@ -1,6 +1,7 @@
 package com.rodrigonovoa.readlog.ui.addbook
 
 import android.net.Uri
+import com.rodrigonovoa.readlog.domain.model.BookState
 
 data class AddBookUiState(
     val selectedMode: AddBookMode = AddBookMode.Manual,
@@ -8,6 +9,7 @@ data class AddBookUiState(
     val author: String = "",
     val pages: String = "",
     val currentPage: String = "",
+    val state: BookState = BookState.IN_PROGRESS,
     val coverUri: Uri? = null,
     val isLoading: Boolean = false,
     val isSubmitEnabled: Boolean = false,

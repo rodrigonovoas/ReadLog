@@ -3,6 +3,7 @@ package com.rodrigonovoa.readlog.ui.addbook
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.BookState
 import com.rodrigonovoa.readlog.domain.usecase.AddBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CalculateReadingProgressUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CapCurrentPageUseCase
@@ -93,6 +94,7 @@ class AddBookViewModelTest {
         assertEquals("", state.author)
         assertEquals("", state.pages)
         assertEquals("", state.currentPage)
+        assertEquals(BookState.IN_PROGRESS, state.state)
         assertNull(state.coverUri)
         assertFalse(state.isSubmitEnabled)
         assertEquals(0, state.progressPercentage)
@@ -167,7 +169,7 @@ class AddBookViewModelTest {
 
     @Test
     fun `add book success with empty currentPage passes zero`() = runTest {
-        coEvery { addBookUseCase(any(), any(), any(), any()) } returns Result.success(Unit)
+        coEvery { addBookUseCase(any(), any(), any(), any(), any()) } returns Result.success(Unit)
 
         viewModel.processIntent(AddBookIntent.OnTitleChanged("Title"))
         viewModel.processIntent(AddBookIntent.OnAuthorChanged("Author"))
@@ -181,14 +183,14 @@ class AddBookViewModelTest {
         advanceUntilIdle()
         collectJob.join()
 
-        coVerify { addBookUseCase("Title", "Author", 100, 0) }
+        coVerify { addBookUseCase("Title", "Author", 100, 0, BookState.IN_PROGRESS) }
         coVerify { refreshUserProfileIfOnlineUseCase() }
         assertTrue(effect is AddBookEffect.NavigateBack)
     }
 
     @Test
     fun `add book success emits navigate back and passes currentPage`() = runTest {
-        coEvery { addBookUseCase(any(), any(), any(), any()) } returns Result.success(Unit)
+        coEvery { addBookUseCase(any(), any(), any(), any(), any()) } returns Result.success(Unit)
         every { capCurrentPageUseCase(any(), any()) } returns "50"
         every { calculateProgressUseCase(any(), any()) } returns 50
         every { validateFormUseCase(any(), any(), any()) } returns true
@@ -206,7 +208,7 @@ class AddBookViewModelTest {
         advanceUntilIdle()
         collectJob.join()
 
-        coVerify { addBookUseCase("Title", "Author", 100, 50) }
+        coVerify { addBookUseCase("Title", "Author", 100, 50, BookState.IN_PROGRESS) }
         coVerify { refreshUserProfileIfOnlineUseCase() }
         assertTrue(effect is AddBookEffect.NavigateBack)
         assertFalse(viewModel.uiState.value.isLoading)
@@ -215,7 +217,7 @@ class AddBookViewModelTest {
 
     @Test
     fun `add book failure shows error and does not refresh profile`() = runTest {
-        coEvery { addBookUseCase(any(), any(), any(), any()) } returns Result.failure(RuntimeException("Insert error"))
+        coEvery { addBookUseCase(any(), any(), any(), any(), any()) } returns Result.failure(RuntimeException("Insert error"))
 
         viewModel.processIntent(AddBookIntent.OnTitleChanged("Title"))
         viewModel.processIntent(AddBookIntent.OnPagesChanged("100"))
@@ -249,7 +251,7 @@ class AddBookViewModelTest {
 
     @Test
     fun `dismiss error clears message`() = runTest {
-        coEvery { addBookUseCase(any(), any(), any(), any()) } returns Result.failure(RuntimeException("Error"))
+        coEvery { addBookUseCase(any(), any(), any(), any(), any()) } returns Result.failure(RuntimeException("Error"))
 
         viewModel.processIntent(AddBookIntent.OnTitleChanged("Title"))
         viewModel.processIntent(AddBookIntent.OnPagesChanged("100"))
@@ -350,6 +352,7 @@ class AddBookViewModelTest {
             releaseDate = "2020",
             numPages = 300,
             currentPage = 150,
+            state = BookState.PAUSED,
         )
         coEvery { getBookByIdUseCase(1) } returns book
         every { validateFormUseCase(any(), any(), any()) } returns true
@@ -362,6 +365,7 @@ class AddBookViewModelTest {
         assertEquals("Existing Author", state.author)
         assertEquals("300", state.pages)
         assertEquals("150", state.currentPage)
+        assertEquals(BookState.PAUSED, state.state)
         assertTrue(state.isSubmitEnabled)
         assertTrue(state.isEditMode)
         assertEquals(1, state.bookId)
@@ -410,7 +414,7 @@ class AddBookViewModelTest {
         val editViewModel = createViewModel()
         advanceUntilIdle()
 
-        coEvery { updateBookUseCase(any(), any(), any(), any(), any()) } returns Result.success(Unit)
+        coEvery { updateBookUseCase(any(), any(), any(), any(), any(), any()) } returns Result.success(Unit)
 
         var effect: AddBookEffect? = null
         val collectJob = launch { effect = editViewModel.effect.first() }
@@ -426,6 +430,7 @@ class AddBookViewModelTest {
                 "Existing Author",
                 300,
                 150,
+                BookState.IN_PROGRESS,
             )
         }
         coVerify { refreshUserProfileIfOnlineUseCase() }

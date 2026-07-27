@@ -75,6 +75,7 @@ class SyncRepositoryImpl @Inject constructor(
                         releaseDate = cloudBook.releaseDate,
                         numPages = cloudBook.numPages,
                         currentPage = cloudBook.currentPage,
+                        state = cloudBook.state.name,
                         creationDate = cloudBook.creationDate,
                         lastModified = cloudBook.lastModified,
                     )
@@ -88,6 +89,7 @@ class SyncRepositoryImpl @Inject constructor(
                         releaseDate = cloudBook.releaseDate,
                         numPages = cloudBook.numPages,
                         currentPage = cloudBook.currentPage,
+                        state = cloudBook.state.name,
                         creationDate = cloudBook.creationDate,
                         lastModified = cloudBook.lastModified,
                     )

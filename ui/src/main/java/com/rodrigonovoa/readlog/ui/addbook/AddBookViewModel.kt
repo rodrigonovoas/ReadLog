@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.BookState
 import com.rodrigonovoa.readlog.domain.usecase.AddBookUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CalculateReadingProgressUseCase
 import com.rodrigonovoa.readlog.domain.usecase.CapCurrentPageUseCase
@@ -57,6 +58,7 @@ class AddBookViewModel @Inject constructor(
                         author = b.author,
                         pages = b.numPages.toString(),
                         currentPage = b.currentPage.toString(),
+                        state = b.state,
                         progressPercentage = calculateProgressUseCase(
                             currentPageStr = b.currentPage.toString(),
                             pagesStr = b.numPages.toString(),
@@ -162,6 +164,9 @@ class AddBookViewModel @Inject constructor(
                     ),
                 )
             }
+            is AddBookIntent.OnStateChanged -> {
+                _uiState.value = _uiState.value.copy(state = intent.state)
+            }
             is AddBookIntent.OnCoverSelected -> {
                 _uiState.value = _uiState.value.copy(coverUri = intent.uri)
             }
@@ -177,6 +182,7 @@ class AddBookViewModel @Inject constructor(
                         state.author.isNotEmpty() ||
                         state.pages.isNotEmpty() ||
                         state.currentPage.isNotEmpty() ||
+                        state.state != BookState.IN_PROGRESS ||
                         state.coverUri != null
                     if (hasData) {
                         _uiState.value = state.copy(showExitConfirmation = true)
@@ -267,6 +273,7 @@ class AddBookViewModel @Inject constructor(
                     author = state.author,
                     numPages = numPages,
                     currentPage = currentPage,
+                    state = state.state,
                 )
             } else {
                 addBookUseCase(
@@ -274,6 +281,7 @@ class AddBookViewModel @Inject constructor(
                     author = state.author,
                     numPages = numPages,
                     currentPage = currentPage,
+                    state = state.state,
                 )
             }
 

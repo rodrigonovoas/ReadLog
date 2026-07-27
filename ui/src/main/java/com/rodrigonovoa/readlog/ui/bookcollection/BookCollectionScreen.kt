@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.ui.R
+import com.rodrigonovoa.readlog.ui.common.BookStateChip
 import com.rodrigonovoa.readlog.ui.common.ConfirmationDialog
 import com.rodrigonovoa.readlog.ui.common.UsernameSetupDialog
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
@@ -299,15 +300,25 @@ private fun BookCard(
                 overflow = TextOverflow.Ellipsis
             )
 
-            Text(
-                text = book.title,
-                fontFamily = FontFamily.Serif,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 17.sp,
-                color = color_on_surface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = book.title,
+                    modifier = Modifier.weight(1f),
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 17.sp,
+                    color = color_on_surface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                BookStateChip(
+                    state = book.state,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
 
             Text(
                 text = book.author,

@@ -1,6 +1,7 @@
 package com.rodrigonovoa.readlog.data.mapper
 
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.BookState
 import javax.inject.Inject
 
 class BookFirestoreMapperImpl @Inject constructor() : BookFirestoreMapper {
@@ -13,6 +14,7 @@ class BookFirestoreMapperImpl @Inject constructor() : BookFirestoreMapper {
             "releaseDate" to book.releaseDate,
             "numPages" to book.numPages,
             "currentPage" to book.currentPage,
+            "state" to book.state.name,
             "creationDate" to book.creationDate,
             "lastModified" to book.lastModified,
         )
@@ -28,8 +30,17 @@ class BookFirestoreMapperImpl @Inject constructor() : BookFirestoreMapper {
             releaseDate = map["releaseDate"] as? String ?: "",
             numPages = (map["numPages"] as? Number)?.toInt() ?: 0,
             currentPage = (map["currentPage"] as? Number)?.toInt() ?: 0,
+            state = parseBookState(map["state"] as? String),
             creationDate = (map["creationDate"] as? Number)?.toLong() ?: 0L,
             lastModified = (map["lastModified"] as? Number)?.toLong() ?: 0L,
         )
+    }
+
+    private fun parseBookState(value: String?): BookState {
+        return try {
+            value?.let { BookState.valueOf(it) } ?: BookState.IN_PROGRESS
+        } catch (_: IllegalArgumentException) {
+            BookState.IN_PROGRESS
+        }
     }
 }

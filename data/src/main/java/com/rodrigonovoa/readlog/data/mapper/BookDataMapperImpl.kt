@@ -2,6 +2,7 @@ package com.rodrigonovoa.readlog.data.mapper
 
 import com.rodrigonovoa.readlog.data.db.entity.BookEntity
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.BookState
 import javax.inject.Inject
 
 class BookDataMapperImpl @Inject constructor() : BookDataMapper {
@@ -15,6 +16,7 @@ class BookDataMapperImpl @Inject constructor() : BookDataMapper {
             releaseDate = entity.releaseDate,
             numPages = entity.numPages,
             currentPage = entity.currentPage,
+            state = parseBookState(entity.state),
             creationDate = entity.creationDate,
             lastModified = entity.lastModified,
         )
@@ -30,8 +32,17 @@ class BookDataMapperImpl @Inject constructor() : BookDataMapper {
             releaseDate = domain.releaseDate,
             numPages = domain.numPages,
             currentPage = domain.currentPage,
+            state = domain.state.name,
             creationDate = domain.creationDate,
             lastModified = domain.lastModified,
         )
+    }
+
+    private fun parseBookState(value: String): BookState {
+        return try {
+            BookState.valueOf(value)
+        } catch (_: IllegalArgumentException) {
+            BookState.IN_PROGRESS
+        }
     }
 }

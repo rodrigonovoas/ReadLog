@@ -1,6 +1,7 @@
 package com.rodrigonovoa.readlog.ui.addbook
 
 import android.net.Uri
+import com.rodrigonovoa.readlog.domain.model.BookState
 
 sealed interface AddBookIntent {
     data class OnModeSelected(val mode: AddBookMode) : AddBookIntent
@@ -8,6 +9,7 @@ sealed interface AddBookIntent {
     data class OnAuthorChanged(val author: String) : AddBookIntent
     data class OnPagesChanged(val pages: String) : AddBookIntent
     data class OnCurrentPageChanged(val currentPage: String) : AddBookIntent
+    data class OnStateChanged(val state: BookState) : AddBookIntent
     data class OnCoverSelected(val uri: Uri?) : AddBookIntent
     data class OnCameraPermissionResult(val granted: Boolean) : AddBookIntent
     data class OnBarcodeScanned(val isbn: String) : AddBookIntent

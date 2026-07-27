@@ -14,6 +14,7 @@ import com.rodrigonovoa.readlog.data.mapper.BookDataMapperImpl
 import com.rodrigonovoa.readlog.data.mapper.SessionDataMapperImpl
 import com.rodrigonovoa.readlog.domain.model.Annotation
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.BookState
 import com.rodrigonovoa.readlog.domain.model.Session
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -66,6 +67,7 @@ class SyncRepositoryImplTest {
             releaseDate = "2024",
             numPages = 200,
             currentPage = 10,
+            state = BookState.IN_PROGRESS,
             creationDate = 1000L,
             lastModified = 2000L,
         )
@@ -94,6 +96,7 @@ class SyncRepositoryImplTest {
             releaseDate = "2024",
             numPages = 200,
             currentPage = 10,
+            state = BookState.COMPLETED,
             creationDate = 1000L,
             lastModified = 3000L,
         )
@@ -106,6 +109,7 @@ class SyncRepositoryImplTest {
             releaseDate = "2024",
             numPages = 200,
             currentPage = 10,
+            state = BookState.IN_PROGRESS.name,
             creationDate = 1000L,
             lastModified = 2000L,
         )
@@ -134,6 +138,7 @@ class SyncRepositoryImplTest {
             releaseDate = "2024",
             numPages = 200,
             currentPage = 10,
+            state = BookState.IN_PROGRESS,
             creationDate = 1000L,
             lastModified = 1000L,
         )
@@ -146,6 +151,7 @@ class SyncRepositoryImplTest {
             releaseDate = "2024",
             numPages = 200,
             currentPage = 10,
+            state = BookState.PAUSED.name,
             creationDate = 1000L,
             lastModified = 3000L,
         )

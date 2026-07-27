@@ -34,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rodrigonovoa.readlog.ui.R
+import com.rodrigonovoa.readlog.ui.common.BookStateChip
 import com.rodrigonovoa.readlog.ui.common.StatCardItem
 import com.rodrigonovoa.readlog.ui.common.StatCardRow
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
@@ -153,6 +154,10 @@ private fun BookHeaderRow(
                 color = color_on_surface_variant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+            )
+            BookStateChip(
+                state = uiState.bookState,
+                modifier = Modifier.padding(top = 6.dp),
             )
             Text(
                 text = stringResource(R.string.book_detail_reading_since, uiState.readingSinceLabel),

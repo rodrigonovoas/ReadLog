@@ -44,6 +44,7 @@ class BookDetailViewModel @Inject constructor(
                         it.copy(
                             bookTitle = book.title,
                             bookAuthor = book.author,
+                            bookState = book.state,
                             readingSinceLabel = formatMillis(dayMonthFormat, book.creationDate),
                             daysReadingCount = daysReadingSince(book.creationDate),
                         )

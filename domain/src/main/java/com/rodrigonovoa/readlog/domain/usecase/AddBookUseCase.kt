@@ -1,6 +1,7 @@
 package com.rodrigonovoa.readlog.domain.usecase
 
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.BookState
 import com.rodrigonovoa.readlog.domain.repository.BookRepository
 import javax.inject.Inject
 
@@ -12,6 +13,7 @@ class AddBookUseCase @Inject constructor(
         author: String,
         numPages: Int,
         currentPage: Int,
+        state: BookState = BookState.IN_PROGRESS,
     ): Result<Unit> {
         val book = Book(
             title = title.trim(),
@@ -20,6 +22,7 @@ class AddBookUseCase @Inject constructor(
             releaseDate = "",
             numPages = numPages,
             currentPage = currentPage,
+            state = state,
         )
         return runCatching { bookRepository.insertBook(book) }
     }

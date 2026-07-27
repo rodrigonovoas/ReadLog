@@ -1,9 +1,12 @@
 package com.rodrigonovoa.readlog.ui.bookdetail
 
+import com.rodrigonovoa.readlog.domain.model.BookState
+
 data class BookDetailUiState(
     val bookId: Int = 0,
     val bookTitle: String = "",
     val bookAuthor: String = "",
+    val bookState: BookState = BookState.IN_PROGRESS,
     val readingSinceLabel: String = "",
     val sessionsCount: Int = 0,
     val totalTimeLabel: String = "",
