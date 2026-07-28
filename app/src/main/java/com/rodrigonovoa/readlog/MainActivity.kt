@@ -102,7 +102,7 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("addBook?bookId=$bookId")
                             },
                             onConfirmDelete = viewModel::confirmDelete,
-                            onProfileClick = { navController.navigate("userProfile") },
+                            onProfileMenuProfileClick = { navController.navigate("userProfile") },
                             onSearchClick = { navController.navigate("userSearch") },
                             onUsernameChange = viewModel::onUsernameChanged,
                             onUsernameConfirm = viewModel::onUsernameConfirmClicked,

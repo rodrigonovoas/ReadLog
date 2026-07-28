@@ -99,7 +99,11 @@
     <string name="book_detail_stat_days">DÍAS LEYENDO</string>
     <string name="book_detail_recent_sessions_title">Sesiones recientes</string>
     <string name="book_detail_no_sessions">Aún no has registrado sesiones para este libro.</string>
-    <string name="book_collection_profile_icon_content_description">Perfil</string>
+    <string name="book_collection_options_icon_content_description">Opciones</string>
+    <string name="menu_profile">Perfil</string>
+    <string name="menu_likes">Me gusta</string>
+    <string name="menu_language">Idioma</string>
+    <string name="menu_login">Iniciar sesión</string>
     <string name="user_profile_title">Perfil</string>
     <string name="user_profile_back_content_description">Atrás</string>
     <string name="user_profile_favorite_content_description">Favorito</string>

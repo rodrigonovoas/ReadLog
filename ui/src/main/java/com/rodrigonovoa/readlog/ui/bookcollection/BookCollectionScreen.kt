@@ -24,13 +24,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -78,7 +84,7 @@ fun BookCollectionScreen(
     onDismissDialog: () -> Unit = {},
     onConfirmEdit: (Int) -> Unit = {},
     onConfirmDelete: () -> Unit = {},
-    onProfileClick: () -> Unit = {},
+    onProfileMenuProfileClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onUsernameChange: (String) -> Unit = {},
     onUsernameConfirm: () -> Unit = {},
@@ -97,7 +103,7 @@ fun BookCollectionScreen(
             } else {
                 ""
             },
-            onProfileClick = onProfileClick,
+            onProfileMenuProfileClick = onProfileMenuProfileClick,
             onSearchClick = onSearchClick,
         )
 
@@ -165,7 +171,7 @@ private fun HeaderSection(
     showTitle: Boolean = true,
     greeting: String,
     modifier: Modifier = Modifier,
-    onProfileClick: () -> Unit = {},
+    onProfileMenuProfileClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
 ) {
     Row(
@@ -212,23 +218,59 @@ private fun HeaderSection(
                     modifier = Modifier.size(20.dp),
                 )
             }
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(color_chip)
-                    .clickable(onClick = onProfileClick),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = stringResource(
-                        R.string.book_collection_profile_icon_content_description
-                    ),
-                    tint = color_on_surface_variant,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
+            ProfileMenuIcon(
+                onProfileClick = onProfileMenuProfileClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProfileMenuIcon(
+    onProfileClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(color_chip)
+            .clickable { expanded = true },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Default.MoreVert,
+            contentDescription = stringResource(
+                R.string.book_collection_options_icon_content_description
+            ),
+            tint = color_on_surface_variant,
+            modifier = Modifier.size(20.dp),
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(color_surface_variant),
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_profile), color = Color.Black) },
+                onClick = {
+                    expanded = false
+                    onProfileClick()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_likes), color = Color.Black) },
+                onClick = { expanded = false },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_language), color = Color.Black) },
+                onClick = { expanded = false },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_login), color = Color.Black) },
+                onClick = { expanded = false },
+            )
         }
     }
 }
