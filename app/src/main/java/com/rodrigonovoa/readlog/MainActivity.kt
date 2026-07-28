@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
                                 when (effect) {
                                     is LoginEffect.NavigateToCollection -> {
                                         navController.navigate("bookCollection") {
-                                            popUpTo("login") { inclusive = true }
+                                            popUpTo(navController.graph.id) { inclusive = true }
                                         }
                                     }
                                 }
@@ -105,6 +105,7 @@ class MainActivity : ComponentActivity() {
                             onConfirmDelete = viewModel::confirmDelete,
                             onProfileMenuProfileClick = { navController.navigate("userProfile") },
                             onProfileMenuLikesClick = { navController.navigate("likes") },
+                            onProfileMenuLoginClick = { navController.navigate("login") },
                             onSearchClick = { navController.navigate("userSearch") },
                             onUsernameChange = viewModel::onUsernameChanged,
                             onUsernameConfirm = viewModel::onUsernameConfirmClicked,

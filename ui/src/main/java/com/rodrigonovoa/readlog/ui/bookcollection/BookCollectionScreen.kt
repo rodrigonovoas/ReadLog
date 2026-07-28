@@ -86,6 +86,7 @@ fun BookCollectionScreen(
     onConfirmDelete: () -> Unit = {},
     onProfileMenuProfileClick: () -> Unit = {},
     onProfileMenuLikesClick: () -> Unit = {},
+    onProfileMenuLoginClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onUsernameChange: (String) -> Unit = {},
     onUsernameConfirm: () -> Unit = {},
@@ -107,6 +108,7 @@ fun BookCollectionScreen(
             canLike = uiState.canLike,
             onProfileMenuProfileClick = onProfileMenuProfileClick,
             onProfileMenuLikesClick = onProfileMenuLikesClick,
+            onProfileMenuLoginClick = onProfileMenuLoginClick,
             onSearchClick = onSearchClick,
         )
 
@@ -177,6 +179,7 @@ private fun HeaderSection(
     modifier: Modifier = Modifier,
     onProfileMenuProfileClick: () -> Unit = {},
     onProfileMenuLikesClick: () -> Unit = {},
+    onProfileMenuLoginClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
 ) {
     Row(
@@ -227,6 +230,7 @@ private fun HeaderSection(
                 canLike = canLike,
                 onProfileClick = onProfileMenuProfileClick,
                 onLikesClick = onProfileMenuLikesClick,
+                onLoginClick = onProfileMenuLoginClick,
             )
         }
     }
@@ -237,6 +241,7 @@ private fun ProfileMenuIcon(
     canLike: Boolean,
     onProfileClick: () -> Unit,
     onLikesClick: () -> Unit,
+    onLoginClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -281,10 +286,15 @@ private fun ProfileMenuIcon(
                 text = { Text(stringResource(R.string.menu_language), color = Color.Black) },
                 onClick = { expanded = false },
             )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.menu_login), color = Color.Black) },
-                onClick = { expanded = false },
-            )
+            if (!canLike) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.menu_login), color = Color.Black) },
+                    onClick = {
+                        expanded = false
+                        onLoginClick()
+                    },
+                )
+            }
         }
     }
 }
