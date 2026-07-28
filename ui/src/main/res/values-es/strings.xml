@@ -120,4 +120,7 @@
     <string name="user_search_placeholder">Buscar por nombre de usuario</string>
     <string name="user_search_empty_state">No se encontraron usuarios</string>
     <string name="user_search_error_state">Algo salió mal. Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="likes_title">Me gusta</string>
+    <string name="likes_empty_state">Aún no te ha gustado ningún perfil</string>
+    <string name="likes_error_state">No se pudieron cargar los perfiles que te gustan. Comprueba tu conexión e inténtalo de nuevo.</string>
 </resources>

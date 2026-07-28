@@ -132,4 +132,25 @@ class UserProfileRepositoryImpl @Inject constructor(
 
         return Result.success(Unit)
     }
+
+    override suspend fun getLikedProfiles(currentUserId: String): Result<List<UserProfileInfo>> {
+        return try {
+            val ownInfoResult = userProfileInfoFirestoreDataSource.download(currentUserId)
+            if (ownInfoResult.isFailure) {
+                return Result.failure(ownInfoResult.exceptionOrNull()!!)
+            }
+            val followeds = (ownInfoResult.getOrNull()?.followeds ?: getUserProfileInfo(currentUserId).followeds)
+                .distinct()
+
+            val profiles = followeds.mapNotNull { userId ->
+                userProfileInfoFirestoreDataSource.download(userId).getOrNull()
+                    ?.takeIf { !it.username.isNullOrBlank() }
+                    ?.also { userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(it)) }
+            }
+
+            Result.success(profiles)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

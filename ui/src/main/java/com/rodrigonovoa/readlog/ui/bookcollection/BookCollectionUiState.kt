@@ -9,6 +9,7 @@ data class BookCollectionUiState(
     val userName: String = "",
     val activeDialog: BookDialogState? = null,
     val usernameSetup: UsernameSetupState? = null,
+    val canLike: Boolean = false,
 )
 
 data class BookDialogState(

@@ -111,6 +111,7 @@ class BookCollectionViewModel @Inject constructor(
 
     private fun buildGreeting() {
         val name = getUserDisplayNameUseCase()
+        val currentUser = getCurrentUserUseCase()
         val greetingResId = when (getTimeOfDayUseCase()) {
             TimeOfDay.MORNING -> R.string.book_collection_greeting_morning
             TimeOfDay.AFTERNOON -> R.string.book_collection_greeting_afternoon
@@ -119,6 +120,7 @@ class BookCollectionViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             greetingResId = greetingResId,
             userName = name,
+            canLike = currentUser != null && !currentUser.isAnonymous,
         )
     }
 

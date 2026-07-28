@@ -188,6 +188,75 @@ class BookCollectionViewModelTest {
     }
 
     @Test
+    fun `canLike is false when no user is signed in`() = runTest {
+        every { getCurrentUserUseCase() } returns null
+        val booksFlow = MutableStateFlow<List<Book>>(emptyList())
+        every { getBooksUseCase() } returns booksFlow
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
+        )
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.uiState.value.canLike)
+    }
+
+    @Test
+    fun `canLike is true when signed in user is not anonymous`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Test User")
+        val booksFlow = MutableStateFlow<List<Book>>(emptyList())
+        every { getBooksUseCase() } returns booksFlow
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
+        )
+        advanceUntilIdle()
+
+        assertEquals(true, viewModel.uiState.value.canLike)
+    }
+
+    @Test
+    fun `canLike is false when signed in user is anonymous`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", null, null, isAnonymous = true)
+        val booksFlow = MutableStateFlow<List<Book>>(emptyList())
+        every { getBooksUseCase() } returns booksFlow
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
+        )
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.uiState.value.canLike)
+    }
+
+    @Test
     fun `onEditIconClick sets activeDialog with EDIT type`() = runTest {
         val book = Book(
             bookId = 1,

@@ -1,7 +1,9 @@
 package com.rodrigonovoa.readlog.ui.usersearch
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rodrigonovoa.readlog.domain.usecase.GetLikedProfilesUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SearchUsersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
@@ -20,15 +22,29 @@ private const val SEARCH_DEBOUNCE_MILLIS = 300L
 @OptIn(FlowPreview::class)
 @HiltViewModel
 class UserSearchViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val searchUsersUseCase: SearchUsersUseCase,
+    private val getLikedProfilesUseCase: GetLikedProfilesUseCase,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(UserSearchUiState())
+    private val mode = UserSearchMode.valueOf(
+        savedStateHandle.get<String>(MODE_ARG) ?: UserSearchMode.SEARCH.name,
+    )
+
+    private val _uiState = MutableStateFlow(UserSearchUiState(mode = mode))
     val uiState: StateFlow<UserSearchUiState> = _uiState.asStateFlow()
 
     private val queryFlow = MutableStateFlow("")
 
     init {
+        if (mode == UserSearchMode.LIKES) {
+            loadLikedProfiles()
+        } else {
+            observeSearchQueries()
+        }
+    }
+
+    private fun observeSearchQueries() {
         viewModelScope.launch {
             queryFlow
                 .debounce(SEARCH_DEBOUNCE_MILLIS)
@@ -53,8 +69,38 @@ class UserSearchViewModel @Inject constructor(
         }
     }
 
+    private fun loadLikedProfiles() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, hasError = false) }
+
+            getLikedProfilesUseCase().fold(
+                onSuccess = { profiles ->
+                    _uiState.update {
+                        it.copy(
+                            results = profiles.map { profile ->
+                                UserSearchResultUi(
+                                    userId = profile.userId,
+                                    username = profile.username.orEmpty(),
+                                )
+                            },
+                            isLoading = false,
+                        )
+                    }
+                },
+                onFailure = {
+                    _uiState.update { it.copy(results = emptyList(), isLoading = false, hasError = true) }
+                },
+            )
+        }
+    }
+
     fun onQueryChange(query: String) {
+        if (mode == UserSearchMode.LIKES) return
         _uiState.update { it.copy(query = query) }
         queryFlow.value = query
+    }
+
+    companion object {
+        const val MODE_ARG = "mode"
     }
 }

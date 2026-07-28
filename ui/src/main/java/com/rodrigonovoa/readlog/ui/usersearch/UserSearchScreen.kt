@@ -54,26 +54,40 @@ fun UserSearchScreen(
     onBackClick: () -> Unit = {},
     onUserClick: (String) -> Unit = {},
 ) {
+    val isSearchMode = uiState.mode == UserSearchMode.SEARCH
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(color_surface)
             .safeDrawingPadding(),
     ) {
-        TopBar(onBackClick = onBackClick)
-
-        SearchField(
-            query = uiState.query,
-            onQueryChange = onQueryChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 12.dp),
+        TopBar(
+            onBackClick = onBackClick,
+            titleRes = if (isSearchMode) R.string.user_search_title else R.string.likes_title,
         )
+
+        if (isSearchMode) {
+            SearchField(
+                query = uiState.query,
+                onQueryChange = onQueryChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
+            )
+        }
 
         when {
             uiState.isLoading -> LoadingState()
-            uiState.hasError -> MessageState(stringResource(R.string.user_search_error_state))
-            uiState.query.isNotBlank() && uiState.results.isEmpty() -> MessageState(stringResource(R.string.user_search_empty_state))
+            uiState.hasError -> MessageState(
+                stringResource(
+                    if (isSearchMode) R.string.user_search_error_state else R.string.likes_error_state
+                )
+            )
+            uiState.results.isEmpty() -> MessageState(
+                stringResource(
+                    if (isSearchMode) R.string.user_search_empty_state else R.string.likes_empty_state
+                )
+            )
             else -> ResultsList(results = uiState.results, onUserClick = onUserClick)
         }
     }
@@ -82,6 +96,7 @@ fun UserSearchScreen(
 @Composable
 private fun TopBar(
     onBackClick: () -> Unit,
+    titleRes: Int,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -107,7 +122,7 @@ private fun TopBar(
             )
         }
         Text(
-            text = stringResource(R.string.user_search_title),
+            text = stringResource(titleRes),
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
             color = color_on_surface,
@@ -237,5 +252,13 @@ private fun UserSearchResultRow(
 private fun UserSearchScreenPreview() {
     ReadLogTheme {
         UserSearchScreen(uiState = sampleUserSearchUiState)
+    }
+}
+
+@Preview(showBackground = true, widthDp = 412, heightDp = 915)
+@Composable
+private fun LikesScreenPreview() {
+    ReadLogTheme {
+        UserSearchScreen(uiState = sampleLikesUiState)
     }
 }

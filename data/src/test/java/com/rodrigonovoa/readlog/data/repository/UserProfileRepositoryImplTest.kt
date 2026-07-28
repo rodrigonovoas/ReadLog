@@ -318,4 +318,81 @@ class UserProfileRepositoryImplTest {
         assertEquals(true, result.isFailure)
         coVerify { userProfileInfoFirestoreDataSource.incrementLikesCount("target", -1) }
     }
+
+    @Test
+    fun `getLikedProfiles returns resolved profiles with usernames`() = runTest {
+        coEvery { userProfileInfoFirestoreDataSource.download("me") } returns Result.success(
+            UserProfileInfo(userId = "me", followeds = listOf("uid-2", "uid-3", "uid-4"))
+        )
+        coEvery { userProfileInfoFirestoreDataSource.download("uid-2") } returns Result.success(
+            UserProfileInfo(userId = "uid-2", username = "elenalee")
+        )
+        coEvery { userProfileInfoFirestoreDataSource.download("uid-3") } returns Result.success(
+            UserProfileInfo(userId = "uid-3", username = "elena_ruiz")
+        )
+        coEvery { userProfileInfoFirestoreDataSource.download("uid-4") } returns Result.success(
+            UserProfileInfo(userId = "uid-4", username = "")
+        )
+
+        val result = repository.getLikedProfiles("me")
+
+        assertEquals(true, result.isSuccess)
+        val profiles = result.getOrThrow()
+        assertEquals(2, profiles.size)
+        assertEquals("elenalee", profiles[0].username)
+        assertEquals("elena_ruiz", profiles[1].username)
+    }
+
+    @Test
+    fun `getLikedProfiles falls back to local followeds when remote own profile is missing`() = runTest {
+        coEvery { userProfileInfoFirestoreDataSource.download("me") } returns Result.success(null)
+        coEvery { userProfileInfoDao.getByUserId("me") } returns UserProfileInfoEntity(
+            userId = "me",
+            followeds = listOf("uid-2"),
+        )
+        coEvery { userProfileInfoFirestoreDataSource.download("uid-2") } returns Result.success(
+            UserProfileInfo(userId = "uid-2", username = "elenalee")
+        )
+
+        val result = repository.getLikedProfiles("me")
+
+        assertEquals(true, result.isSuccess)
+        assertEquals("elenalee", result.getOrThrow().first().username)
+    }
+
+    @Test
+    fun `getLikedProfiles caches downloaded profiles locally`() = runTest {
+        coEvery { userProfileInfoFirestoreDataSource.download("me") } returns Result.success(
+            UserProfileInfo(userId = "me", followeds = listOf("uid-2"))
+        )
+        coEvery { userProfileInfoFirestoreDataSource.download("uid-2") } returns Result.success(
+            UserProfileInfo(userId = "uid-2", username = "elenalee")
+        )
+
+        repository.getLikedProfiles("me")
+
+        coVerify { userProfileInfoDao.upsert(any()) }
+    }
+
+    @Test
+    fun `getLikedProfiles returns empty list when user has no followeds`() = runTest {
+        coEvery { userProfileInfoFirestoreDataSource.download("me") } returns Result.success(
+            UserProfileInfo(userId = "me", followeds = emptyList())
+        )
+
+        val result = repository.getLikedProfiles("me")
+
+        assertEquals(Result.success(emptyList<UserProfileInfo>()), result)
+    }
+
+    @Test
+    fun `getLikedProfiles returns failure when download fails`() = runTest {
+        val exception = RuntimeException("network error")
+        coEvery { userProfileInfoFirestoreDataSource.download("me") } returns Result.failure(exception)
+
+        val result = repository.getLikedProfiles("me")
+
+        assertEquals(true, result.isFailure)
+        assertEquals(exception, result.exceptionOrNull())
+    }
 }

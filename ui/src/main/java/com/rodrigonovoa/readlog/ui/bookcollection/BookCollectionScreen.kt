@@ -85,6 +85,7 @@ fun BookCollectionScreen(
     onConfirmEdit: (Int) -> Unit = {},
     onConfirmDelete: () -> Unit = {},
     onProfileMenuProfileClick: () -> Unit = {},
+    onProfileMenuLikesClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onUsernameChange: (String) -> Unit = {},
     onUsernameConfirm: () -> Unit = {},
@@ -103,7 +104,9 @@ fun BookCollectionScreen(
             } else {
                 ""
             },
+            canLike = uiState.canLike,
             onProfileMenuProfileClick = onProfileMenuProfileClick,
+            onProfileMenuLikesClick = onProfileMenuLikesClick,
             onSearchClick = onSearchClick,
         )
 
@@ -170,8 +173,10 @@ fun BookCollectionScreen(
 private fun HeaderSection(
     showTitle: Boolean = true,
     greeting: String,
+    canLike: Boolean,
     modifier: Modifier = Modifier,
     onProfileMenuProfileClick: () -> Unit = {},
+    onProfileMenuLikesClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
 ) {
     Row(
@@ -219,7 +224,9 @@ private fun HeaderSection(
                 )
             }
             ProfileMenuIcon(
+                canLike = canLike,
                 onProfileClick = onProfileMenuProfileClick,
+                onLikesClick = onProfileMenuLikesClick,
             )
         }
     }
@@ -227,7 +234,9 @@ private fun HeaderSection(
 
 @Composable
 private fun ProfileMenuIcon(
+    canLike: Boolean,
     onProfileClick: () -> Unit,
+    onLikesClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -259,10 +268,15 @@ private fun ProfileMenuIcon(
                     onProfileClick()
                 },
             )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.menu_likes), color = Color.Black) },
-                onClick = { expanded = false },
-            )
+            if (canLike) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.menu_likes), color = Color.Black) },
+                    onClick = {
+                        expanded = false
+                        onLikesClick()
+                    },
+                )
+            }
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.menu_language), color = Color.Black) },
                 onClick = { expanded = false },

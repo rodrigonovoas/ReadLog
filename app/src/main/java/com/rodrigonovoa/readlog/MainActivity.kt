@@ -33,6 +33,7 @@ import com.rodrigonovoa.readlog.ui.login.LoginViewModel
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.userprofile.UserProfileScreen
 import com.rodrigonovoa.readlog.ui.userprofile.UserProfileViewModel
+import com.rodrigonovoa.readlog.ui.usersearch.UserSearchMode
 import com.rodrigonovoa.readlog.ui.usersearch.UserSearchScreen
 import com.rodrigonovoa.readlog.ui.usersearch.UserSearchViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -103,6 +104,7 @@ class MainActivity : ComponentActivity() {
                             },
                             onConfirmDelete = viewModel::confirmDelete,
                             onProfileMenuProfileClick = { navController.navigate("userProfile") },
+                            onProfileMenuLikesClick = { navController.navigate("likes") },
                             onSearchClick = { navController.navigate("userSearch") },
                             onUsernameChange = viewModel::onUsernameChanged,
                             onUsernameConfirm = viewModel::onUsernameConfirmClicked,
@@ -128,6 +130,26 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("userSearch") {
+                        val viewModel: UserSearchViewModel = hiltViewModel()
+                        val uiState by viewModel.uiState.collectAsState()
+
+                        UserSearchScreen(
+                            modifier = Modifier.fillMaxSize(),
+                            uiState = uiState,
+                            onQueryChange = viewModel::onQueryChange,
+                            onBackClick = { navController.popBackStack() },
+                            onUserClick = { userId -> navController.navigate("userProfile?userId=$userId") },
+                        )
+                    }
+                    composable(
+                        "likes?mode={mode}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("mode") {
+                                type = androidx.navigation.NavType.StringType
+                                defaultValue = UserSearchMode.LIKES.name
+                            }
+                        )
+                    ) {
                         val viewModel: UserSearchViewModel = hiltViewModel()
                         val uiState by viewModel.uiState.collectAsState()
 
