@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -66,6 +67,8 @@ fun UserSearchScreen(
             titleRes = if (isSearchMode) R.string.user_search_title else R.string.likes_title,
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
         if (isSearchMode) {
             SearchField(
                 query = uiState.query,
@@ -83,11 +86,15 @@ fun UserSearchScreen(
                     if (isSearchMode) R.string.user_search_error_state else R.string.likes_error_state
                 )
             )
-            uiState.results.isEmpty() -> MessageState(
-                stringResource(
-                    if (isSearchMode) R.string.user_search_empty_state else R.string.likes_empty_state
-                )
-            )
+            uiState.results.isEmpty() -> {
+                if (!isSearchMode || uiState.query.isNotBlank()) {
+                    MessageState(
+                        stringResource(
+                            if (isSearchMode) R.string.user_search_empty_state else R.string.likes_empty_state
+                        )
+                    )
+                }
+            }
             else -> ResultsList(results = uiState.results, onUserClick = onUserClick)
         }
     }
