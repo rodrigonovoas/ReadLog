@@ -1,20 +1,23 @@
 package com.rodrigonovoa.readlog
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.os.LocaleListCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import java.util.Locale
 import com.rodrigonovoa.readlog.domain.usecase.IsUserSignedInUseCase
 import com.rodrigonovoa.readlog.ui.addbook.AddBookEffect
 import com.rodrigonovoa.readlog.ui.addbook.AddBookIntent
@@ -40,7 +43,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var isUserSignedInUseCase: IsUserSignedInUseCase
@@ -88,6 +91,15 @@ class MainActivity : ComponentActivity() {
                         BookCollectionScreen(
                             modifier = Modifier.fillMaxSize(),
                             uiState = uiState,
+                            currentLanguage = run {
+                                val appLocales = AppCompatDelegate.getApplicationLocales()
+                                if (!appLocales.isEmpty) {
+                                    appLocales[0]?.language ?: "en"
+                                } else {
+                                    val systemLanguage = Locale.getDefault().language
+                                    if (systemLanguage == "es") "es" else "en"
+                                }
+                            },
                             onAddBookClick = { navController.navigate("addBook") },
                             onEditIconClick = viewModel::onEditIconClick,
                             onDeleteIconClick = viewModel::onDeleteIconClick,
@@ -106,6 +118,9 @@ class MainActivity : ComponentActivity() {
                             onProfileMenuProfileClick = { navController.navigate("userProfile") },
                             onProfileMenuLikesClick = { navController.navigate("likes") },
                             onProfileMenuLoginClick = { navController.navigate("login") },
+                            onLanguageSelected = { languageTag ->
+                                AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageTag))
+                            },
                             onSearchClick = { navController.navigate("userSearch") },
                             onUsernameChange = viewModel::onUsernameChanged,
                             onUsernameConfirm = viewModel::onUsernameConfirmClicked,

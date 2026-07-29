@@ -123,4 +123,7 @@
     <string name="likes_title">Me gusta</string>
     <string name="likes_empty_state">Aún no te ha gustado ningún perfil</string>
     <string name="likes_error_state">No se pudieron cargar los perfiles que te gustan. Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="language_dialog_title">Seleccionar idioma</string>
+    <string name="language_english">Inglés</string>
+    <string name="language_spanish">Español</string>
 </resources>

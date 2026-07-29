@@ -53,6 +53,7 @@ import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.common.BookStateChip
 import com.rodrigonovoa.readlog.ui.common.ConfirmationDialog
+import com.rodrigonovoa.readlog.ui.common.LanguageSelectionDialog
 import com.rodrigonovoa.readlog.ui.common.UsernameSetupDialog
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
@@ -87,11 +88,14 @@ fun BookCollectionScreen(
     onProfileMenuProfileClick: () -> Unit = {},
     onProfileMenuLikesClick: () -> Unit = {},
     onProfileMenuLoginClick: () -> Unit = {},
+    currentLanguage: String = "en",
+    onLanguageSelected: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
     onUsernameChange: (String) -> Unit = {},
     onUsernameConfirm: () -> Unit = {},
 ) {
     val books = uiState.books
+    var showLanguageDialog by remember { mutableStateOf(false) }
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -109,6 +113,7 @@ fun BookCollectionScreen(
             onProfileMenuProfileClick = onProfileMenuProfileClick,
             onProfileMenuLikesClick = onProfileMenuLikesClick,
             onProfileMenuLoginClick = onProfileMenuLoginClick,
+            onProfileMenuLanguageClick = { showLanguageDialog = true },
             onSearchClick = onSearchClick,
         )
 
@@ -169,6 +174,17 @@ fun BookCollectionScreen(
             onConfirm = onUsernameConfirm,
         )
     }
+
+    if (showLanguageDialog) {
+        LanguageSelectionDialog(
+            currentLanguage = currentLanguage,
+            onLanguageSelected = { languageTag ->
+                showLanguageDialog = false
+                onLanguageSelected(languageTag)
+            },
+            onDismiss = { showLanguageDialog = false },
+        )
+    }
 }
 
 @Composable
@@ -180,6 +196,7 @@ private fun HeaderSection(
     onProfileMenuProfileClick: () -> Unit = {},
     onProfileMenuLikesClick: () -> Unit = {},
     onProfileMenuLoginClick: () -> Unit = {},
+    onProfileMenuLanguageClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
 ) {
     Row(
@@ -231,6 +248,7 @@ private fun HeaderSection(
                 onProfileClick = onProfileMenuProfileClick,
                 onLikesClick = onProfileMenuLikesClick,
                 onLoginClick = onProfileMenuLoginClick,
+                onLanguageClick = onProfileMenuLanguageClick,
             )
         }
     }
@@ -242,6 +260,7 @@ private fun ProfileMenuIcon(
     onProfileClick: () -> Unit,
     onLikesClick: () -> Unit,
     onLoginClick: () -> Unit,
+    onLanguageClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -284,7 +303,10 @@ private fun ProfileMenuIcon(
             }
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.menu_language), color = Color.Black) },
-                onClick = { expanded = false },
+                onClick = {
+                    expanded = false
+                    onLanguageClick()
+                },
             )
             if (!canLike) {
                 DropdownMenuItem(

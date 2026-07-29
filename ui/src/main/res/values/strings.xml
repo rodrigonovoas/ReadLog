@@ -123,4 +123,7 @@
     <string name="likes_title">Likes</string>
     <string name="likes_empty_state">You haven\'t liked any profile yet</string>
     <string name="likes_error_state">Couldn\'t load liked profiles. Check your connection and try again.</string>
+    <string name="language_dialog_title">Select language</string>
+    <string name="language_english">English</string>
+    <string name="language_spanish">Spanish</string>
 </resources>
