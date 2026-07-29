@@ -93,7 +93,6 @@
     <string name="book_session_manual_time_hours_unit">h</string>
     <string name="book_session_manual_time_minutes_unit">min</string>
     <string name="book_session_manual_time_date_label">Fecha</string>
-    <string name="book_session_manual_time_annotation_label">Anotación (opcional)</string>
     <string name="book_session_manual_time_cancel">Cancelar</string>
     <string name="book_session_manual_time_save">Guardar</string>
     <string name="book_detail_back_content_description">Atrás</string>

@@ -111,7 +111,6 @@ class BookSessionViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         elapsedSeconds = intent.hours * 3600L + intent.minutes * 60L,
-                        annotationText = intent.annotation,
                         sessionDate = intent.dateMillis,
                     )
                 }

@@ -427,7 +427,6 @@ class BookSessionViewModelTest {
                 hours = 0,
                 minutes = 0,
                 dateMillis = 1_700_000_000_000L,
-                annotation = "Manual note",
             )
         )
         advanceUntilIdle()
@@ -447,7 +446,7 @@ class BookSessionViewModelTest {
     }
 
     @Test
-    fun `confirming manual time updates elapsed seconds, annotation, date and pauses the timer`() = runTest {
+    fun `confirming manual time updates elapsed seconds, date and pauses the timer`() = runTest {
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceTimeBy(2_000)
         runCurrent()
@@ -458,14 +457,12 @@ class BookSessionViewModelTest {
                 hours = 1,
                 minutes = 30,
                 dateMillis = manualDate,
-                annotation = "Manual note",
             )
         )
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
         assertEquals(5_400L, state.elapsedSeconds)
-        assertEquals("Manual note", state.annotationText)
         assertEquals(manualDate, state.sessionDate)
         assertFalse(state.isRunning)
 
@@ -482,7 +479,6 @@ class BookSessionViewModelTest {
                 hours = 1,
                 minutes = 30,
                 dateMillis = manualDate,
-                annotation = "Manual note",
             )
         )
         advanceUntilIdle()

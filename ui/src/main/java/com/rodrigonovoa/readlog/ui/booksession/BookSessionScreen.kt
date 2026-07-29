@@ -263,11 +263,10 @@ fun BookSessionScreen(
     if (showManualTimeDialog) {
         ManualTimeEntryDialog(
             initialElapsedSeconds = uiState.elapsedSeconds,
-            initialAnnotation = uiState.annotationText,
             initialDateMillis = uiState.sessionDate,
             onDismiss = { showManualTimeDialog = false },
-            onConfirm = { hours, minutes, dateMillis, annotation ->
-                onIntent(BookSessionIntent.OnConfirmManualTimeClicked(hours, minutes, dateMillis, annotation))
+            onConfirm = { hours, minutes, dateMillis ->
+                onIntent(BookSessionIntent.OnConfirmManualTimeClicked(hours, minutes, dateMillis))
                 showManualTimeDialog = false
             },
         )
@@ -745,10 +744,9 @@ private const val MAX_ANNOTATION_LINES = 3
 @Composable
 private fun ManualTimeEntryDialog(
     initialElapsedSeconds: Long,
-    initialAnnotation: String,
     initialDateMillis: Long,
     onDismiss: () -> Unit,
-    onConfirm: (hours: Int, minutes: Int, dateMillis: Long, annotation: String) -> Unit,
+    onConfirm: (hours: Int, minutes: Int, dateMillis: Long) -> Unit,
 ) {
     var hoursText by remember {
         mutableStateOf((initialElapsedSeconds / 3600).toString().padStart(2, '0'))
@@ -756,7 +754,6 @@ private fun ManualTimeEntryDialog(
     var minutesText by remember {
         mutableStateOf(((initialElapsedSeconds % 3600) / 60).toString().padStart(2, '0'))
     }
-    var annotationText by remember { mutableStateOf(initialAnnotation) }
     var dateMillis by remember { mutableStateOf(initialDateMillis) }
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -841,43 +838,6 @@ private fun ManualTimeEntryDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.book_session_manual_time_annotation_label).uppercase(),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.5.sp,
-                    color = color_on_surface_variant,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(44.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(color_surface_variant)
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.CenterStart,
-                ) {
-                    if (annotationText.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.book_session_annotation_placeholder),
-                            fontSize = 13.sp,
-                            color = color_placeholder,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    BasicTextField(
-                        value = annotationText,
-                        onValueChange = { annotationText = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        textStyle = TextStyle(fontSize = 13.sp, color = color_on_surface),
-                        cursorBrush = SolidColor(color_on_surface),
-                    )
-                }
-
                 Row(
                     modifier = Modifier
                         .padding(top = 24.dp)
@@ -904,7 +864,6 @@ private fun ManualTimeEntryDialog(
                                 hoursText.toIntOrNull() ?: 0,
                                 minutesText.toIntOrNull() ?: 0,
                                 dateMillis,
-                                annotationText,
                             )
                         },
                         modifier = Modifier

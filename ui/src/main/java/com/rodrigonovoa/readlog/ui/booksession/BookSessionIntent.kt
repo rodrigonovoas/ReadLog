@@ -13,6 +13,5 @@ sealed interface BookSessionIntent {
         val hours: Int,
         val minutes: Int,
         val dateMillis: Long,
-        val annotation: String,
     ) : BookSessionIntent
 }
