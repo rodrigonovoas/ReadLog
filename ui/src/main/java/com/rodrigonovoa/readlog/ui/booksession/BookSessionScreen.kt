@@ -229,6 +229,7 @@ fun BookSessionScreen(
             }
 
             SessionActionsSheet(
+                annotationText = uiState.annotationText,
                 isMusicOn = isMusicOn,
                 onToggleMusic = { isMusicOn = !isMusicOn },
                 onAddManualTimeClick = { showManualTimeDialog = true },
@@ -562,6 +563,7 @@ private fun SessionActionButton(
 
 @Composable
 private fun SessionActionsSheet(
+    annotationText: String,
     isMusicOn: Boolean,
     onToggleMusic: () -> Unit,
     onAddManualTimeClick: () -> Unit,
@@ -622,6 +624,7 @@ private fun SessionActionsSheet(
                 )
             }
 
+            val hasAnnotation = annotationText.isNotBlank()
             val commentContentDescription =
                 stringResource(R.string.book_session_comment_content_description)
             Box(
@@ -634,7 +637,7 @@ private fun SessionActionsSheet(
                 contentAlignment = Alignment.Center,
             ) {
                 CommentIcon(
-                    tint = color_on_surface,
+                    tint = if (hasAnnotation) color_primary else color_on_surface,
                     modifier = Modifier.size(16.dp),
                 )
             }
