@@ -65,7 +65,7 @@ class BookCollectionViewModelTest {
         claimUsernameUseCase = mockk()
         val booksFlow = MutableStateFlow<List<Book>>(emptyList())
         every { getBooksUseCase() } returns booksFlow
-        every { getUserDisplayNameUseCase() } returns "reader"
+        every { getUserDisplayNameUseCase() } returns ""
         every { getTimeOfDayUseCase() } returns TimeOfDay.AFTERNOON
         every { getCurrentUserUseCase() } returns null
         every { isOnlineUseCase() } returns true
@@ -164,8 +164,8 @@ class BookCollectionViewModelTest {
     }
 
     @Test
-    fun `greeting falls back to reader when no user is signed in`() = runTest {
-        every { getUserDisplayNameUseCase() } returns "reader"
+    fun `greeting falls back to empty string when no user is signed in`() = runTest {
+        every { getUserDisplayNameUseCase() } returns ""
         every { getTimeOfDayUseCase() } returns TimeOfDay.MORNING
         val booksFlow = MutableStateFlow<List<Book>>(emptyList())
         every { getBooksUseCase() } returns booksFlow
@@ -184,7 +184,7 @@ class BookCollectionViewModelTest {
         )
         advanceUntilIdle()
 
-        assertEquals("reader", viewModel.uiState.value.userName)
+        assertEquals("", viewModel.uiState.value.userName)
     }
 
     @Test

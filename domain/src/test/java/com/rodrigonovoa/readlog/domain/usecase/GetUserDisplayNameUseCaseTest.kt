@@ -27,23 +27,23 @@ class GetUserDisplayNameUseCaseTest {
     }
 
     @Test
-    fun `invoke falls back to reader when display name is blank`() {
+    fun `invoke returns null when display name is blank`() {
         every { authRepository.getCurrentUser() } returns User("uid", "test@test.com", "   ")
 
-        assertEquals("reader", useCase())
+        assertEquals(null, useCase())
     }
 
     @Test
-    fun `invoke falls back to reader when display name is null`() {
+    fun `invoke returns null when display name is null`() {
         every { authRepository.getCurrentUser() } returns User("uid", "test@test.com", null)
 
-        assertEquals("reader", useCase())
+        assertEquals(null, useCase())
     }
 
     @Test
-    fun `invoke falls back to reader when no user is signed in`() {
+    fun `invoke returns null when no user is signed in`() {
         every { authRepository.getCurrentUser() } returns null
 
-        assertEquals("reader", useCase())
+        assertEquals(null, useCase())
     }
 }

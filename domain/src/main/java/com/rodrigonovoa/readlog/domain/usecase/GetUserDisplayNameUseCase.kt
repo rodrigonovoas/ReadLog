@@ -6,8 +6,8 @@ import javax.inject.Inject
 class GetUserDisplayNameUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    operator fun invoke(): String {
+    operator fun invoke(): String? {
         val rawName = authRepository.getCurrentUser()?.displayName?.ifBlank { null }
-        return rawName?.split(" ")?.firstOrNull() ?: "reader"
+        return rawName?.split(" ")?.firstOrNull()
     }
 }

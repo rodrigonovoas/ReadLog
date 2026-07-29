@@ -102,10 +102,13 @@ fun BookCollectionScreen(
             .background(color_surface)
             .safeDrawingPadding(),
     ) {
+        val greetingName = uiState.userName.ifEmpty {
+            stringResource(R.string.reader_name_fallback)
+        }
         HeaderSection(
             showTitle = books.isNotEmpty(),
             greeting = if (uiState.greetingResId != 0) {
-                stringResource(uiState.greetingResId, uiState.userName)
+                stringResource(uiState.greetingResId, greetingName)
             } else {
                 ""
             },

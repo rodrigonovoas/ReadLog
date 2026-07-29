@@ -50,7 +50,7 @@ class UserProfileViewModel @Inject constructor(
         val userId = currentUser?.uid.orEmpty()
         _uiState.update {
             it.copy(
-                userName = getUserDisplayNameUseCase(),
+                userName = getUserDisplayNameUseCase().orEmpty(),
                 username = "",
             )
         }

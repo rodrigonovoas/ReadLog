@@ -14,6 +14,7 @@
     <string name="book_collection_greeting_morning">Good morning, %1$s</string>
     <string name="book_collection_greeting_afternoon">Good afternoon, %1$s</string>
     <string name="book_collection_greeting_evening">Good evening, %1$s</string>
+    <string name="reader_name_fallback">Reader</string>
     <string name="book_collection_title">Your readings</string>
     <string name="book_collection_progress_pct">%1$d%%</string>
     <string name="book_collection_add_book">Add book</string>

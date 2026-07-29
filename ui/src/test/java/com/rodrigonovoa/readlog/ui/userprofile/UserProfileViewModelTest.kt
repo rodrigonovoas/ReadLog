@@ -81,15 +81,15 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `userName falls back to reader and username stays empty when no user is signed in`() = runTest {
+    fun `userName falls back to empty string and username stays empty when no user is signed in`() = runTest {
         every { getCurrentUserUseCase() } returns null
-        every { getUserDisplayNameUseCase() } returns "reader"
+        every { getUserDisplayNameUseCase() } returns ""
         coEvery { getUserProfileInfoUseCase("") } returns UserProfileInfo(userId = "")
 
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        assertEquals("reader", viewModel.uiState.value.userName)
+        assertEquals("", viewModel.uiState.value.userName)
         assertEquals("", viewModel.uiState.value.username)
     }
 

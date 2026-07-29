@@ -110,7 +110,7 @@ class BookCollectionViewModel @Inject constructor(
     }
 
     private fun buildGreeting() {
-        val name = getUserDisplayNameUseCase()
+        val name = getUserDisplayNameUseCase().orEmpty()
         val currentUser = getCurrentUserUseCase()
         val greetingResId = when (getTimeOfDayUseCase()) {
             TimeOfDay.MORNING -> R.string.book_collection_greeting_morning

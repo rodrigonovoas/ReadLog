@@ -159,8 +159,11 @@ private fun AvatarSection(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            val displayName = uiState.userName.ifEmpty {
+                stringResource(R.string.reader_name_fallback)
+            }
             Text(
-                text = uiState.userName,
+                text = displayName,
                 fontFamily = FontFamily.Serif,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 22.sp,
