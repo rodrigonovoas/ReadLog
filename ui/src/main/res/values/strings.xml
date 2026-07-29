@@ -79,12 +79,15 @@
     <string name="book_session_end_dialog_message">You\'ll lose your progress if you leave now.</string>
     <string name="book_session_end_dialog_yes">Yes</string>
     <string name="book_session_end_dialog_no">No</string>
-    <string name="book_session_annotations_label">Annotations</string>
     <string name="book_session_annotation_placeholder">Anything to note about this session?</string>
     <string name="book_session_music_on_content_description">Music on</string>
     <string name="book_session_music_off_content_description">Music off</string>
-    <string name="book_session_send_annotation_content_description">Send annotation</string>
+    <string name="book_session_comment_content_description">Add annotation</string>
     <string name="book_session_add_manual_time_content_description">Add manual time</string>
+    <string name="book_session_annotation_dialog_title">Annotations</string>
+    <string name="book_session_annotation_dialog_placeholder">What do you want to remember about this session?</string>
+    <string name="book_session_annotation_dialog_cancel">Cancel</string>
+    <string name="book_session_annotation_dialog_save">Save</string>
     <string name="book_session_manual_time_dialog_title">Add manual time</string>
     <string name="book_session_manual_time_duration_label">Duration</string>
     <string name="book_session_manual_time_hours_unit">h</string>

@@ -6,6 +6,8 @@ sealed interface BookSessionIntent {
     data object OnBackClicked : BookSessionIntent
     data object OnConfirmEndSessionClicked : BookSessionIntent
     data object OnDismissEndSessionDialogClicked : BookSessionIntent
+    data object OnOpenAnnotationDialogClicked : BookSessionIntent
+    data object OnDismissAnnotationDialogClicked : BookSessionIntent
     data class OnAnnotationTextChanged(val text: String) : BookSessionIntent
     data class OnConfirmManualTimeClicked(
         val hours: Int,

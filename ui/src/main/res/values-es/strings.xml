@@ -79,12 +79,15 @@
     <string name="book_session_end_dialog_message">Perderás tu progreso si sales ahora.</string>
     <string name="book_session_end_dialog_yes">Sí</string>
     <string name="book_session_end_dialog_no">No</string>
-    <string name="book_session_annotations_label">Anotaciones</string>
     <string name="book_session_annotation_placeholder">¿Algo que anotar sobre esta sesión?</string>
     <string name="book_session_music_on_content_description">Música activada</string>
     <string name="book_session_music_off_content_description">Música desactivada</string>
-    <string name="book_session_send_annotation_content_description">Enviar anotación</string>
+    <string name="book_session_comment_content_description">Añadir anotación</string>
     <string name="book_session_add_manual_time_content_description">Añadir tiempo manual</string>
+    <string name="book_session_annotation_dialog_title">Anotaciones</string>
+    <string name="book_session_annotation_dialog_placeholder">¿Qué quieres recordar de esta sesión?</string>
+    <string name="book_session_annotation_dialog_cancel">Cancelar</string>
+    <string name="book_session_annotation_dialog_save">Guardar</string>
     <string name="book_session_manual_time_dialog_title">Añadir tiempo manual</string>
     <string name="book_session_manual_time_duration_label">Duración</string>
     <string name="book_session_manual_time_hours_unit">h</string>

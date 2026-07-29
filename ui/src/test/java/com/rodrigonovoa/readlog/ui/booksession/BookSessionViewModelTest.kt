@@ -77,6 +77,7 @@ class BookSessionViewModelTest {
         assertEquals(0L, state.elapsedSeconds)
         assertFalse(state.isRunning)
         assertFalse(state.showEndSessionDialog)
+        assertFalse(state.showAnnotationDialog)
         assertEquals("", state.annotationText)
     }
 
@@ -294,6 +295,25 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
 
         assertEquals("Great chapter", viewModel.uiState.value.annotationText)
+    }
+
+    @Test
+    fun `open annotation dialog shows it`() = runTest {
+        viewModel.processIntent(BookSessionIntent.OnOpenAnnotationDialogClicked)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.showAnnotationDialog)
+    }
+
+    @Test
+    fun `dismiss annotation dialog hides it`() = runTest {
+        viewModel.processIntent(BookSessionIntent.OnOpenAnnotationDialogClicked)
+        advanceUntilIdle()
+
+        viewModel.processIntent(BookSessionIntent.OnDismissAnnotationDialogClicked)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.showAnnotationDialog)
     }
 
     @Test

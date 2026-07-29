@@ -93,6 +93,12 @@ class BookSessionViewModel @Inject constructor(
                     startTimer()
                 }
             }
+            is BookSessionIntent.OnOpenAnnotationDialogClicked -> {
+                _uiState.update { it.copy(showAnnotationDialog = true) }
+            }
+            is BookSessionIntent.OnDismissAnnotationDialogClicked -> {
+                _uiState.update { it.copy(showAnnotationDialog = false) }
+            }
             is BookSessionIntent.OnAnnotationTextChanged -> {
                 val lineCount = intent.text.count { it == '\n' } + 1
                 if (lineCount <= MAX_ANNOTATION_LINES) {

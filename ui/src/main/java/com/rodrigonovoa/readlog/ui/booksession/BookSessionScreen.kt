@@ -97,7 +97,7 @@ fun BookSessionScreen(
     uiState: BookSessionUiState = BookSessionUiState(),
     onIntent: (BookSessionIntent) -> Unit = {},
 ) {
-    var isMusicOn by remember { mutableStateOf(true) }
+    var isMusicOn by remember { mutableStateOf(false) }
     var showManualTimeDialog by remember { mutableStateOf(false) }
 
     BackHandler(enabled = !uiState.showEndSessionDialog) {
@@ -144,10 +144,7 @@ fun BookSessionScreen(
             SessionHeader(
                 bookTitle = uiState.bookTitle,
                 sessionDateLabel = formatSessionDate(uiState.sessionDate),
-                isMusicOn = isMusicOn,
-                onToggleMusic = { isMusicOn = !isMusicOn },
                 onBackClick = { onIntent(BookSessionIntent.OnBackClicked) },
-                onAddManualTimeClick = { showManualTimeDialog = true },
             )
 
             Column(
@@ -231,9 +228,11 @@ fun BookSessionScreen(
                 }
             }
 
-            SessionAnnotationsSheet(
-                annotationText = uiState.annotationText,
-                onAnnotationTextChanged = { onIntent(BookSessionIntent.OnAnnotationTextChanged(it)) },
+            SessionActionsSheet(
+                isMusicOn = isMusicOn,
+                onToggleMusic = { isMusicOn = !isMusicOn },
+                onAddManualTimeClick = { showManualTimeDialog = true },
+                onOpenAnnotationDialogClick = { onIntent(BookSessionIntent.OnOpenAnnotationDialogClicked) },
             )
         }
     }
@@ -247,6 +246,17 @@ fun BookSessionScreen(
             onDismiss = { onIntent(BookSessionIntent.OnDismissEndSessionDialogClicked) },
             onConfirm = { onIntent(BookSessionIntent.OnConfirmEndSessionClicked) },
             useAccentConfirmButton = false,
+        )
+    }
+
+    if (uiState.showAnnotationDialog) {
+        AnnotationDialog(
+            initialText = uiState.annotationText,
+            onDismiss = { onIntent(BookSessionIntent.OnDismissAnnotationDialogClicked) },
+            onSave = { text ->
+                onIntent(BookSessionIntent.OnAnnotationTextChanged(text))
+                onIntent(BookSessionIntent.OnDismissAnnotationDialogClicked)
+            },
         )
     }
 
@@ -277,10 +287,7 @@ private fun formatSessionDate(millis: Long): String =
 private fun SessionHeader(
     bookTitle: String,
     sessionDateLabel: String,
-    isMusicOn: Boolean,
-    onToggleMusic: () -> Unit,
     onBackClick: () -> Unit,
-    onAddManualTimeClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -288,93 +295,40 @@ private fun SessionHeader(
             .fillMaxWidth()
             .padding(top = 8.dp, start = 24.dp, end = 24.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Row(
-            modifier = Modifier.weight(1f, fill = false),
-            verticalAlignment = Alignment.CenterVertically,
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .background(color_chip),
         ) {
-            IconButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(color_chip),
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                    contentDescription = stringResource(R.string.book_session_back_content_description),
-                    tint = color_on_surface,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column {
-                Text(
-                    text = bookTitle,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = color_on_surface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = sessionDateLabel,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = color_on_surface_variant,
-                    maxLines = 1,
-                )
-            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                contentDescription = stringResource(R.string.book_session_back_content_description),
+                tint = color_on_surface,
+                modifier = Modifier.size(18.dp),
+            )
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            val addManualTimeContentDescription =
-                stringResource(R.string.book_session_add_manual_time_content_description)
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.55f))
-                    .clickable(onClick = onAddManualTimeClick)
-                    .semantics { contentDescription = addManualTimeContentDescription },
-                contentAlignment = Alignment.Center,
-            ) {
-                StopwatchIcon(
-                    tint = color_on_surface,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-
-            val musicToggleContentDescription = stringResource(
-                if (isMusicOn) {
-                    R.string.book_session_music_on_content_description
-                } else {
-                    R.string.book_session_music_off_content_description
-                }
+        Column {
+            Text(
+                text = bookTitle,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = color_on_surface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.55f))
-                    .clickable(onClick = onToggleMusic)
-                    .semantics { contentDescription = musicToggleContentDescription },
-                contentAlignment = Alignment.Center,
-            ) {
-                MusicToggleIcon(
-                    isOn = isMusicOn,
-                    tint = if (isMusicOn) color_on_surface else color_on_surface_variant,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
+            Text(
+                text = sessionDateLabel,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = color_on_surface_variant,
+                maxLines = 1,
+            )
         }
     }
 }
@@ -423,6 +377,47 @@ private fun MusicToggleIcon(
                 cap = StrokeCap.Round,
             )
         }
+    }
+}
+
+@Composable
+private fun CommentIcon(
+    tint: Color,
+    modifier: Modifier = Modifier,
+    iconSize: Dp = 16.dp,
+) {
+    Canvas(modifier = modifier.size(iconSize)) {
+        val strokeWidth = 1.4.dp.toPx()
+        val cornerRadius = size.minDimension * 0.18f
+
+        drawRoundRect(
+            color = tint,
+            topLeft = Offset(size.width * 0.1f, size.height * 0.1f),
+            size = androidx.compose.ui.geometry.Size(size.width * 0.8f, size.height * 0.6f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius, cornerRadius),
+            style = Stroke(width = strokeWidth),
+        )
+
+        val tailTopY = size.height * 0.7f
+        val tailBottomY = size.height * 0.9f
+        val tailStartX = size.width * 0.3f
+        val tailPointX = size.width * 0.16f
+        val tailEndX = size.width * 0.46f
+
+        drawLine(
+            color = tint,
+            start = Offset(tailStartX, tailTopY),
+            end = Offset(tailPointX, tailBottomY),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round,
+        )
+        drawLine(
+            color = tint,
+            start = Offset(tailPointX, tailBottomY),
+            end = Offset(tailEndX, tailTopY),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round,
+        )
     }
 }
 
@@ -567,9 +562,11 @@ private fun SessionActionButton(
 }
 
 @Composable
-private fun SessionAnnotationsSheet(
-    annotationText: String,
-    onAnnotationTextChanged: (String) -> Unit,
+private fun SessionActionsSheet(
+    isMusicOn: Boolean,
+    onToggleMusic: () -> Unit,
+    onAddManualTimeClick: () -> Unit,
+    onOpenAnnotationDialogClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -581,47 +578,168 @@ private fun SessionAnnotationsSheet(
             .navigationBarsPadding()
             .padding(start = 24.dp, top = 18.dp, end = 24.dp, bottom = 26.dp),
     ) {
-        Text(
-            text = stringResource(R.string.book_session_annotations_label),
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = color_on_surface,
-            modifier = Modifier.padding(top = 14.dp, bottom = 10.dp),
-        )
         Row(
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
+            val addManualTimeContentDescription =
+                stringResource(R.string.book_session_add_manual_time_content_description)
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 44.dp)
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(color_surface)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                contentAlignment = Alignment.CenterStart,
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.55f))
+                    .clickable(onClick = onAddManualTimeClick)
+                    .semantics { contentDescription = addManualTimeContentDescription },
+                contentAlignment = Alignment.Center,
             ) {
-                if (annotationText.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.book_session_annotation_placeholder),
-                        fontSize = 13.sp,
-                        color = color_placeholder,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                StopwatchIcon(
+                    tint = color_on_surface,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+
+            val musicToggleContentDescription = stringResource(
+                if (isMusicOn) {
+                    R.string.book_session_music_on_content_description
+                } else {
+                    R.string.book_session_music_off_content_description
                 }
-                BasicTextField(
-                    value = annotationText,
-                    onValueChange = onAnnotationTextChanged,
-                    modifier = Modifier.fillMaxWidth(),
-                    maxLines = 3,
-                    textStyle = TextStyle(fontSize = 13.sp, color = color_on_surface),
-                    cursorBrush = SolidColor(color_on_surface),
+            )
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.55f))
+                    .clickable(onClick = onToggleMusic)
+                    .semantics { contentDescription = musicToggleContentDescription },
+                contentAlignment = Alignment.Center,
+            ) {
+                MusicToggleIcon(
+                    isOn = isMusicOn,
+                    tint = if (isMusicOn) color_on_surface else color_on_surface_variant,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+
+            val commentContentDescription =
+                stringResource(R.string.book_session_comment_content_description)
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.55f))
+                    .clickable(onClick = onOpenAnnotationDialogClick)
+                    .semantics { contentDescription = commentContentDescription },
+                contentAlignment = Alignment.Center,
+            ) {
+                CommentIcon(
+                    tint = color_on_surface,
+                    modifier = Modifier.size(16.dp),
                 )
             }
         }
     }
 }
+
+@Composable
+private fun AnnotationDialog(
+    initialText: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+) {
+    var text by remember { mutableStateOf(initialText) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = color_surface,
+            modifier = Modifier.widthIn(max = 320.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(start = 24.dp, top = 26.dp, end = 24.dp, bottom = 22.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.book_session_annotation_dialog_title),
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 19.sp,
+                    color = color_on_surface,
+                )
+
+                Spacer(modifier = Modifier.height(18.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 120.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(color_surface_variant)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    contentAlignment = Alignment.TopStart,
+                ) {
+                    if (text.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.book_session_annotation_dialog_placeholder),
+                            fontSize = 13.sp,
+                            color = color_placeholder,
+                        )
+                    }
+                    BasicTextField(
+                        value = text,
+                        onValueChange = { newText ->
+                            if (newText.count { it == '\n' } < MAX_ANNOTATION_LINES) {
+                                text = newText
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = MAX_ANNOTATION_LINES,
+                        textStyle = TextStyle(fontSize = 13.sp, color = color_on_surface),
+                        cursorBrush = SolidColor(color_on_surface),
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .padding(top = 24.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.textButtonColors(contentColor = color_on_surface_variant),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.book_session_annotation_dialog_cancel),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    Button(
+                        onClick = { onSave(text) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = color_primary, contentColor = color_surface),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.book_session_annotation_dialog_save),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private const val MAX_ANNOTATION_LINES = 3
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
