@@ -1,6 +1,7 @@
 package com.rodrigonovoa.readlog.ui.common
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,11 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,9 +22,9 @@ import androidx.compose.ui.unit.sp
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.theme.color_chip
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
-import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant
 import com.rodrigonovoa.readlog.ui.theme.color_surface
 import com.rodrigonovoa.readlog.ui.theme.color_surface_variant
+import com.rodrigonovoa.readlog.ui.theme.color_transparent
 
 private const val LANGUAGE_ENGLISH = "en"
 private const val LANGUAGE_SPANISH = "es"
@@ -81,6 +79,11 @@ private fun LanguageOption(
             .padding(vertical = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(if (isSelected) color_chip else color_surface_variant)
+            .border(
+                width = if (isSelected) 1.5.dp else 0.dp,
+                color = if (isSelected) color_on_surface else color_transparent,
+                shape = RoundedCornerShape(12.dp),
+            )
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -92,12 +95,5 @@ private fun LanguageOption(
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
             color = color_on_surface,
         )
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = null,
-                tint = color_on_surface_variant,
-            )
-        }
     }
 }
