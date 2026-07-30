@@ -115,7 +115,7 @@
     <string name="user_profile_likes_label">LIKES</string>
     <string name="user_profile_sessions_this_week_label">SESSIONS THIS WEEK</string>
     <string name="user_profile_time_this_week_label">TIME THIS WEEK</string>
-    <string name="user_profile_collection_title">Your collection</string>
+    <string name="user_profile_collection_title">Book Collection</string>
     <string name="user_profile_collection_count">%1$d books</string>
     <string name="book_collection_search_icon_content_description">Search users</string>
     <string name="user_search_title">Search users</string>

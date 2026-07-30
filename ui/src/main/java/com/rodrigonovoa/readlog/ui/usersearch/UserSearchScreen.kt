@@ -161,8 +161,8 @@ private fun SearchField(
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = color_on_surface,
             unfocusedTextColor = color_on_surface,
-            cursorColor = color_primary,
-            focusedBorderColor = color_primary,
+            cursorColor = color_on_surface_variant,
+            focusedBorderColor = color_on_surface_variant,
             unfocusedBorderColor = color_outline,
             focusedContainerColor = color_transparent,
             unfocusedContainerColor = color_transparent,
