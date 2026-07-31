@@ -9,14 +9,13 @@ class RefreshUserProfileInfoUseCase @Inject constructor(
     private val userProfileRepository: UserProfileRepository,
 ) {
     suspend operator fun invoke(userId: String, displayName: String?): Result<UserProfileInfo> {
-        val startOfWeek = startOfCurrentWeekMillis()
-        return userProfileRepository.refreshUserProfileInfo(userId, startOfWeek, displayName)
+        val startOfMonth = startOfCurrentMonthMillis()
+        return userProfileRepository.refreshUserProfileInfo(userId, startOfMonth, displayName)
     }
 
-    private fun startOfCurrentWeekMillis(): Long {
+    private fun startOfCurrentMonthMillis(): Long {
         val calendar = Calendar.getInstance().apply {
-            firstDayOfWeek = Calendar.MONDAY
-            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            set(Calendar.DAY_OF_MONTH, 1)
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)

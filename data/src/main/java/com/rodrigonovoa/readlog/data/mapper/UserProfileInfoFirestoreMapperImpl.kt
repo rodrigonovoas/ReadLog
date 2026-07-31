@@ -8,8 +8,8 @@ class UserProfileInfoFirestoreMapperImpl @Inject constructor() : UserProfileInfo
     override fun toFirestoreMap(info: UserProfileInfo): Map<String, Any> {
         return mapOf(
             "likesCount" to info.likesCount,
-            "sessionsThisWeek" to info.sessionsThisWeek,
-            "weekTimeSeconds" to info.weekTimeSeconds,
+            "sessionsThisMonth" to info.sessionsThisMonth,
+            "monthTimeSeconds" to info.monthTimeSeconds,
             "bookCollection" to info.bookCollection,
             "lastModified" to info.lastModified,
             "displayName" to info.displayName.orEmpty(),
@@ -24,8 +24,8 @@ class UserProfileInfoFirestoreMapperImpl @Inject constructor() : UserProfileInfo
         return UserProfileInfo(
             userId = userId,
             likesCount = (map["likesCount"] as? Number)?.toInt() ?: 0,
-            sessionsThisWeek = (map["sessionsThisWeek"] as? Number)?.toInt() ?: 0,
-            weekTimeSeconds = (map["weekTimeSeconds"] as? Number)?.toLong() ?: 0L,
+            sessionsThisMonth = (map["sessionsThisMonth"] as? Number)?.toInt() ?: 0,
+            monthTimeSeconds = (map["monthTimeSeconds"] as? Number)?.toLong() ?: 0L,
             bookCollection = (map["bookCollection"] as? List<String>) ?: emptyList(),
             lastModified = (map["lastModified"] as? Number)?.toLong() ?: 0L,
             displayName = (map["displayName"] as? String)?.ifBlank { null },

@@ -9,8 +9,8 @@ class UserProfileInfoDataMapperImpl @Inject constructor() : UserProfileInfoDataM
         return UserProfileInfo(
             userId = entity.userId,
             likesCount = entity.likesCount,
-            sessionsThisWeek = entity.sessionsThisWeek,
-            weekTimeSeconds = entity.weekTimeSeconds,
+            sessionsThisMonth = entity.sessionsThisMonth,
+            monthTimeSeconds = entity.monthTimeSeconds,
             bookCollection = entity.bookCollection,
             lastModified = entity.lastModified,
             displayName = entity.displayName,
@@ -23,8 +23,8 @@ class UserProfileInfoDataMapperImpl @Inject constructor() : UserProfileInfoDataM
         return UserProfileInfoEntity(
             userId = domain.userId,
             likesCount = domain.likesCount,
-            sessionsThisWeek = domain.sessionsThisWeek,
-            weekTimeSeconds = domain.weekTimeSeconds,
+            sessionsThisMonth = domain.sessionsThisMonth,
+            monthTimeSeconds = domain.monthTimeSeconds,
             bookCollection = domain.bookCollection,
             lastModified = domain.lastModified,
             displayName = domain.displayName,

@@ -32,8 +32,8 @@ class SessionRepositoryImpl @Inject constructor(
         return sessionDao.getAllListForBook(bookId).map { sessionDataMapper.toDomain(it) }
     }
 
-    override suspend fun getAllSessionsSince(startOfWeekMillis: Long): List<Session> {
-        return sessionDao.getSessionsSince(startOfWeekMillis).map { sessionDataMapper.toDomain(it) }
+    override suspend fun getAllSessionsSince(startOfMonthMillis: Long): List<Session> {
+        return sessionDao.getSessionsSince(startOfMonthMillis).map { sessionDataMapper.toDomain(it) }
     }
 
     override suspend fun getSessionById(id: Int): Session? {

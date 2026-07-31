@@ -6,7 +6,7 @@ interface UserProfileRepository {
     suspend fun getUserProfileInfo(userId: String): UserProfileInfo
     suspend fun refreshUserProfileInfo(
         userId: String,
-        startOfWeekMillis: Long,
+        startOfMonthMillis: Long,
         displayName: String?,
     ): Result<UserProfileInfo>
     suspend fun getRemoteUserProfileInfo(userId: String): Result<UserProfileInfo>

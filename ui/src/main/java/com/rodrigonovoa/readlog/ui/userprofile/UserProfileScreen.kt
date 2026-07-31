@@ -218,12 +218,12 @@ private fun ProfileStatsRow(
                 value = String.format(Locale.getDefault(), "%,d", uiState.likesCount),
             ),
             StatCardItem(
-                label = stringResource(R.string.user_profile_sessions_this_week_label),
-                value = uiState.weeklySessionsCount.toString(),
+                label = stringResource(R.string.user_profile_sessions_this_month_label),
+                value = uiState.monthlySessionsCount.toString(),
             ),
             StatCardItem(
-                label = stringResource(R.string.user_profile_time_this_week_label),
-                value = uiState.weeklyTimeLabel,
+                label = stringResource(R.string.user_profile_time_this_month_label),
+                value = uiState.monthlyTimeLabel,
                 isLongValue = true,
             ),
         ),

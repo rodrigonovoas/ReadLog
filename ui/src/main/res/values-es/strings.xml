@@ -113,8 +113,8 @@
     <string name="user_profile_unfavorite_content_description">Ya no me gusta</string>
     <string name="user_profile_like_error_message">No se pudo actualizar. Comprueba tu conexión e inténtalo de nuevo.</string>
     <string name="user_profile_likes_label">LIKES</string>
-    <string name="user_profile_sessions_this_week_label">SESIONES ESTA SEMANA</string>
-    <string name="user_profile_time_this_week_label">TIEMPO ESTA SEMANA</string>
+    <string name="user_profile_sessions_this_month_label">SESIONES ESTE MES</string>
+    <string name="user_profile_time_this_month_label">TIEMPO ESTE MES</string>
     <string name="user_profile_collection_title">Colección de libros</string>
     <string name="user_profile_collection_count">%1$d libros</string>
     <string name="book_collection_search_icon_content_description">Buscar usuarios</string>

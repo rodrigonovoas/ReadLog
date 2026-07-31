@@ -117,8 +117,8 @@ class UserProfileViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 likesCount = info.likesCount,
-                weeklySessionsCount = info.sessionsThisWeek,
-                weeklyTimeLabel = formatDuration(info.weekTimeSeconds),
+                monthlySessionsCount = info.sessionsThisMonth,
+                monthlyTimeLabel = formatDuration(info.monthTimeSeconds),
                 collectionBooks = info.bookCollection.map { title -> UserProfileBook(title = title) },
             )
         }

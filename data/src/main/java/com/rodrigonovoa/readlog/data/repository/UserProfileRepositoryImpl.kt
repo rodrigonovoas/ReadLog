@@ -27,11 +27,11 @@ class UserProfileRepositoryImpl @Inject constructor(
 
     override suspend fun refreshUserProfileInfo(
         userId: String,
-        startOfWeekMillis: Long,
+        startOfMonthMillis: Long,
         displayName: String?,
     ): Result<UserProfileInfo> {
         return try {
-            val weekSessions = sessionRepository.getAllSessionsSince(startOfWeekMillis)
+            val monthSessions = sessionRepository.getAllSessionsSince(startOfMonthMillis)
             val books = bookRepository.getAllBooksList()
             val remoteInfo = userProfileInfoFirestoreDataSource.download(userId).getOrNull()
             val resolvedDisplayName = displayName ?: remoteInfo?.displayName
@@ -39,8 +39,8 @@ class UserProfileRepositoryImpl @Inject constructor(
             val merged = UserProfileInfo(
                 userId = userId,
                 likesCount = remoteInfo?.likesCount ?: 0,
-                sessionsThisWeek = weekSessions.size,
-                weekTimeSeconds = weekSessions.sumOf { it.time },
+                sessionsThisMonth = monthSessions.size,
+                monthTimeSeconds = monthSessions.sumOf { it.time },
                 bookCollection = books.map { it.title },
                 lastModified = System.currentTimeMillis(),
                 displayName = resolvedDisplayName,

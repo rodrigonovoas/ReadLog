@@ -125,8 +125,8 @@ class UserProfileViewModelTest {
         coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(
             userId = "uid-1",
             likesCount = 20,
-            sessionsThisWeek = 4,
-            weekTimeSeconds = 3900L,
+            sessionsThisMonth = 4,
+            monthTimeSeconds = 3900L,
             bookCollection = listOf("Book A", "Book B"),
         )
 
@@ -134,8 +134,8 @@ class UserProfileViewModelTest {
         advanceUntilIdle()
 
         assertEquals(20, viewModel.uiState.value.likesCount)
-        assertEquals(4, viewModel.uiState.value.weeklySessionsCount)
-        assertEquals("1h 05min", viewModel.uiState.value.weeklyTimeLabel)
+        assertEquals(4, viewModel.uiState.value.monthlySessionsCount)
+        assertEquals("1h 05min", viewModel.uiState.value.monthlyTimeLabel)
         assertEquals(
             listOf(UserProfileBook(title = "Book A"), UserProfileBook(title = "Book B")),
             viewModel.uiState.value.collectionBooks,
@@ -143,16 +143,16 @@ class UserProfileViewModelTest {
     }
 
     @Test
-    fun `weeklyTimeLabel formats durations under an hour in minutes`() = runTest {
+    fun `monthlyTimeLabel formats durations under an hour in minutes`() = runTest {
         every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena")
         coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(
-            userId = "uid-1", weekTimeSeconds = 1800L
+            userId = "uid-1", monthTimeSeconds = 1800L
         )
 
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        assertEquals("30 min", viewModel.uiState.value.weeklyTimeLabel)
+        assertEquals("30 min", viewModel.uiState.value.monthlyTimeLabel)
     }
 
     @Test
@@ -167,8 +167,8 @@ class UserProfileViewModelTest {
             UserProfileInfo(
                 userId = "other-uid",
                 likesCount = 20,
-                sessionsThisWeek = 2,
-                weekTimeSeconds = 120L,
+                sessionsThisMonth = 2,
+                monthTimeSeconds = 120L,
                 bookCollection = listOf("Book A"),
                 displayName = "Elena Marín",
                 username = "elena_marin",

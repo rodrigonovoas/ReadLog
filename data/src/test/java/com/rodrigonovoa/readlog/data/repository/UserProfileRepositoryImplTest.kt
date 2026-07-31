@@ -54,8 +54,8 @@ class UserProfileRepositoryImplTest {
         coEvery { userProfileInfoDao.getByUserId("uid") } returns UserProfileInfoEntity(
             userId = "uid",
             likesCount = 7,
-            sessionsThisWeek = 2,
-            weekTimeSeconds = 600L,
+            sessionsThisMonth = 2,
+            monthTimeSeconds = 600L,
             bookCollection = listOf("Book A"),
             lastModified = 1000L,
         )
@@ -63,14 +63,14 @@ class UserProfileRepositoryImplTest {
         val result = repository.getUserProfileInfo("uid")
 
         assertEquals(7, result.likesCount)
-        assertEquals(2, result.sessionsThisWeek)
-        assertEquals(600L, result.weekTimeSeconds)
+        assertEquals(2, result.sessionsThisMonth)
+        assertEquals(600L, result.monthTimeSeconds)
         assertEquals(listOf("Book A"), result.bookCollection)
     }
 
     @Test
-    fun `refreshUserProfileInfo recomputes weekly stats and collection, keeps remote counters`() = runTest {
-        val weekSessions = listOf(
+    fun `refreshUserProfileInfo recomputes monthly stats and collection, keeps remote counters`() = runTest {
+        val monthSessions = listOf(
             Session(sessionId = 1, bookId = 1, time = 100L),
             Session(sessionId = 2, bookId = 1, time = 200L),
         )
@@ -78,7 +78,7 @@ class UserProfileRepositoryImplTest {
             Book(bookId = 1, title = "Book A", author = "", genre = "", releaseDate = "", numPages = 0, currentPage = 0),
             Book(bookId = 2, title = "Book B", author = "", genre = "", releaseDate = "", numPages = 0, currentPage = 0),
         )
-        coEvery { sessionRepository.getAllSessionsSince(500L) } returns weekSessions
+        coEvery { sessionRepository.getAllSessionsSince(500L) } returns monthSessions
         coEvery { bookRepository.getAllBooksList() } returns books
         coEvery { userProfileInfoFirestoreDataSource.download("uid") } returns Result.success(
             UserProfileInfo(userId = "uid", likesCount = 9, followeds = listOf("uid-2"))
@@ -90,8 +90,8 @@ class UserProfileRepositoryImplTest {
         assertEquals(true, result.isSuccess)
         val info = result.getOrThrow()
         assertEquals(9, info.likesCount)
-        assertEquals(2, info.sessionsThisWeek)
-        assertEquals(300L, info.weekTimeSeconds)
+        assertEquals(2, info.sessionsThisMonth)
+        assertEquals(300L, info.monthTimeSeconds)
         assertEquals(listOf("Book A", "Book B"), info.bookCollection)
         assertEquals("Elena Marín", info.displayName)
         assertEquals(null, info.username)
@@ -222,8 +222,8 @@ class UserProfileRepositoryImplTest {
         coEvery { userProfileInfoDao.getByUserId("uid") } returns UserProfileInfoEntity(
             userId = "uid",
             likesCount = 7,
-            sessionsThisWeek = 2,
-            weekTimeSeconds = 600L,
+            sessionsThisMonth = 2,
+            monthTimeSeconds = 600L,
             bookCollection = listOf("Book A"),
             lastModified = 1000L,
         )

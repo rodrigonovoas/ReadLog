@@ -18,11 +18,11 @@ class RefreshUserProfileInfoUseCaseTest {
     private val useCase = RefreshUserProfileInfoUseCase(repository)
 
     @Test
-    fun `invoke passes the start of the current week to the repository`() = runTest {
-        val startOfWeekSlot = slot<Long>()
+    fun `invoke passes the start of the current month to the repository`() = runTest {
+        val startOfMonthSlot = slot<Long>()
         val info = UserProfileInfo(userId = "uid")
         coEvery {
-            repository.refreshUserProfileInfo("uid", capture(startOfWeekSlot), "Elena Marín")
+            repository.refreshUserProfileInfo("uid", capture(startOfMonthSlot), "Elena Marín")
         } returns Result.success(info)
 
         val result = useCase("uid", "Elena Marín")
@@ -30,11 +30,10 @@ class RefreshUserProfileInfoUseCaseTest {
         assertEquals(info, result.getOrNull())
         coVerify { repository.refreshUserProfileInfo("uid", any(), "Elena Marín") }
 
-        val calendar = Calendar.getInstance().apply { timeInMillis = startOfWeekSlot.captured }
-        assertEquals(Calendar.MONDAY, calendar.get(Calendar.DAY_OF_WEEK))
+        val calendar = Calendar.getInstance().apply { timeInMillis = startOfMonthSlot.captured }
+        assertEquals(1, calendar.get(Calendar.DAY_OF_MONTH))
         assertEquals(0, calendar.get(Calendar.HOUR_OF_DAY))
-        assertEquals(0, calendar.get(Calendar.MINUTE))
-        assertTrue(startOfWeekSlot.captured <= System.currentTimeMillis())
+        assertTrue(startOfMonthSlot.captured <= System.currentTimeMillis())
     }
 
     @Test

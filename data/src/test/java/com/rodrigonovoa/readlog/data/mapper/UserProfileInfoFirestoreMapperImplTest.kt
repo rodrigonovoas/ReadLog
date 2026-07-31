@@ -13,8 +13,8 @@ class UserProfileInfoFirestoreMapperImplTest {
         val stats = UserProfileInfo(
             userId = "uid-1",
             likesCount = 10,
-            sessionsThisWeek = 3,
-            weekTimeSeconds = 3600L,
+            sessionsThisMonth = 3,
+            monthTimeSeconds = 3600L,
             bookCollection = listOf("Book A", "Book B"),
             lastModified = 2000L,
             displayName = "Elena Marín",
@@ -25,8 +25,8 @@ class UserProfileInfoFirestoreMapperImplTest {
         val map = mapper.toFirestoreMap(stats)
 
         assertEquals(10, map["likesCount"])
-        assertEquals(3, map["sessionsThisWeek"])
-        assertEquals(3600L, map["weekTimeSeconds"])
+        assertEquals(3, map["sessionsThisMonth"])
+        assertEquals(3600L, map["monthTimeSeconds"])
         assertEquals(listOf("Book A", "Book B"), map["bookCollection"])
         assertEquals(2000L, map["lastModified"])
         assertEquals("Elena Marín", map["displayName"])
@@ -59,8 +59,8 @@ class UserProfileInfoFirestoreMapperImplTest {
             UserProfileInfo(
                 userId = "uid-2",
                 likesCount = 10,
-                sessionsThisWeek = 0,
-                weekTimeSeconds = 0L,
+                sessionsThisMonth = 0,
+                monthTimeSeconds = 0L,
                 bookCollection = emptyList(),
                 lastModified = 0L,
                 displayName = null,
