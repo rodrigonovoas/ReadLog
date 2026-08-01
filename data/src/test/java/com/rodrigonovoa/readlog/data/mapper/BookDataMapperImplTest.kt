@@ -24,6 +24,7 @@ class BookDataMapperImplTest {
             state = BookState.IN_PROGRESS.name,
             creationDate = 12345678L,
             lastModified = 11111111L,
+            statusDate = 9999L,
         )
 
         val result = mapper.toDomain(entity)
@@ -41,6 +42,7 @@ class BookDataMapperImplTest {
                 state = BookState.IN_PROGRESS,
                 creationDate = 12345678L,
                 lastModified = 11111111L,
+                statusDate = 9999L,
             ),
             result
         )
@@ -60,6 +62,7 @@ class BookDataMapperImplTest {
             state = BookState.PAUSED,
             creationDate = 87654321L,
             lastModified = 22222222L,
+            statusDate = 8888L,
         )
 
         val result = mapper.toEntity(domain)
@@ -77,6 +80,7 @@ class BookDataMapperImplTest {
                 state = BookState.PAUSED.name,
                 creationDate = 87654321L,
                 lastModified = 22222222L,
+                statusDate = 8888L,
             ),
             result
         )
@@ -96,6 +100,7 @@ class BookDataMapperImplTest {
             state = BookState.DROPPED,
             creationDate = 11111111L,
             lastModified = 33333333L,
+            statusDate = 7777L,
         )
 
         val entity = mapper.toEntity(original)

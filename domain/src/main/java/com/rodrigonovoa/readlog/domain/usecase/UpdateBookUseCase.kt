@@ -22,7 +22,17 @@ class UpdateBookUseCase @Inject constructor(
             numPages = numPages,
             currentPage = currentPage,
             state = state,
+            statusDate = resolveStatusDate(original, state),
         )
         return runCatching { bookRepository.updateBook(updated) }
+    }
+
+    private fun resolveStatusDate(original: Book, newState: BookState): Long? {
+        return when (newState) {
+            BookState.COMPLETED,
+            BookState.DROPPED,
+            BookState.PAUSED -> original.statusDate ?: System.currentTimeMillis()
+            BookState.IN_PROGRESS -> null
+        }
     }
 }

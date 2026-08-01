@@ -18,4 +18,5 @@ data class BookEntity(
     val state: String = BookState.IN_PROGRESS.name,
     val creationDate: Long = System.currentTimeMillis(),
     val lastModified: Long = 0L,
+    val statusDate: Long? = null,
 )

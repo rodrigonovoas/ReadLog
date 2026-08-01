@@ -3,6 +3,7 @@ package com.rodrigonovoa.readlog.ui.bookdetail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rodrigonovoa.readlog.domain.model.BookState
 import com.rodrigonovoa.readlog.domain.model.Session
 import com.rodrigonovoa.readlog.domain.usecase.GetAnnotationsForSessionUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
@@ -46,7 +47,11 @@ class BookDetailViewModel @Inject constructor(
                             bookAuthor = book.author,
                             bookState = book.state,
                             readingSinceLabel = formatMillis(dayMonthFormat, book.creationDate),
-                            daysReadingCount = daysReadingSince(book.creationDate),
+                            daysReadingCount = calculateDaysReading(
+                                book.creationDate,
+                                book.statusDate,
+                                book.state,
+                            ),
                         )
                     }
                 }
@@ -90,22 +95,30 @@ class BookDetailViewModel @Inject constructor(
         }
     }
 
-    private fun daysReadingSince(creationDateMillis: Long): Int {
-        val startOfCreationDay = Calendar.getInstance().apply {
-            timeInMillis = creationDateMillis
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
+    private fun calculateDaysReading(
+        creationDateMillis: Long,
+        statusDateMillis: Long?,
+        state: BookState,
+    ): Int {
+        val startOfCreationDay = startOfDay(creationDateMillis)
+        val endOfDay = when (state) {
+            BookState.COMPLETED,
+            BookState.DROPPED,
+            BookState.PAUSED -> statusDateMillis?.let { startOfDay(it) } ?: startOfDay(System.currentTimeMillis())
+            BookState.IN_PROGRESS -> startOfDay(System.currentTimeMillis())
         }
-        val startOfToday = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        val elapsedDays = (startOfToday.timeInMillis - startOfCreationDay.timeInMillis) / DAY_IN_MILLIS
+        val elapsedDays = (endOfDay.timeInMillis - startOfCreationDay.timeInMillis) / DAY_IN_MILLIS
         return (elapsedDays + 1).toInt().coerceAtLeast(1)
+    }
+
+    private fun startOfDay(millis: Long): Calendar {
+        return Calendar.getInstance().apply {
+            timeInMillis = millis
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
     }
 
     private fun currentMonthLabel(): String {

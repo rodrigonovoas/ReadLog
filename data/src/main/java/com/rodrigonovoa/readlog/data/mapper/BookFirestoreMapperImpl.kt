@@ -7,17 +7,18 @@ import javax.inject.Inject
 class BookFirestoreMapperImpl @Inject constructor() : BookFirestoreMapper {
 
     override fun toFirestoreMap(book: Book): Map<String, Any> {
-        return mapOf(
-            "title" to book.title,
-            "author" to book.author,
-            "genre" to book.genre,
-            "releaseDate" to book.releaseDate,
-            "numPages" to book.numPages,
-            "currentPage" to book.currentPage,
-            "state" to book.state.name,
-            "creationDate" to book.creationDate,
-            "lastModified" to book.lastModified,
-        )
+        return buildMap {
+            put("title", book.title)
+            put("author", book.author)
+            put("genre", book.genre)
+            put("releaseDate", book.releaseDate)
+            put("numPages", book.numPages)
+            put("currentPage", book.currentPage)
+            put("state", book.state.name)
+            put("creationDate", book.creationDate)
+            put("lastModified", book.lastModified)
+            book.statusDate?.let { put("statusDate", it) }
+        }
     }
 
     override fun fromFirestoreMap(map: Map<String, Any?>, remoteId: String): Book {
@@ -33,6 +34,7 @@ class BookFirestoreMapperImpl @Inject constructor() : BookFirestoreMapper {
             state = parseBookState(map["state"] as? String),
             creationDate = (map["creationDate"] as? Number)?.toLong() ?: 0L,
             lastModified = (map["lastModified"] as? Number)?.toLong() ?: 0L,
+            statusDate = (map["statusDate"] as? Number)?.toLong(),
         )
     }
 

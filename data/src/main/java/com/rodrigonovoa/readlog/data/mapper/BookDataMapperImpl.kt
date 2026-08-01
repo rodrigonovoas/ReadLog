@@ -19,6 +19,7 @@ class BookDataMapperImpl @Inject constructor() : BookDataMapper {
             state = parseBookState(entity.state),
             creationDate = entity.creationDate,
             lastModified = entity.lastModified,
+            statusDate = entity.statusDate,
         )
     }
 
@@ -35,6 +36,7 @@ class BookDataMapperImpl @Inject constructor() : BookDataMapper {
             state = domain.state.name,
             creationDate = domain.creationDate,
             lastModified = domain.lastModified,
+            statusDate = domain.statusDate,
         )
     }
 

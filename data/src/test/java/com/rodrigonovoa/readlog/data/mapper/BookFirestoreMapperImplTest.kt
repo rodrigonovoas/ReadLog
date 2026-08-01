@@ -3,6 +3,7 @@ package com.rodrigonovoa.readlog.data.mapper
 import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.domain.model.BookState
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class BookFirestoreMapperImplTest {
@@ -23,6 +24,7 @@ class BookFirestoreMapperImplTest {
             state = BookState.PAUSED,
             creationDate = 1000L,
             lastModified = 2000L,
+            statusDate = 3000L,
         )
 
         val map = mapper.toFirestoreMap(book)
@@ -36,6 +38,7 @@ class BookFirestoreMapperImplTest {
         assertEquals(BookState.PAUSED.name, map["state"])
         assertEquals(1000L, map["creationDate"])
         assertEquals(2000L, map["lastModified"])
+        assertEquals(3000L, map["statusDate"])
     }
 
     @Test
@@ -63,6 +66,7 @@ class BookFirestoreMapperImplTest {
                 state = BookState.IN_PROGRESS,
                 creationDate = 0L,
                 lastModified = 5000L,
+                statusDate = null,
             ),
             book
         )
@@ -77,10 +81,34 @@ class BookFirestoreMapperImplTest {
             "currentPage" to 10,
             "state" to BookState.COMPLETED.name,
             "lastModified" to 5000L,
+            "statusDate" to 6000L,
         )
 
         val book = mapper.fromFirestoreMap(map, "uuid-3")
 
         assertEquals(BookState.COMPLETED, book.state)
+        assertEquals(6000L, book.statusDate)
+    }
+
+    @Test
+    fun `toFirestoreMap omits statusDate when null`() {
+        val book = Book(
+            bookId = 1,
+            remoteId = "uuid-1",
+            title = "Title",
+            author = "Author",
+            genre = "Genre",
+            releaseDate = "2024",
+            numPages = 300,
+            currentPage = 50,
+            state = BookState.IN_PROGRESS,
+            creationDate = 1000L,
+            lastModified = 2000L,
+            statusDate = null,
+        )
+
+        val map = mapper.toFirestoreMap(book)
+
+        assertFalse("statusDate" in map)
     }
 }
