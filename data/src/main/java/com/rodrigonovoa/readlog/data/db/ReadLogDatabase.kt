@@ -14,7 +14,7 @@ import com.rodrigonovoa.readlog.data.db.entity.UserProfileInfoEntity
 
 @Database(
     entities = [BookEntity::class, SessionEntity::class, AnnotationEntity::class, UserProfileInfoEntity::class],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -131,6 +131,10 @@ abstract class ReadLogDatabase : RoomDatabase() {
 
         val MIGRATION_9_10 = androidx.room.migration.Migration(9, 10) { database ->
             database.execSQL("ALTER TABLE books ADD COLUMN statusDate INTEGER")
+        }
+
+        val MIGRATION_10_11 = androidx.room.migration.Migration(10, 11) { database ->
+            database.execSQL("ALTER TABLE books ADD COLUMN coverUrl TEXT NOT NULL DEFAULT ''")
         }
     }
 }

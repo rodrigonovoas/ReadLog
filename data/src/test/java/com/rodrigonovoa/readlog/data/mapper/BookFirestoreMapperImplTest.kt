@@ -25,6 +25,7 @@ class BookFirestoreMapperImplTest {
             creationDate = 1000L,
             lastModified = 2000L,
             statusDate = 3000L,
+            coverUrl = "https://covers.openlibrary.org/b/id/1-S.jpg",
         )
 
         val map = mapper.toFirestoreMap(book)
@@ -39,6 +40,7 @@ class BookFirestoreMapperImplTest {
         assertEquals(1000L, map["creationDate"])
         assertEquals(2000L, map["lastModified"])
         assertEquals(3000L, map["statusDate"])
+        assertEquals("https://covers.openlibrary.org/b/id/1-S.jpg", map["coverUrl"])
     }
 
     @Test
@@ -67,6 +69,7 @@ class BookFirestoreMapperImplTest {
                 creationDate = 0L,
                 lastModified = 5000L,
                 statusDate = null,
+                coverUrl = "",
             ),
             book
         )
@@ -88,6 +91,7 @@ class BookFirestoreMapperImplTest {
 
         assertEquals(BookState.COMPLETED, book.state)
         assertEquals(6000L, book.statusDate)
+        assertEquals("", book.coverUrl)
     }
 
     @Test
@@ -105,10 +109,12 @@ class BookFirestoreMapperImplTest {
             creationDate = 1000L,
             lastModified = 2000L,
             statusDate = null,
+            coverUrl = "",
         )
 
         val map = mapper.toFirestoreMap(book)
 
         assertFalse("statusDate" in map)
+        assertEquals("", map["coverUrl"])
     }
 }

@@ -43,6 +43,7 @@ class OpenLibraryBookMetadataRepositoryTest {
             genre = "Science fiction",
             releaseDate = "1965",
             numPages = 412,
+            coverUrl = "",
         )
 
         coEvery { openLibraryApi.getBookByIsbn("9780441172719") } returns isbnResponse
@@ -100,6 +101,7 @@ class OpenLibraryBookMetadataRepositoryTest {
             genre = "",
             releaseDate = "2020",
             numPages = 100,
+            coverUrl = "",
         )
 
         coEvery { openLibraryApi.getBookByIsbn("9781234567890") } returns isbnResponse

@@ -6,4 +6,5 @@ data class BookMetadata(
     val genre: String,
     val releaseDate: String,
     val numPages: Int?,
+    val coverUrl: String = "",
 )

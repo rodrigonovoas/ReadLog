@@ -20,6 +20,7 @@ class BookDataMapperImpl @Inject constructor() : BookDataMapper {
             creationDate = entity.creationDate,
             lastModified = entity.lastModified,
             statusDate = entity.statusDate,
+            coverUrl = entity.coverUrl,
         )
     }
 
@@ -37,6 +38,7 @@ class BookDataMapperImpl @Inject constructor() : BookDataMapper {
             creationDate = domain.creationDate,
             lastModified = domain.lastModified,
             statusDate = domain.statusDate,
+            coverUrl = domain.coverUrl,
         )
     }
 

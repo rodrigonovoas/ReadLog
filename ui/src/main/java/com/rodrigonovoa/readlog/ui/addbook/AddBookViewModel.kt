@@ -59,6 +59,7 @@ class AddBookViewModel @Inject constructor(
                         pages = b.numPages.toString(),
                         currentPage = b.currentPage.toString(),
                         state = b.state,
+                        coverUrl = b.coverUrl,
                         progressPercentage = calculateProgressUseCase(
                             currentPageStr = b.currentPage.toString(),
                             pagesStr = b.numPages.toString(),
@@ -167,9 +168,6 @@ class AddBookViewModel @Inject constructor(
             is AddBookIntent.OnStateChanged -> {
                 _uiState.value = _uiState.value.copy(state = intent.state)
             }
-            is AddBookIntent.OnCoverSelected -> {
-                _uiState.value = _uiState.value.copy(coverUri = intent.uri)
-            }
             is AddBookIntent.OnAddBookClicked -> {
                 submitBook()
             }
@@ -182,8 +180,7 @@ class AddBookViewModel @Inject constructor(
                         state.author.isNotEmpty() ||
                         state.pages.isNotEmpty() ||
                         state.currentPage.isNotEmpty() ||
-                        state.state != BookState.IN_PROGRESS ||
-                        state.coverUri != null
+                        state.state != BookState.IN_PROGRESS
                     if (hasData) {
                         _uiState.value = state.copy(showExitConfirmation = true)
                     } else {
@@ -200,9 +197,6 @@ class AddBookViewModel @Inject constructor(
             }
             is AddBookIntent.DismissError -> {
                 _uiState.value = _uiState.value.copy(errorMessage = null)
-            }
-            is AddBookIntent.LaunchCoverPicker -> {
-                viewModelScope.launch { _effect.emit(AddBookEffect.RequestCoverPicker) }
             }
         }
     }
@@ -226,6 +220,7 @@ class AddBookViewModel @Inject constructor(
                     author = metadata.author,
                     pages = pages,
                     currentPage = currentPage,
+                    coverUrl = metadata.coverUrl,
                     isScanning = false,
                     manualIsbn = "",
                     isManualIsbnSearchEnabled = false,
@@ -282,6 +277,7 @@ class AddBookViewModel @Inject constructor(
                     numPages = numPages,
                     currentPage = currentPage,
                     state = state.state,
+                    coverUrl = state.coverUrl,
                 )
             }
 

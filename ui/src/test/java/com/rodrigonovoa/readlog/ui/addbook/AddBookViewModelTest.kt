@@ -95,7 +95,7 @@ class AddBookViewModelTest {
         assertEquals("", state.pages)
         assertEquals("", state.currentPage)
         assertEquals(BookState.IN_PROGRESS, state.state)
-        assertNull(state.coverUri)
+        assertEquals("", state.coverUrl)
         assertFalse(state.isSubmitEnabled)
         assertEquals(0, state.progressPercentage)
         assertFalse(state.isLoading)
@@ -169,7 +169,7 @@ class AddBookViewModelTest {
 
     @Test
     fun `add book success with empty currentPage passes zero`() = runTest {
-        coEvery { addBookUseCase(any(), any(), any(), any(), any()) } returns Result.success(Unit)
+        coEvery { addBookUseCase(any(), any(), any(), any(), any(), any()) } returns Result.success(Unit)
 
         viewModel.processIntent(AddBookIntent.OnTitleChanged("Title"))
         viewModel.processIntent(AddBookIntent.OnAuthorChanged("Author"))
@@ -183,14 +183,14 @@ class AddBookViewModelTest {
         advanceUntilIdle()
         collectJob.join()
 
-        coVerify { addBookUseCase("Title", "Author", 100, 0, BookState.IN_PROGRESS) }
+        coVerify { addBookUseCase("Title", "Author", 100, 0, BookState.IN_PROGRESS, "") }
         coVerify { refreshUserProfileIfOnlineUseCase() }
         assertTrue(effect is AddBookEffect.NavigateBack)
     }
 
     @Test
     fun `add book success emits navigate back and passes currentPage`() = runTest {
-        coEvery { addBookUseCase(any(), any(), any(), any(), any()) } returns Result.success(Unit)
+        coEvery { addBookUseCase(any(), any(), any(), any(), any(), any()) } returns Result.success(Unit)
         every { capCurrentPageUseCase(any(), any()) } returns "50"
         every { calculateProgressUseCase(any(), any()) } returns 50
         every { validateFormUseCase(any(), any(), any()) } returns true
@@ -208,7 +208,7 @@ class AddBookViewModelTest {
         advanceUntilIdle()
         collectJob.join()
 
-        coVerify { addBookUseCase("Title", "Author", 100, 50, BookState.IN_PROGRESS) }
+        coVerify { addBookUseCase("Title", "Author", 100, 50, BookState.IN_PROGRESS, "") }
         coVerify { refreshUserProfileIfOnlineUseCase() }
         assertTrue(effect is AddBookEffect.NavigateBack)
         assertFalse(viewModel.uiState.value.isLoading)
@@ -217,7 +217,7 @@ class AddBookViewModelTest {
 
     @Test
     fun `add book failure shows error and does not refresh profile`() = runTest {
-        coEvery { addBookUseCase(any(), any(), any(), any(), any()) } returns Result.failure(RuntimeException("Insert error"))
+        coEvery { addBookUseCase(any(), any(), any(), any(), any(), any()) } returns Result.failure(RuntimeException("Insert error"))
 
         viewModel.processIntent(AddBookIntent.OnTitleChanged("Title"))
         viewModel.processIntent(AddBookIntent.OnPagesChanged("100"))
@@ -229,16 +229,6 @@ class AddBookViewModelTest {
         assertFalse(viewModel.uiState.value.isLoading)
         assertEquals("Insert error", viewModel.uiState.value.errorMessage)
         coVerify(exactly = 0) { refreshUserProfileIfOnlineUseCase() }
-    }
-
-    @Test
-    fun `cover selected updates uri`() = runTest {
-        val mockUri = mockk<Uri>()
-
-        viewModel.processIntent(AddBookIntent.OnCoverSelected(mockUri))
-        advanceUntilIdle()
-
-        assertEquals(mockUri, viewModel.uiState.value.coverUri)
     }
 
     @Test
@@ -331,18 +321,6 @@ class AddBookViewModelTest {
     }
 
     @Test
-    fun `launch cover picker emits request effect`() = runTest {
-        var effect: AddBookEffect? = null
-        val collectJob = launch { effect = viewModel.effect.first() }
-
-        viewModel.processIntent(AddBookIntent.LaunchCoverPicker)
-        advanceUntilIdle()
-        collectJob.join()
-
-        assertTrue(effect is AddBookEffect.RequestCoverPicker)
-    }
-
-    @Test
     fun `edit mode pre-fills state from loaded book`() = runTest {
         val book = Book(
             bookId = 1,
@@ -353,6 +331,7 @@ class AddBookViewModelTest {
             numPages = 300,
             currentPage = 150,
             state = BookState.PAUSED,
+            coverUrl = "https://example.com/cover.jpg",
         )
         coEvery { getBookByIdUseCase(1) } returns book
         every { validateFormUseCase(any(), any(), any()) } returns true
@@ -366,6 +345,7 @@ class AddBookViewModelTest {
         assertEquals("300", state.pages)
         assertEquals("150", state.currentPage)
         assertEquals(BookState.PAUSED, state.state)
+        assertEquals("https://example.com/cover.jpg", state.coverUrl)
         assertTrue(state.isSubmitEnabled)
         assertTrue(state.isEditMode)
         assertEquals(1, state.bookId)
@@ -484,6 +464,7 @@ class AddBookViewModelTest {
             genre = "Fiction",
             releaseDate = "2020",
             numPages = 250,
+            coverUrl = "https://covers.openlibrary.org/b/id/123-M.jpg",
         )
         coEvery { fetchBookByIsbnUseCase("9781234567890") } returns Result.success(metadata)
         every { capCurrentPageUseCase(any(), any()) } returns ""
@@ -498,6 +479,7 @@ class AddBookViewModelTest {
         assertEquals("Scanned Title", viewModel.uiState.value.title)
         assertEquals("Scanned Author", viewModel.uiState.value.author)
         assertEquals("250", viewModel.uiState.value.pages)
+        assertEquals("https://covers.openlibrary.org/b/id/123-M.jpg", viewModel.uiState.value.coverUrl)
         assertFalse(viewModel.uiState.value.isScanning)
         assertNull(viewModel.uiState.value.scanError)
     }
@@ -586,6 +568,7 @@ class AddBookViewModelTest {
             genre = "Fiction",
             releaseDate = "2021",
             numPages = 300,
+            coverUrl = "https://covers.openlibrary.org/b/id/456-M.jpg",
         )
         coEvery { fetchBookByIsbnUseCase("9781234567890") } returns Result.success(metadata)
         every { capCurrentPageUseCase(any(), any()) } returns ""
@@ -601,6 +584,7 @@ class AddBookViewModelTest {
         assertEquals("Manual Title", viewModel.uiState.value.title)
         assertEquals("Manual Author", viewModel.uiState.value.author)
         assertEquals("300", viewModel.uiState.value.pages)
+        assertEquals("https://covers.openlibrary.org/b/id/456-M.jpg", viewModel.uiState.value.coverUrl)
         assertFalse(viewModel.uiState.value.isScanning)
         assertNull(viewModel.uiState.value.scanError)
         assertEquals("", viewModel.uiState.value.manualIsbn)

@@ -37,7 +37,6 @@
     <string name="add_book_manual_tab">Manual</string>
     <string name="add_book_scan_tab">Escanear</string>
     <string name="add_book_back_content_description">Atrás</string>
-    <string name="add_book_cover_placeholder">Añadir portada</string>
     <string name="add_book_field_title_label">TÍTULO</string>
     <string name="add_book_field_title_placeholder">Ej. Cien años de soledad</string>
     <string name="add_book_field_author_label">AUTOR</string>

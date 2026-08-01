@@ -78,6 +78,7 @@ class SyncRepositoryImpl @Inject constructor(
                         state = cloudBook.state.name,
                         creationDate = cloudBook.creationDate,
                         lastModified = cloudBook.lastModified,
+                        coverUrl = cloudBook.coverUrl,
                     )
                 )
             } else if (cloudBook.lastModified > localEntity.lastModified) {
@@ -92,6 +93,7 @@ class SyncRepositoryImpl @Inject constructor(
                         state = cloudBook.state.name,
                         creationDate = cloudBook.creationDate,
                         lastModified = cloudBook.lastModified,
+                        coverUrl = cloudBook.coverUrl,
                     )
                 )
             }

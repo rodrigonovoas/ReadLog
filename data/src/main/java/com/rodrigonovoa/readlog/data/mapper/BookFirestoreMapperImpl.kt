@@ -18,6 +18,7 @@ class BookFirestoreMapperImpl @Inject constructor() : BookFirestoreMapper {
             put("creationDate", book.creationDate)
             put("lastModified", book.lastModified)
             book.statusDate?.let { put("statusDate", it) }
+            put("coverUrl", book.coverUrl)
         }
     }
 
@@ -35,6 +36,7 @@ class BookFirestoreMapperImpl @Inject constructor() : BookFirestoreMapper {
             creationDate = (map["creationDate"] as? Number)?.toLong() ?: 0L,
             lastModified = (map["lastModified"] as? Number)?.toLong() ?: 0L,
             statusDate = (map["statusDate"] as? Number)?.toLong(),
+            coverUrl = map["coverUrl"] as? String ?: "",
         )
     }
 

@@ -37,7 +37,6 @@
     <string name="add_book_manual_tab">Manual</string>
     <string name="add_book_scan_tab">Scan</string>
     <string name="add_book_back_content_description">Back</string>
-    <string name="add_book_cover_placeholder">Add cover</string>
     <string name="add_book_field_title_label">TITLE</string>
     <string name="add_book_field_title_placeholder">Ex. One Hundred Years of Solitude</string>
     <string name="add_book_field_author_label">AUTHOR</string>

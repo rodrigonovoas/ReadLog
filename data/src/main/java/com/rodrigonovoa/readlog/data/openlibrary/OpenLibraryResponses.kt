@@ -8,6 +8,7 @@ data class OpenLibraryIsbnResponse(
     @SerializedName("number_of_pages") val numberOfPages: Int?,
     @SerializedName("publish_date") val publishDate: String?,
     val subjects: List<String>?,
+    val covers: List<Int>? = null,
 )
 
 data class OpenLibraryAuthorRef(

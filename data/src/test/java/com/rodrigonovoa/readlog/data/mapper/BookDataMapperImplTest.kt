@@ -25,6 +25,7 @@ class BookDataMapperImplTest {
             creationDate = 12345678L,
             lastModified = 11111111L,
             statusDate = 9999L,
+            coverUrl = "https://covers.openlibrary.org/b/id/1-S.jpg",
         )
 
         val result = mapper.toDomain(entity)
@@ -39,10 +40,11 @@ class BookDataMapperImplTest {
                 releaseDate = "1967",
                 numPages = 340,
                 currentPage = 231,
-                state = BookState.IN_PROGRESS,
-                creationDate = 12345678L,
-                lastModified = 11111111L,
-                statusDate = 9999L,
+            state = BookState.IN_PROGRESS,
+            creationDate = 12345678L,
+            lastModified = 11111111L,
+            statusDate = 9999L,
+            coverUrl = "https://covers.openlibrary.org/b/id/1-S.jpg",
             ),
             result
         )
@@ -63,6 +65,7 @@ class BookDataMapperImplTest {
             creationDate = 87654321L,
             lastModified = 22222222L,
             statusDate = 8888L,
+            coverUrl = "",
         )
 
         val result = mapper.toEntity(domain)
@@ -77,10 +80,11 @@ class BookDataMapperImplTest {
                 releaseDate = "1966",
                 numPages = 300,
                 currentPage = 102,
-                state = BookState.PAUSED.name,
-                creationDate = 87654321L,
-                lastModified = 22222222L,
-                statusDate = 8888L,
+            state = BookState.PAUSED.name,
+            creationDate = 87654321L,
+            lastModified = 22222222L,
+            statusDate = 8888L,
+            coverUrl = "",
             ),
             result
         )
@@ -101,6 +105,7 @@ class BookDataMapperImplTest {
             creationDate = 11111111L,
             lastModified = 33333333L,
             statusDate = 7777L,
+            coverUrl = "https://example.com/cover.jpg",
         )
 
         val entity = mapper.toEntity(original)

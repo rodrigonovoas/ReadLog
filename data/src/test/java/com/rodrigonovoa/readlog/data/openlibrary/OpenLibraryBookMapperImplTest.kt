@@ -16,6 +16,7 @@ class OpenLibraryBookMapperImplTest {
             numberOfPages = 310,
             publishDate = "21 September 1937",
             subjects = listOf("Fantasy", "Adventure"),
+            covers = listOf(123, 456),
         )
 
         val result = mapper.toDomain(isbnResponse, listOf("J. R. R. Tolkien"))
@@ -27,6 +28,7 @@ class OpenLibraryBookMapperImplTest {
                 genre = "Fantasy",
                 releaseDate = "1937",
                 numPages = 310,
+                coverUrl = "https://covers.openlibrary.org/b/id/123-M.jpg",
             ),
             result,
         )
@@ -40,11 +42,13 @@ class OpenLibraryBookMapperImplTest {
             numberOfPages = null,
             publishDate = null,
             subjects = null,
+            covers = null,
         )
 
         val result = mapper.toDomain(isbnResponse, listOf("Author One", "Author Two"))
 
         assertEquals("Author One, Author Two", result.author)
+        assertEquals("", result.coverUrl)
     }
 
     @Test
@@ -64,6 +68,7 @@ class OpenLibraryBookMapperImplTest {
         assertEquals("", result.genre)
         assertEquals("", result.releaseDate)
         assertEquals(null, result.numPages)
+        assertEquals("", result.coverUrl)
     }
 
     @Test

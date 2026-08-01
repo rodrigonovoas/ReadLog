@@ -1,6 +1,5 @@
 package com.rodrigonovoa.readlog.ui.addbook
 
-import android.net.Uri
 import com.rodrigonovoa.readlog.domain.model.BookState
 
 sealed interface AddBookIntent {
@@ -10,7 +9,6 @@ sealed interface AddBookIntent {
     data class OnPagesChanged(val pages: String) : AddBookIntent
     data class OnCurrentPageChanged(val currentPage: String) : AddBookIntent
     data class OnStateChanged(val state: BookState) : AddBookIntent
-    data class OnCoverSelected(val uri: Uri?) : AddBookIntent
     data class OnCameraPermissionResult(val granted: Boolean) : AddBookIntent
     data class OnBarcodeScanned(val isbn: String) : AddBookIntent
     data class OnManualIsbnChanged(val isbn: String) : AddBookIntent
@@ -18,7 +16,6 @@ sealed interface AddBookIntent {
     data object OnAddBookClicked : AddBookIntent
     data object OnBackClicked : AddBookIntent
     data object DismissError : AddBookIntent
-    data object LaunchCoverPicker : AddBookIntent
     data object OnConfirmExitClicked : AddBookIntent
     data object OnDismissExitClicked : AddBookIntent
     data object RequestCameraPermission : AddBookIntent

@@ -14,6 +14,7 @@ class AddBookUseCase @Inject constructor(
         numPages: Int,
         currentPage: Int,
         state: BookState = BookState.IN_PROGRESS,
+        coverUrl: String = "",
     ): Result<Unit> {
         val book = Book(
             title = title.trim(),
@@ -23,6 +24,7 @@ class AddBookUseCase @Inject constructor(
             numPages = numPages,
             currentPage = currentPage,
             state = state,
+            coverUrl = coverUrl,
         )
         return runCatching { bookRepository.insertBook(book) }
     }

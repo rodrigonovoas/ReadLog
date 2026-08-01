@@ -15,6 +15,7 @@ class OpenLibraryBookMapperImpl @Inject constructor() : OpenLibraryBookMapper {
             genre = isbnResponse.subjects?.firstOrNull { it.isNotBlank() }.orEmpty().trim(),
             releaseDate = extractYear(isbnResponse.publishDate),
             numPages = isbnResponse.numberOfPages,
+            coverUrl = buildCoverUrl(isbnResponse.covers),
         )
     }
 
@@ -22,5 +23,10 @@ class OpenLibraryBookMapperImpl @Inject constructor() : OpenLibraryBookMapper {
         if (publishDate.isNullOrBlank()) return ""
         val yearMatch = Regex("""\b(19|20)\d{2}\b""").find(publishDate)
         return yearMatch?.value ?: publishDate.trim()
+    }
+
+    private fun buildCoverUrl(coverIds: List<Int>?): String {
+        val firstId = coverIds?.firstOrNull() ?: return ""
+        return "https://covers.openlibrary.org/b/id/$firstId-M.jpg"
     }
 }

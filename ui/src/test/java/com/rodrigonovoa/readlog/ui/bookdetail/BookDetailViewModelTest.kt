@@ -56,6 +56,7 @@ class BookDetailViewModelTest {
             author = "Gabriel García Márquez",
             state = BookState.IN_PROGRESS,
             creationDate = creationDate,
+            coverUrl = "https://example.com/cover.jpg",
         )
         coEvery { getBookByIdUseCase(bookId) } returns book
         coEvery { getSessionsForBookUseCase(bookId) } returns flowOf(emptyList())
@@ -66,6 +67,7 @@ class BookDetailViewModelTest {
         assertEquals("Cien años de soledad", viewModel.uiState.value.bookTitle)
         assertEquals("Gabriel García Márquez", viewModel.uiState.value.bookAuthor)
         assertEquals(BookState.IN_PROGRESS, viewModel.uiState.value.bookState)
+        assertEquals("https://example.com/cover.jpg", viewModel.uiState.value.coverUrl)
     }
 
     @Test
@@ -184,6 +186,7 @@ class BookDetailViewModelTest {
         state: BookState = BookState.IN_PROGRESS,
         creationDate: Long = daysAgo(0),
         statusDate: Long? = null,
+        coverUrl: String = "",
     ): Book {
         return Book(
             bookId = bookId,
@@ -196,6 +199,7 @@ class BookDetailViewModelTest {
             state = state,
             creationDate = creationDate,
             statusDate = statusDate,
+            coverUrl = coverUrl,
         )
     }
 

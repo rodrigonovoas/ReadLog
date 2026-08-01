@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.common.BookStateChip
 import com.rodrigonovoa.readlog.ui.common.StatCardItem
@@ -117,24 +119,36 @@ private fun BookHeaderRow(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .width(64.dp)
-                .height(92.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(bookDetailColor(uiState.bookId))
-                .padding(horizontal = 6.dp, vertical = 7.dp),
-        ) {
-            Text(
-                text = uiState.bookTitle,
-                fontFamily = FontFamily.Serif,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 10.sp,
-                lineHeight = 13.sp,
-                color = color_surface,
-                maxLines = 4,
-                overflow = TextOverflow.Ellipsis,
+        if (uiState.coverUrl.isNotEmpty()) {
+            AsyncImage(
+                model = uiState.coverUrl,
+                contentDescription = stringResource(R.string.add_book_cover_content_description),
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(92.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
             )
+        } else {
+            Box(
+                modifier = Modifier
+                    .width(64.dp)
+                    .height(92.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(bookDetailColor(uiState.bookId))
+                    .padding(horizontal = 6.dp, vertical = 7.dp),
+            ) {
+                Text(
+                    text = uiState.bookTitle,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 10.sp,
+                    lineHeight = 13.sp,
+                    color = color_surface,
+                    maxLines = 4,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
 
         Spacer(modifier = Modifier.width(16.dp))

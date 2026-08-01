@@ -19,4 +19,5 @@ data class BookEntity(
     val creationDate: Long = System.currentTimeMillis(),
     val lastModified: Long = 0L,
     val statusDate: Long? = null,
+    val coverUrl: String = "",
 )

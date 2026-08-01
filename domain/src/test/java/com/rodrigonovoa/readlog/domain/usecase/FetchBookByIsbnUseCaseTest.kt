@@ -32,6 +32,7 @@ class FetchBookByIsbnUseCaseTest {
             genre = "Genre",
             releaseDate = "2020",
             numPages = 100,
+            coverUrl = "",
         )
         coEvery { bookMetadataRepository.getByIsbn("9781234567890") } returns Result.success(metadata)
 

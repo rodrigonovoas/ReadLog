@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
@@ -235,12 +234,6 @@ class MainActivity : AppCompatActivity() {
                         val viewModel: AddBookViewModel = hiltViewModel()
                         val state by viewModel.uiState.collectAsState()
 
-                        val photoPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-                            contract = ActivityResultContracts.PickVisualMedia(),
-                        ) { uri ->
-                            viewModel.processIntent(AddBookIntent.OnCoverSelected(uri))
-                        }
-
                         val cameraPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
                             contract = ActivityResultContracts.RequestPermission(),
                         ) { isGranted ->
@@ -252,11 +245,6 @@ class MainActivity : AppCompatActivity() {
                                 when (effect) {
                                     is AddBookEffect.NavigateBack -> {
                                         navController.popBackStack()
-                                    }
-                                    is AddBookEffect.RequestCoverPicker -> {
-                                        photoPickerLauncher.launch(
-                                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                        )
                                     }
                                     is AddBookEffect.RequestCameraPermission -> {
                                         cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)

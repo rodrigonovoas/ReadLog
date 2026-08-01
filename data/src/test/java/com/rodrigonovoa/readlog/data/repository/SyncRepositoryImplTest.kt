@@ -70,6 +70,7 @@ class SyncRepositoryImplTest {
             state = BookState.IN_PROGRESS,
             creationDate = 1000L,
             lastModified = 2000L,
+            coverUrl = "",
         )
         coEvery { bookFirestoreDataSource.downloadAll("uid") } returns Result.success(listOf(cloudBook))
         coEvery { sessionFirestoreDataSource.downloadAll("uid") } returns Result.success(emptyList())
@@ -99,6 +100,7 @@ class SyncRepositoryImplTest {
             state = BookState.COMPLETED,
             creationDate = 1000L,
             lastModified = 3000L,
+            coverUrl = "",
         )
         val localEntity = BookEntity(
             bookId = 1,
@@ -141,6 +143,7 @@ class SyncRepositoryImplTest {
             state = BookState.IN_PROGRESS,
             creationDate = 1000L,
             lastModified = 1000L,
+            coverUrl = "",
         )
         val localEntity = BookEntity(
             bookId = 1,
@@ -154,6 +157,7 @@ class SyncRepositoryImplTest {
             state = BookState.PAUSED.name,
             creationDate = 1000L,
             lastModified = 3000L,
+            coverUrl = "",
         )
         coEvery { bookFirestoreDataSource.downloadAll("uid") } returns Result.success(listOf(cloudBook))
         coEvery { sessionFirestoreDataSource.downloadAll("uid") } returns Result.success(emptyList())
@@ -209,6 +213,7 @@ class SyncRepositoryImplTest {
             currentPage = 10,
             creationDate = 1000L,
             lastModified = 5000L,
+            coverUrl = "",
         )
         val localSession = SessionEntity(
             sessionId = 2,

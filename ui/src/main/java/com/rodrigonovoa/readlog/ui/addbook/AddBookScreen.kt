@@ -2,7 +2,6 @@ package com.rodrigonovoa.readlog.ui.addbook
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,7 +52,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
@@ -74,7 +72,6 @@ import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant
-import com.rodrigonovoa.readlog.ui.theme.color_outline
 import com.rodrigonovoa.readlog.ui.theme.color_placeholder
 import com.rodrigonovoa.readlog.ui.theme.color_primary
 import com.rodrigonovoa.readlog.ui.theme.color_surface
@@ -137,10 +134,18 @@ fun AddBookScreen(
                         .padding(start = 24.dp, top = 20.dp, end = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
-                    CoverPicker(
-                        coverUri = state.coverUri,
-                        onClick = { onIntent(AddBookIntent.LaunchCoverPicker) },
-                    )
+                    if (state.coverUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = state.coverUrl,
+                            contentDescription = stringResource(R.string.add_book_cover_content_description),
+                            modifier = Modifier
+                                .width(100.dp)
+                                .height(150.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .align(Alignment.CenterHorizontally),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        )
+                    }
 
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         AddBookTextField(
@@ -530,64 +535,6 @@ private fun AddBookModeSelector(
     }
 }
 
-@Composable
-private fun CoverPicker(
-    coverUri: Uri?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(150.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (coverUri != null) {
-            AsyncImage(
-                model = coverUri,
-                contentDescription = stringResource(R.string.add_book_cover_content_description),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(16.dp)),
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-            )
-        } else {
-            val strokeWidth = 1.5.dp
-            val cornerRadius = 16.dp
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .drawBehind {
-                        drawRoundRect(
-                            color = color_outline,
-                            cornerRadius = CornerRadius(cornerRadius.toPx(), cornerRadius.toPx()),
-                            style = Stroke(
-                                width = strokeWidth.toPx(),
-                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f), 0f),
-                            ),
-                        )
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    AddCoverIcon(color = color_placeholder)
-                    Text(
-                        text = stringResource(R.string.add_book_cover_placeholder),
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = color_placeholder,
-                    )
-                }
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun BookStateDropdown(
@@ -717,35 +664,6 @@ private fun BarcodeIcon(
                 x += barWidth + gaps[index].dp.toPx()
             }
         }
-    }
-}
-
-@Composable
-private fun AddCoverIcon(
-    color: Color,
-    modifier: Modifier = Modifier,
-) {
-    Canvas(modifier = modifier.size(26.dp)) {
-        val strokeWidth = 1.5.dp.toPx()
-        drawRoundRect(
-            color = color,
-            style = Stroke(width = strokeWidth),
-            cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx()),
-        )
-        drawLine(
-            color = color,
-            start = androidx.compose.ui.geometry.Offset(size.width / 2f, 8.dp.toPx()),
-            end = androidx.compose.ui.geometry.Offset(size.width / 2f, 18.dp.toPx()),
-            strokeWidth = strokeWidth,
-            cap = StrokeCap.Round,
-        )
-        drawLine(
-            color = color,
-            start = androidx.compose.ui.geometry.Offset(8.dp.toPx(), size.height / 2f),
-            end = androidx.compose.ui.geometry.Offset(18.dp.toPx(), size.height / 2f),
-            strokeWidth = strokeWidth,
-            cap = StrokeCap.Round,
-        )
     }
 }
 

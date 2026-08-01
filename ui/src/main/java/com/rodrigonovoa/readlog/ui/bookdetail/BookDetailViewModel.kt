@@ -52,6 +52,7 @@ class BookDetailViewModel @Inject constructor(
                                 book.statusDate,
                                 book.state,
                             ),
+                            coverUrl = book.coverUrl,
                         )
                     }
                 }
