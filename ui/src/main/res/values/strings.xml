@@ -79,8 +79,6 @@
     <string name="book_session_end_dialog_yes">Yes</string>
     <string name="book_session_end_dialog_no">No</string>
     <string name="book_session_annotation_placeholder">Anything to note about this session?</string>
-    <string name="book_session_music_on_content_description">Music on</string>
-    <string name="book_session_music_off_content_description">Music off</string>
     <string name="book_session_comment_content_description">Add annotation</string>
     <string name="book_session_add_manual_time_content_description">Add manual time</string>
     <string name="book_session_annotation_dialog_title">Annotations</string>

@@ -97,7 +97,6 @@ fun BookSessionScreen(
     uiState: BookSessionUiState = BookSessionUiState(),
     onIntent: (BookSessionIntent) -> Unit = {},
 ) {
-    var isMusicOn by remember { mutableStateOf(false) }
     var showManualTimeDialog by remember { mutableStateOf(false) }
 
     BackHandler(enabled = !uiState.showEndSessionDialog) {
@@ -230,8 +229,6 @@ fun BookSessionScreen(
 
             SessionActionsSheet(
                 annotationText = uiState.annotationText,
-                isMusicOn = isMusicOn,
-                onToggleMusic = { isMusicOn = !isMusicOn },
                 onAddManualTimeClick = { showManualTimeDialog = true },
                 onOpenAnnotationDialogClick = { onIntent(BookSessionIntent.OnOpenAnnotationDialogClicked) },
             )
@@ -328,53 +325,6 @@ private fun SessionHeader(
                 fontWeight = FontWeight.Medium,
                 color = color_on_surface_variant,
                 maxLines = 1,
-            )
-        }
-    }
-}
-
-@Composable
-private fun MusicToggleIcon(
-    isOn: Boolean,
-    tint: Color,
-    modifier: Modifier = Modifier,
-    iconSize: Dp = 16.dp,
-) {
-    Canvas(modifier = modifier.size(iconSize)) {
-        val strokeWidth = 1.4.dp.toPx()
-        val noteHeadRadiusX = size.minDimension * 0.19f
-        val noteHeadRadiusY = size.minDimension * 0.15f
-        val headCenter = Offset(x = size.width * 0.36f, y = size.height * 0.78f)
-        val stemX = headCenter.x + noteHeadRadiusX * 0.85f
-        val stemTopY = size.height * 0.14f
-
-        drawOval(
-            color = tint,
-            topLeft = Offset(headCenter.x - noteHeadRadiusX, headCenter.y - noteHeadRadiusY),
-            size = androidx.compose.ui.geometry.Size(noteHeadRadiusX * 2, noteHeadRadiusY * 2),
-        )
-        drawLine(
-            color = tint,
-            start = Offset(stemX, headCenter.y),
-            end = Offset(stemX, stemTopY),
-            strokeWidth = strokeWidth,
-            cap = StrokeCap.Round,
-        )
-        drawLine(
-            color = tint,
-            start = Offset(stemX, stemTopY),
-            end = Offset(stemX + size.width * 0.28f, stemTopY + size.height * 0.16f),
-            strokeWidth = strokeWidth,
-            cap = StrokeCap.Round,
-        )
-
-        if (!isOn) {
-            drawLine(
-                color = tint,
-                start = Offset(size.width * 0.08f, size.height * 0.08f),
-                end = Offset(size.width * 0.92f, size.height * 0.92f),
-                strokeWidth = strokeWidth,
-                cap = StrokeCap.Round,
             )
         }
     }
@@ -564,8 +514,6 @@ private fun SessionActionButton(
 @Composable
 private fun SessionActionsSheet(
     annotationText: String,
-    isMusicOn: Boolean,
-    onToggleMusic: () -> Unit,
     onAddManualTimeClick: () -> Unit,
     onOpenAnnotationDialogClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -597,29 +545,6 @@ private fun SessionActionsSheet(
             ) {
                 StopwatchIcon(
                     tint = color_on_surface,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-
-            val musicToggleContentDescription = stringResource(
-                if (isMusicOn) {
-                    R.string.book_session_music_on_content_description
-                } else {
-                    R.string.book_session_music_off_content_description
-                }
-            )
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.55f))
-                    .clickable(onClick = onToggleMusic)
-                    .semantics { contentDescription = musicToggleContentDescription },
-                contentAlignment = Alignment.Center,
-            ) {
-                MusicToggleIcon(
-                    isOn = isMusicOn,
-                    tint = if (isMusicOn) color_on_surface else color_on_surface_variant,
                     modifier = Modifier.size(16.dp),
                 )
             }
