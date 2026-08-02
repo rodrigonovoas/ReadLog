@@ -15,22 +15,29 @@ class UserDataMapperImplTest {
     @Test
     fun `toDomain maps all fields correctly`() {
         val firebaseUser = mockk<FirebaseUser>()
+        val photoUrl = mockk<android.net.Uri>()
+        every { photoUrl.toString() } returns "https://example.com/photo.jpg"
         every { firebaseUser.uid } returns "uid123"
         every { firebaseUser.email } returns "test@example.com"
         every { firebaseUser.displayName } returns "Test User"
+        every { firebaseUser.photoUrl } returns photoUrl
         every { firebaseUser.isAnonymous } returns false
 
         val result = mapper.toDomain(firebaseUser)
 
-        assertEquals(User("uid123", "test@example.com", "Test User", isAnonymous = false), result)
+        assertEquals(
+            User("uid123", "test@example.com", "Test User", photoUrl = "https://example.com/photo.jpg", isAnonymous = false),
+            result,
+        )
     }
 
     @Test
-    fun `toDomain handles null email and displayName`() {
+    fun `toDomain handles null email, displayName and photoUrl`() {
         val firebaseUser = mockk<FirebaseUser>()
         every { firebaseUser.uid } returns "uid456"
         every { firebaseUser.email } returns null
         every { firebaseUser.displayName } returns null
+        every { firebaseUser.photoUrl } returns null
         every { firebaseUser.isAnonymous } returns false
 
         val result = mapper.toDomain(firebaseUser)
@@ -38,6 +45,7 @@ class UserDataMapperImplTest {
         assertEquals("uid456", result.uid)
         assertNull(result.email)
         assertNull(result.displayName)
+        assertNull(result.photoUrl)
     }
 
     @Test
@@ -46,6 +54,7 @@ class UserDataMapperImplTest {
         every { firebaseUser.uid } returns "uid789"
         every { firebaseUser.email } returns null
         every { firebaseUser.displayName } returns null
+        every { firebaseUser.photoUrl } returns null
         every { firebaseUser.isAnonymous } returns true
 
         val result = mapper.toDomain(firebaseUser)

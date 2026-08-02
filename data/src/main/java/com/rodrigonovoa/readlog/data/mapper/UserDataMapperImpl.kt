@@ -10,6 +10,7 @@ class UserDataMapperImpl @Inject constructor() : UserDataMapper {
             uid = firebaseUser.uid,
             email = firebaseUser.email,
             displayName = firebaseUser.displayName,
+            photoUrl = firebaseUser.photoUrl?.toString(),
             isAnonymous = firebaseUser.isAnonymous,
         )
     }

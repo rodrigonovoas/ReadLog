@@ -23,7 +23,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.common.StatCardItem
 import com.rodrigonovoa.readlog.ui.common.StatCardRow
@@ -134,25 +135,41 @@ private fun AvatarSection(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        val avatarBackground = if (uiState.photoUrl != null) {
+            color_secondary
+        } else {
+            avatarColorFromId(uiState.userId)
+        }
+
         Box(
             modifier = Modifier
                 .size(88.dp)
                 .shadow(
                     elevation = 14.dp,
                     shape = CircleShape,
-                    ambientColor = color_secondary,
-                    spotColor = color_secondary,
+                    ambientColor = avatarBackground,
+                    spotColor = avatarBackground,
                 )
                 .clip(CircleShape)
-                .background(color_secondary),
+                .background(avatarBackground),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = color_surface,
-                modifier = Modifier.size(36.dp),
-            )
+            if (uiState.photoUrl != null) {
+                AsyncImage(
+                    model = uiState.photoUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                Text(
+                    text = initialsFromName(uiState.userName),
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 28.sp,
+                    color = color_surface,
+                )
+            }
         }
         Spacer(modifier = Modifier.height(12.dp))
         Row(
@@ -204,6 +221,43 @@ private fun AvatarSection(
             )
         }
     }
+}
+
+private fun initialsFromName(name: String): String {
+    val trimmed = name.trim()
+    if (trimmed.isEmpty()) return "?"
+    val parts = trimmed.split(" ").filter { it.isNotBlank() }
+    return when {
+        parts.size >= 2 -> {
+            (parts.first().first().uppercaseChar().toString() +
+                parts.last().first().uppercaseChar().toString())
+        }
+        else -> parts.first().first().uppercaseChar().toString()
+    }
+}
+
+private fun avatarColorFromId(userId: String): Color {
+    if (userId.isEmpty()) return color_secondary
+    val palette = listOf(
+        Color(0xFFE57373),
+        Color(0xFFF06292),
+        Color(0xFFBA68C8),
+        Color(0xFF9575CD),
+        Color(0xFF7986CB),
+        Color(0xFF64B5F6),
+        Color(0xFF4FC3F7),
+        Color(0xFF4DD0E1),
+        Color(0xFF4DB6AC),
+        Color(0xFF81C784),
+        Color(0xFFAED581),
+        Color(0xFFDCE775),
+        Color(0xFFFFF176),
+        Color(0xFFFFD54F),
+        Color(0xFFFFB74D),
+        Color(0xFFFF8A65),
+    )
+    val hash = userId.fold(0) { acc, char -> acc * 31 + char.code }
+    return palette[(hash % palette.size).let { if (it < 0) it + palette.size else it }]
 }
 
 @Composable

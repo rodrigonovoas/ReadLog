@@ -3,7 +3,7 @@ package com.rodrigonovoa.readlog.auth
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.rodrigonovoa.readlog.R
 import com.rodrigonovoa.readlog.domain.auth.AuthLauncher
@@ -18,12 +18,11 @@ class GoogleAuthLauncher @Inject constructor(
     override suspend fun launchGoogleSignIn(): Result<String> {
         return try {
             val credentialManager = CredentialManager.create(context)
-            val googleIdOption = GetGoogleIdOption.Builder()
-                .setServerClientId(context.getString(R.string.default_web_client_id))
-                .setFilterByAuthorizedAccounts(false)
-                .build()
+            val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(
+                context.getString(R.string.default_web_client_id)
+            ).build()
             val request = GetCredentialRequest.Builder()
-                .addCredentialOption(googleIdOption)
+                .addCredentialOption(signInWithGoogleOption)
                 .build()
             val result = credentialManager.getCredential(context, request)
             val credential = result.credential

@@ -50,8 +50,10 @@ class UserProfileViewModel @Inject constructor(
         val userId = currentUser?.uid.orEmpty()
         _uiState.update {
             it.copy(
+                userId = userId,
                 userName = getUserDisplayNameUseCase().orEmpty(),
                 username = "",
+                photoUrl = currentUser?.photoUrl,
             )
         }
 
@@ -65,6 +67,7 @@ class UserProfileViewModel @Inject constructor(
     }
 
     private fun loadOtherUserProfile(userId: String) {
+        _uiState.update { it.copy(userId = userId) }
         viewModelScope.launch {
             applyProfileInfo(getUserProfileInfoUseCase(userId))
             val currentUserId = getCurrentUserUseCase()?.uid
