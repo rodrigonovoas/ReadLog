@@ -484,6 +484,7 @@ class BookCollectionViewModelTest {
 
         coVerify { syncUserDataUseCase("uid-1") }
         coVerify { refreshUserProfileIfOnlineUseCase() }
+        assertEquals(false, viewModel.uiState.value.isSyncing)
     }
 
     @Test
@@ -509,6 +510,7 @@ class BookCollectionViewModelTest {
 
         coVerify(exactly = 0) { syncUserDataUseCase(any()) }
         coVerify(exactly = 0) { refreshUserProfileIfOnlineUseCase() }
+        assertEquals(false, viewModel.uiState.value.isSyncing)
     }
 
     @Test
@@ -534,6 +536,33 @@ class BookCollectionViewModelTest {
 
         coVerify(exactly = 0) { syncUserDataUseCase(any()) }
         coVerify(exactly = 0) { refreshUserProfileIfOnlineUseCase() }
+        assertEquals(false, viewModel.uiState.value.isSyncing)
+    }
+
+    @Test
+    fun `isSyncing is true while syncing and false after completion`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Test User")
+        every { isOnlineUseCase() } returns true
+        coEvery { syncUserDataUseCase("uid-1") } returns Result.success(Unit)
+
+        viewModel = BookCollectionViewModel(
+            getBooksUseCase = getBooksUseCase,
+            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
+            getTimeOfDayUseCase = getTimeOfDayUseCase,
+            deleteBookUseCase = deleteBookUseCase,
+            getCurrentUserUseCase = getCurrentUserUseCase,
+            syncUserDataUseCase = syncUserDataUseCase,
+            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
+            isOnlineUseCase = isOnlineUseCase,
+            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
+            claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
+        )
+
+        assertEquals(true, viewModel.uiState.value.isSyncing)
+        advanceUntilIdle()
+        assertEquals(false, viewModel.uiState.value.isSyncing)
     }
 
     @Test

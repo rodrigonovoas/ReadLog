@@ -131,4 +131,5 @@
     <string name="language_dialog_title">Seleccionar idioma</string>
     <string name="language_english">Inglés</string>
     <string name="language_spanish">Español</string>
+    <string name="downloading_label">Descargando…</string>
 </resources>

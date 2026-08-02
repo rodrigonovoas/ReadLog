@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -64,19 +65,30 @@ fun BookDetailScreen(
     ) {
         TopBar(onBackClick = onBackClick)
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .padding(top = 20.dp, bottom = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            BookHeaderRow(uiState = uiState)
-            StatsRow(uiState = uiState)
-            MonthCalendar(uiState = uiState)
-            RecentSessionsSection(sessions = uiState.recentSessions)
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(color = color_primary)
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 20.dp, bottom = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                BookHeaderRow(uiState = uiState)
+                StatsRow(uiState = uiState)
+                MonthCalendar(uiState = uiState)
+                RecentSessionsSection(sessions = uiState.recentSessions)
+            }
         }
     }
 }

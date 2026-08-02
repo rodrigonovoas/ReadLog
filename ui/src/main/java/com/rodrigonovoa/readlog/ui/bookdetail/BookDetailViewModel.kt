@@ -36,6 +36,9 @@ class BookDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(BookDetailUiState(bookId = bookId))
     val uiState: StateFlow<BookDetailUiState> = _uiState.asStateFlow()
 
+    private var bookLoaded = false
+    private var sessionsLoaded = false
+
     init {
         if (bookId != -1) {
             viewModelScope.launch {
@@ -56,12 +59,24 @@ class BookDetailViewModel @Inject constructor(
                         )
                     }
                 }
+                bookLoaded = true
+                if (sessionsLoaded) {
+                    _uiState.update { it.copy(isLoading = false) }
+                }
             }
             viewModelScope.launch {
                 getSessionsForBookUseCase(bookId).collect { sessions ->
                     updateSessionData(sessions)
+                    if (!sessionsLoaded) {
+                        sessionsLoaded = true
+                        if (bookLoaded) {
+                            _uiState.update { it.copy(isLoading = false) }
+                        }
+                    }
                 }
             }
+        } else {
+            _uiState.update { it.copy(isLoading = false) }
         }
     }
 

@@ -171,6 +171,36 @@ class BookDetailViewModelTest {
         assertEquals("5 m.", viewModel.uiState.value.totalTimeLabel)
     }
 
+    @Test
+    fun `isLoading is true immediately after creation`() = runTest {
+        coEvery { getBookByIdUseCase(bookId) } returns book()
+        coEvery { getSessionsForBookUseCase(bookId) } returns flowOf(emptyList())
+
+        val viewModel = createViewModel()
+
+        assertEquals(true, viewModel.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `isLoading is false after data loads`() = runTest {
+        coEvery { getBookByIdUseCase(bookId) } returns book()
+        coEvery { getSessionsForBookUseCase(bookId) } returns flowOf(emptyList())
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(false, viewModel.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `isLoading is false immediately for invalid bookId`() = runTest {
+        savedStateHandle = SavedStateHandle(mapOf("bookId" to -1))
+
+        val viewModel = createViewModel()
+
+        assertEquals(false, viewModel.uiState.value.isLoading)
+    }
+
     private fun createViewModel(): BookDetailViewModel {
         return BookDetailViewModel(
             getBookByIdUseCase = getBookByIdUseCase,

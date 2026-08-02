@@ -15,6 +15,7 @@ data class BookDetailUiState(
     val monthDays: List<BookDetailMonthDay> = emptyList(),
     val recentSessions: List<BookDetailSession> = emptyList(),
     val coverUrl: String = "",
+    val isLoading: Boolean = true,
 )
 
 enum class BookDetailDayStatus { NONE, READ, TODAY }
@@ -67,4 +68,5 @@ val sampleBookDetailUiState = BookDetailUiState(
             comment = "Buonaparte otra vez... me está costando seguir el hilo familiar.",
         ),
     ),
+    isLoading = false,
 )

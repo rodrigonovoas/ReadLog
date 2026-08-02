@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -72,18 +73,29 @@ fun UserProfileScreen(
     ) {
         TopBar(onBackClick = onBackClick)
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .padding(top = 20.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(26.dp),
-        ) {
-            AvatarSection(uiState = uiState, onLikeClick = onLikeClick)
-            ProfileStatsRow(uiState = uiState)
-            CollectionSection(uiState = uiState)
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(color = color_primary)
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 20.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(26.dp),
+            ) {
+                AvatarSection(uiState = uiState, onLikeClick = onLikeClick)
+                ProfileStatsRow(uiState = uiState)
+                CollectionSection(uiState = uiState)
+            }
         }
     }
 }

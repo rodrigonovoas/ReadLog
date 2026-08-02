@@ -61,7 +61,10 @@ class UserProfileViewModel @Inject constructor(
             val info = getUserProfileInfoUseCase(userId)
             applyProfileInfo(info)
             _uiState.update {
-                it.copy(username = info.username?.let { name -> "@$name" } ?: it.username)
+                it.copy(
+                    username = info.username?.let { name -> "@$name" } ?: it.username,
+                    isLoading = false,
+                )
             }
         }
     }
@@ -79,6 +82,7 @@ class UserProfileViewModel @Inject constructor(
                 applyProfileInfo(it)
                 applyIdentity(it)
             }
+            _uiState.update { it.copy(isLoading = false) }
         }
     }
 

@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -101,64 +102,95 @@ fun BookCollectionScreen(
 ) {
     val books = uiState.books
     var showLanguageDialog by remember { mutableStateOf(false) }
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .background(color_surface)
-            .safeDrawingPadding(),
+            .background(color_surface),
     ) {
-        val greetingName = uiState.userName.ifEmpty {
-            stringResource(R.string.reader_name_fallback)
-        }
-        HeaderSection(
-            showTitle = books.isNotEmpty(),
-            greeting = if (uiState.greetingResId != 0) {
-                stringResource(uiState.greetingResId, greetingName)
-            } else {
-                ""
-            },
-            canLike = uiState.canLike,
-            onProfileMenuProfileClick = onProfileMenuProfileClick,
-            onProfileMenuLikesClick = onProfileMenuLikesClick,
-            onProfileMenuLoginClick = onProfileMenuLoginClick,
-            onProfileMenuLogoutClick = onProfileMenuLogoutClick,
-            onProfileMenuLanguageClick = { showLanguageDialog = true },
-            onSearchClick = onSearchClick,
-        )
-
-        if (books.isEmpty()) {
-            EmptyCollectionSection(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .safeDrawingPadding(),
+        ) {
+            val greetingName = uiState.userName.ifEmpty {
+                stringResource(R.string.reader_name_fallback)
+            }
+            HeaderSection(
+                showTitle = books.isNotEmpty(),
+                greeting = if (uiState.greetingResId != 0) {
+                    stringResource(uiState.greetingResId, greetingName)
+                } else {
+                    ""
+                },
+                canLike = uiState.canLike,
+                onProfileMenuProfileClick = onProfileMenuProfileClick,
+                onProfileMenuLikesClick = onProfileMenuLikesClick,
+                onProfileMenuLoginClick = onProfileMenuLoginClick,
+                onProfileMenuLogoutClick = onProfileMenuLogoutClick,
+                onProfileMenuLanguageClick = { showLanguageDialog = true },
+                onSearchClick = onSearchClick,
             )
-        } else {
-            LazyColumn(
+
+            if (books.isEmpty()) {
+                EmptyCollectionSection(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    contentPadding = PaddingValues(vertical = 4.dp),
+                ) {
+                    items(books, key = { it.bookId }) { book ->
+                        BookCard(
+                            book = book,
+                            onEditClick = { onEditIconClick(book.bookId) },
+                            onDeleteClick = { onDeleteIconClick(book.bookId) },
+                            onSessionClick = { onSessionClick(book.bookId) },
+                            onCardClick = { onBookClick(book.bookId) },
+                        )
+                    }
+                }
+            }
+
+            AddBookButton(
+                onClick = onAddBookClick,
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-                contentPadding = PaddingValues(vertical = 4.dp),
+                    .padding(bottom = 28.dp, top = 20.dp)
+                    .align(Alignment.CenterHorizontally),
+            )
+        }
+
+        if (uiState.isSyncing) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color_on_surface.copy(alpha = 0.4f))
+                    .clickable(enabled = false) {},
+                contentAlignment = Alignment.Center,
             ) {
-                items(books, key = { it.bookId }) { book ->
-                    BookCard(
-                        book = book,
-                        onEditClick = { onEditIconClick(book.bookId) },
-                        onDeleteClick = { onDeleteIconClick(book.bookId) },
-                        onSessionClick = { onSessionClick(book.bookId) },
-                        onCardClick = { onBookClick(book.bookId) },
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    CircularProgressIndicator(
+                        color = color_primary,
+                        strokeWidth = 2.dp,
+                    )
+                    Text(
+                        text = stringResource(R.string.downloading_label),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = color_on_surface,
                     )
                 }
             }
         }
-
-        AddBookButton(
-            onClick = onAddBookClick,
-            modifier = Modifier
-                .padding(bottom = 28.dp, top = 20.dp)
-                .align(Alignment.CenterHorizontally),
-        )
     }
 
     uiState.activeDialog?.let { dialog ->

@@ -64,7 +64,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import com.rodrigonovoa.readlog.domain.model.BookState
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.common.bookStateStringRes
@@ -135,16 +135,28 @@ fun AddBookScreen(
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
                     if (state.coverUrl.isNotEmpty()) {
-                        AsyncImage(
-                            model = state.coverUrl,
-                            contentDescription = stringResource(R.string.add_book_cover_content_description),
+                        Box(
                             modifier = Modifier
                                 .width(100.dp)
                                 .height(150.dp)
                                 .clip(RoundedCornerShape(12.dp))
                                 .align(Alignment.CenterHorizontally),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                        )
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            SubcomposeAsyncImage(
+                                model = state.coverUrl,
+                                contentDescription = stringResource(R.string.add_book_cover_content_description),
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                loading = {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(32.dp),
+                                        color = color_primary,
+                                        strokeWidth = 2.dp,
+                                    )
+                                },
+                            )
+                        }
                     }
 
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {

@@ -13,6 +13,7 @@ data class UserProfileUiState(
     val isLiked: Boolean = false,
     val hasLikeError: Boolean = false,
     val canLike: Boolean = true,
+    val isLoading: Boolean = true,
 )
 
 data class UserProfileBook(
@@ -34,4 +35,5 @@ val sampleUserProfileUiState = UserProfileUiState(
     ),
     isOwnProfile = false,
     isLiked = true,
+    isLoading = false,
 )
