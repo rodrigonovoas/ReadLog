@@ -278,43 +278,6 @@ class BookCollectionViewModelTest {
     }
 
     @Test
-    fun `onEditIconClick sets activeDialog with EDIT type`() = runTest {
-        val book = Book(
-            bookId = 1,
-            title = "Cien años de soledad",
-            author = "Author",
-            genre = "Novel",
-            releaseDate = "2020",
-            numPages = 100,
-            currentPage = 50,
-        )
-        val booksFlow = MutableStateFlow(listOf(book))
-        every { getBooksUseCase() } returns booksFlow
-        viewModel = BookCollectionViewModel(
-            getBooksUseCase = getBooksUseCase,
-            getUserDisplayNameUseCase = getUserDisplayNameUseCase,
-            getTimeOfDayUseCase = getTimeOfDayUseCase,
-            deleteBookUseCase = deleteBookUseCase,
-            getCurrentUserUseCase = getCurrentUserUseCase,
-            syncUserDataUseCase = syncUserDataUseCase,
-            refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
-            isOnlineUseCase = isOnlineUseCase,
-            requireUsernameSetupUseCase = requireUsernameSetupUseCase,
-            claimUsernameUseCase = claimUsernameUseCase,
-            signOutUseCase = signOutUseCase,
-            clearLocalDataUseCase = clearLocalDataUseCase,
-        )
-        advanceUntilIdle()
-
-        viewModel.onEditIconClick(1)
-
-        assertEquals(
-            BookDialogState(bookId = 1, bookTitle = "Cien años de soledad", type = BookDialogType.EDIT),
-            viewModel.uiState.value.activeDialog,
-        )
-    }
-
-    @Test
     fun `onDeleteIconClick sets activeDialog with DELETE type`() = runTest {
         val book = Book(
             bookId = 1,
@@ -379,7 +342,7 @@ class BookCollectionViewModelTest {
             clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
-        viewModel.onEditIconClick(1)
+        viewModel.onDeleteIconClick(1)
 
         viewModel.dismissDialog()
 

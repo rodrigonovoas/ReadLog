@@ -113,7 +113,9 @@ class MainActivity : AppCompatActivity() {
                                 }
                             },
                             onAddBookClick = { navController.navigate("addBook") },
-                            onEditIconClick = viewModel::onEditIconClick,
+                            onEditIconClick = { bookId ->
+                                navController.navigate("addBook?bookId=$bookId")
+                            },
                             onDeleteIconClick = viewModel::onDeleteIconClick,
                             onSessionClick = { bookId ->
                                 navController.navigate("bookSession?bookId=$bookId")
@@ -122,10 +124,6 @@ class MainActivity : AppCompatActivity() {
                                 navController.navigate("bookDetail?bookId=$bookId")
                             },
                             onDismissDialog = viewModel::dismissDialog,
-                            onConfirmEdit = { bookId ->
-                                viewModel.dismissDialog()
-                                navController.navigate("addBook?bookId=$bookId")
-                            },
                             onConfirmDelete = viewModel::confirmDelete,
                             onProfileMenuProfileClick = { navController.navigate("userProfile") },
                             onProfileMenuLikesClick = { navController.navigate("likes") },

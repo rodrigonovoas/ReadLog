@@ -136,10 +136,6 @@ class BookCollectionViewModel @Inject constructor(
         )
     }
 
-    fun onEditIconClick(bookId: Int) {
-        openDialog(bookId, BookDialogType.EDIT)
-    }
-
     fun onDeleteIconClick(bookId: Int) {
         openDialog(bookId, BookDialogType.DELETE)
     }

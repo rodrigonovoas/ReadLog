@@ -86,7 +86,6 @@ fun BookCollectionScreen(
     onSessionClick: (Int) -> Unit = {},
     onBookClick: (Int) -> Unit = {},
     onDismissDialog: () -> Unit = {},
-    onConfirmEdit: (Int) -> Unit = {},
     onConfirmDelete: () -> Unit = {},
     onProfileMenuProfileClick: () -> Unit = {},
     onProfileMenuLikesClick: () -> Unit = {},
@@ -195,16 +194,12 @@ fun BookCollectionScreen(
 
     uiState.activeDialog?.let { dialog ->
         when (dialog.type) {
-            BookDialogType.EDIT -> EditBookDialog(
-                bookTitle = dialog.bookTitle,
-                onDismiss = onDismissDialog,
-                onConfirm = { onConfirmEdit(dialog.bookId) },
-            )
             BookDialogType.DELETE -> DeleteBookDialog(
                 bookTitle = dialog.bookTitle,
                 onDismiss = onDismissDialog,
                 onConfirm = onConfirmDelete,
             )
+            else -> Unit
         }
     }
 
@@ -585,24 +580,6 @@ private fun bookColor(bookId: Int): Color {
         1 -> color_secondary
         else -> color_on_surface_variant
     }
-}
-
-@Composable
-private fun EditBookDialog(
-    bookTitle: String,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    ConfirmationDialog(
-        icon = Icons.Default.Edit,
-        iconContainerColor = color_chip,
-        title = stringResource(R.string.book_collection_edit_dialog_title),
-        message = stringResource(R.string.book_collection_edit_dialog_message, bookTitle),
-        confirmLabel = stringResource(R.string.book_collection_edit),
-        dismissLabel = stringResource(R.string.book_collection_cancel),
-        onDismiss = onDismiss,
-        onConfirm = onConfirm,
-    )
 }
 
 @Composable
