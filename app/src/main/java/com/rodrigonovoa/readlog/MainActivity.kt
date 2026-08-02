@@ -22,6 +22,7 @@ import com.rodrigonovoa.readlog.ui.addbook.AddBookEffect
 import com.rodrigonovoa.readlog.ui.addbook.AddBookIntent
 import com.rodrigonovoa.readlog.ui.addbook.AddBookScreen
 import com.rodrigonovoa.readlog.ui.addbook.AddBookViewModel
+import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionEffect
 import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionScreen
 import com.rodrigonovoa.readlog.ui.bookcollection.BookCollectionViewModel
 import com.rodrigonovoa.readlog.ui.booksession.BookSessionEffect
@@ -87,6 +88,18 @@ class MainActivity : AppCompatActivity() {
                         val viewModel: BookCollectionViewModel = hiltViewModel()
                         val uiState by viewModel.uiState.collectAsState()
 
+                        LaunchedEffect(Unit) {
+                            viewModel.effect.collect { effect ->
+                                when (effect) {
+                                    is BookCollectionEffect.NavigateToLogin -> {
+                                        navController.navigate("login") {
+                                            popUpTo(navController.graph.id) { inclusive = true }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         BookCollectionScreen(
                             modifier = Modifier.fillMaxSize(),
                             uiState = uiState,
@@ -117,6 +130,9 @@ class MainActivity : AppCompatActivity() {
                             onProfileMenuProfileClick = { navController.navigate("userProfile") },
                             onProfileMenuLikesClick = { navController.navigate("likes") },
                             onProfileMenuLoginClick = { navController.navigate("login") },
+                            onProfileMenuLogoutClick = viewModel::onLogoutClicked,
+                            onDismissLogoutDialog = viewModel::dismissLogoutDialog,
+                            onConfirmLogout = viewModel::confirmLogout,
                             onLanguageSelected = { languageTag ->
                                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageTag))
                             },

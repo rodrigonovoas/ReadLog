@@ -12,7 +12,9 @@ import com.rodrigonovoa.readlog.domain.usecase.GetTimeOfDayUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.IsOnlineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
+import com.rodrigonovoa.readlog.domain.usecase.ClearLocalDataUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RequireUsernameSetupUseCase
+import com.rodrigonovoa.readlog.domain.usecase.SignOutUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SyncUserDataUseCase
 import com.rodrigonovoa.readlog.domain.usecase.TimeOfDay
 import io.mockk.coEvery
@@ -23,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -48,6 +51,8 @@ class BookCollectionViewModelTest {
     private lateinit var isOnlineUseCase: IsOnlineUseCase
     private lateinit var requireUsernameSetupUseCase: RequireUsernameSetupUseCase
     private lateinit var claimUsernameUseCase: ClaimUsernameUseCase
+    private lateinit var signOutUseCase: SignOutUseCase
+    private lateinit var clearLocalDataUseCase: ClearLocalDataUseCase
     private lateinit var viewModel: BookCollectionViewModel
 
     @Before
@@ -63,6 +68,8 @@ class BookCollectionViewModelTest {
         isOnlineUseCase = mockk()
         requireUsernameSetupUseCase = mockk()
         claimUsernameUseCase = mockk()
+        signOutUseCase = mockk(relaxed = true)
+        clearLocalDataUseCase = mockk(relaxed = true)
         val booksFlow = MutableStateFlow<List<Book>>(emptyList())
         every { getBooksUseCase() } returns booksFlow
         every { getUserDisplayNameUseCase() } returns ""
@@ -81,6 +88,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
     }
 
@@ -126,6 +135,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -157,6 +168,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -181,6 +194,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -204,6 +219,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -227,6 +244,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -250,6 +269,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -280,6 +301,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -315,6 +338,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -350,6 +375,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
         viewModel.onEditIconClick(1)
@@ -383,6 +410,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
         viewModel.onDeleteIconClick(1)
@@ -417,6 +446,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -446,6 +477,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -469,6 +502,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -492,6 +527,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -524,6 +561,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
         viewModel.onDeleteIconClick(1)
@@ -554,6 +593,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -580,6 +621,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -602,6 +645,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -626,6 +671,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -658,6 +705,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -689,6 +738,8 @@ class BookCollectionViewModelTest {
             isOnlineUseCase = isOnlineUseCase,
             requireUsernameSetupUseCase = requireUsernameSetupUseCase,
             claimUsernameUseCase = claimUsernameUseCase,
+            signOutUseCase = signOutUseCase,
+            clearLocalDataUseCase = clearLocalDataUseCase,
         )
         advanceUntilIdle()
 
@@ -699,5 +750,39 @@ class BookCollectionViewModelTest {
         val usernameSetup = viewModel.uiState.value.usernameSetup
         assertTrue(usernameSetup != null)
         assertEquals("taken_name", usernameSetup?.username)
+    }
+
+    @Test
+    fun `onLogoutClicked sets showLogoutDialog to true`() = runTest {
+        viewModel.onLogoutClicked()
+
+        assertEquals(true, viewModel.uiState.value.showLogoutDialog)
+    }
+
+    @Test
+    fun `dismissLogoutDialog sets showLogoutDialog to false`() = runTest {
+        viewModel.onLogoutClicked()
+        viewModel.dismissLogoutDialog()
+
+        assertEquals(false, viewModel.uiState.value.showLogoutDialog)
+    }
+
+    @Test
+    fun `confirmLogout calls signOutUseCase and emits NavigateToLogin`() = runTest {
+        viewModel.onLogoutClicked()
+        val effects = mutableListOf<BookCollectionEffect>()
+        val job = launch {
+            viewModel.effect.collect { effects.add(it) }
+        }
+
+        viewModel.confirmLogout()
+        advanceUntilIdle()
+
+        coVerify { clearLocalDataUseCase() }
+        coVerify { signOutUseCase() }
+        assertEquals(1, effects.size)
+        assertEquals(BookCollectionEffect.NavigateToLogin, effects.first())
+        assertEquals(false, viewModel.uiState.value.showLogoutDialog)
+        job.cancel()
     }
 }

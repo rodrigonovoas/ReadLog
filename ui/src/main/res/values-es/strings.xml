@@ -104,6 +104,11 @@
     <string name="menu_likes">Me gusta</string>
     <string name="menu_language">Idioma</string>
     <string name="menu_login">Iniciar sesión</string>
+    <string name="menu_logout">Cerrar sesión</string>
+    <string name="logout_dialog_title">¿Cerrar sesión?</string>
+    <string name="logout_dialog_message">Volverás a la pantalla de inicio de sesión. Tus datos locales están a salvo.</string>
+    <string name="logout_confirm">Cerrar sesión</string>
+    <string name="logout_cancel">Cancelar</string>
     <string name="user_profile_title">Perfil</string>
     <string name="user_profile_back_content_description">Atrás</string>
     <string name="user_profile_favorite_content_description">Favorito</string>

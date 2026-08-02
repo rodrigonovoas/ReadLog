@@ -12,14 +12,19 @@ import com.rodrigonovoa.readlog.domain.usecase.GetTimeOfDayUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.IsOnlineUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
+import com.rodrigonovoa.readlog.domain.usecase.ClearLocalDataUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RequireUsernameSetupUseCase
+import com.rodrigonovoa.readlog.domain.usecase.SignOutUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SyncUserDataUseCase
 import com.rodrigonovoa.readlog.domain.usecase.TimeOfDay
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.common.UsernameSetupState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,10 +41,15 @@ class BookCollectionViewModel @Inject constructor(
     private val isOnlineUseCase: IsOnlineUseCase,
     private val requireUsernameSetupUseCase: RequireUsernameSetupUseCase,
     private val claimUsernameUseCase: ClaimUsernameUseCase,
+    private val signOutUseCase: SignOutUseCase,
+    private val clearLocalDataUseCase: ClearLocalDataUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BookCollectionUiState())
     val uiState: StateFlow<BookCollectionUiState> = _uiState.asStateFlow()
+
+    private val _effect = MutableSharedFlow<BookCollectionEffect>()
+    val effect: SharedFlow<BookCollectionEffect> = _effect.asSharedFlow()
 
     init {
         viewModelScope.launch {
@@ -152,6 +162,23 @@ class BookCollectionViewModel @Inject constructor(
                 deleteBookUseCase(selectedBook)
                 refreshUserProfileIfOnlineUseCase()
             }
+        }
+    }
+
+    fun onLogoutClicked() {
+        _uiState.value = _uiState.value.copy(showLogoutDialog = true)
+    }
+
+    fun dismissLogoutDialog() {
+        _uiState.value = _uiState.value.copy(showLogoutDialog = false)
+    }
+
+    fun confirmLogout() {
+        viewModelScope.launch {
+            dismissLogoutDialog()
+            clearLocalDataUseCase()
+            signOutUseCase()
+            _effect.emit(BookCollectionEffect.NavigateToLogin)
         }
     }
 }

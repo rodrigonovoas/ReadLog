@@ -90,6 +90,9 @@ fun BookCollectionScreen(
     onProfileMenuProfileClick: () -> Unit = {},
     onProfileMenuLikesClick: () -> Unit = {},
     onProfileMenuLoginClick: () -> Unit = {},
+    onProfileMenuLogoutClick: () -> Unit = {},
+    onDismissLogoutDialog: () -> Unit = {},
+    onConfirmLogout: () -> Unit = {},
     currentLanguage: String = "en",
     onLanguageSelected: (String) -> Unit = {},
     onSearchClick: () -> Unit = {},
@@ -118,6 +121,7 @@ fun BookCollectionScreen(
             onProfileMenuProfileClick = onProfileMenuProfileClick,
             onProfileMenuLikesClick = onProfileMenuLikesClick,
             onProfileMenuLoginClick = onProfileMenuLoginClick,
+            onProfileMenuLogoutClick = onProfileMenuLogoutClick,
             onProfileMenuLanguageClick = { showLanguageDialog = true },
             onSearchClick = onSearchClick,
         )
@@ -190,6 +194,13 @@ fun BookCollectionScreen(
             onDismiss = { showLanguageDialog = false },
         )
     }
+
+    if (uiState.showLogoutDialog) {
+        LogoutConfirmationDialog(
+            onDismiss = onDismissLogoutDialog,
+            onConfirm = onConfirmLogout,
+        )
+    }
 }
 
 @Composable
@@ -201,6 +212,7 @@ private fun HeaderSection(
     onProfileMenuProfileClick: () -> Unit = {},
     onProfileMenuLikesClick: () -> Unit = {},
     onProfileMenuLoginClick: () -> Unit = {},
+    onProfileMenuLogoutClick: () -> Unit = {},
     onProfileMenuLanguageClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
 ) {
@@ -253,6 +265,7 @@ private fun HeaderSection(
                 onProfileClick = onProfileMenuProfileClick,
                 onLikesClick = onProfileMenuLikesClick,
                 onLoginClick = onProfileMenuLoginClick,
+                onLogoutClick = onProfileMenuLogoutClick,
                 onLanguageClick = onProfileMenuLanguageClick,
             )
         }
@@ -265,6 +278,7 @@ private fun ProfileMenuIcon(
     onProfileClick: () -> Unit,
     onLikesClick: () -> Unit,
     onLoginClick: () -> Unit,
+    onLogoutClick: () -> Unit,
     onLanguageClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -319,6 +333,15 @@ private fun ProfileMenuIcon(
                     onClick = {
                         expanded = false
                         onLoginClick()
+                    },
+                )
+            }
+            if (canLike) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.menu_logout), color = Color.Black) },
+                    onClick = {
+                        expanded = false
+                        onLogoutClick()
                     },
                 )
             }
@@ -565,6 +588,22 @@ private fun DeleteBookDialog(
         dismissLabel = stringResource(R.string.book_collection_cancel),
         onDismiss = onDismiss,
         onConfirm = onConfirm,
+    )
+}
+
+@Composable
+private fun LogoutConfirmationDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    ConfirmationDialog(
+        title = stringResource(R.string.logout_dialog_title),
+        message = stringResource(R.string.logout_dialog_message),
+        confirmLabel = stringResource(R.string.logout_confirm),
+        dismissLabel = stringResource(R.string.logout_cancel),
+        onDismiss = onDismiss,
+        onConfirm = onConfirm,
+        useAccentConfirmButton = false,
     )
 }
 

@@ -10,6 +10,7 @@ data class BookCollectionUiState(
     val activeDialog: BookDialogState? = null,
     val usernameSetup: UsernameSetupState? = null,
     val canLike: Boolean = false,
+    val showLogoutDialog: Boolean = false,
 )
 
 data class BookDialogState(

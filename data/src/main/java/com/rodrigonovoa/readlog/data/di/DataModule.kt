@@ -38,6 +38,7 @@ import com.rodrigonovoa.readlog.data.mapper.UserSearchFirestoreMapperImpl
 import com.rodrigonovoa.readlog.data.repository.AnnotationRepositoryImpl
 import com.rodrigonovoa.readlog.data.repository.AuthRepositoryImpl
 import com.rodrigonovoa.readlog.data.repository.BookRepositoryImpl
+import com.rodrigonovoa.readlog.data.repository.LocalDataRepositoryImpl
 import com.rodrigonovoa.readlog.data.repository.SessionRepositoryImpl
 import com.rodrigonovoa.readlog.data.repository.SyncRepositoryImpl
 import com.rodrigonovoa.readlog.data.repository.UserProfileRepositoryImpl
@@ -47,6 +48,7 @@ import com.rodrigonovoa.readlog.domain.repository.AuthRepository
 import com.rodrigonovoa.readlog.domain.repository.BookMetadataRepository
 import com.rodrigonovoa.readlog.domain.repository.BookRepository
 import com.rodrigonovoa.readlog.domain.repository.ConnectivityRepository
+import com.rodrigonovoa.readlog.domain.repository.LocalDataRepository
 import com.rodrigonovoa.readlog.domain.repository.SessionRepository
 import com.rodrigonovoa.readlog.domain.repository.SyncRepository
 import com.rodrigonovoa.readlog.domain.repository.UserProfileRepository
@@ -69,6 +71,12 @@ abstract class DataModule {
     abstract fun bindAuthRepository(
         impl: AuthRepositoryImpl
     ): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLocalDataRepository(
+        impl: LocalDataRepositoryImpl
+    ): LocalDataRepository
 
     @Binds
     @Singleton
