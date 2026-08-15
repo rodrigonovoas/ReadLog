@@ -44,7 +44,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -53,9 +52,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.ui.R
+import com.rodrigonovoa.readlog.ui.common.BookCover
 import com.rodrigonovoa.readlog.ui.common.BookStateChip
 import com.rodrigonovoa.readlog.ui.common.ConfirmationDialog
 import com.rodrigonovoa.readlog.ui.common.LanguageSelectionDialog
@@ -387,8 +386,6 @@ private fun BookCard(
     onCardClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val color = bookColor(book.bookId)
-
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -417,37 +414,16 @@ private fun BookCard(
                 modifier = Modifier.fillMaxHeight(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (book.coverUrl.isNotEmpty()) {
-                    AsyncImage(
-                        model = book.coverUrl,
-                        contentDescription = stringResource(R.string.add_book_cover_content_description),
-                        modifier = Modifier
-                            .width(72.dp)
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(8.dp)),
-                        contentScale = ContentScale.Crop,
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .width(72.dp)
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(color)
-                            .padding(horizontal = 5.dp, vertical = 6.dp),
-                    ) {
-                        Text(
-                            text = book.title,
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 9.sp,
-                            lineHeight = 12.sp,
-                            color = color_surface,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                }
+                BookCover(
+                    coverUrl = book.coverUrl,
+                    title = book.title,
+                    author = book.author,
+                    bookId = book.bookId,
+                    modifier = Modifier
+                        .width(72.dp)
+                        .fillMaxHeight(),
+                    contentDescription = stringResource(R.string.add_book_cover_content_description),
+                )
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -564,14 +540,6 @@ private fun BookCard(
 }
 
 private val BookRowActionButtonSize = 32.dp
-
-private fun bookColor(bookId: Int): Color {
-    return when (bookId % 3) {
-        0 -> color_primary
-        1 -> color_secondary
-        else -> color_on_surface_variant
-    }
-}
 
 @Composable
 private fun DeleteBookDialog(

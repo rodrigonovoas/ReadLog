@@ -64,9 +64,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import coil.compose.SubcomposeAsyncImage
 import com.rodrigonovoa.readlog.domain.model.BookState
 import com.rodrigonovoa.readlog.ui.R
+import com.rodrigonovoa.readlog.ui.common.BookCover
 import com.rodrigonovoa.readlog.ui.common.bookStateStringRes
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
@@ -134,30 +134,17 @@ fun AddBookScreen(
                         .padding(start = 24.dp, top = 20.dp, end = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
-                    if (state.coverUrl.isNotEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .width(100.dp)
-                                .height(150.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .align(Alignment.CenterHorizontally),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            SubcomposeAsyncImage(
-                                model = state.coverUrl,
-                                contentDescription = stringResource(R.string.add_book_cover_content_description),
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                                loading = {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(32.dp),
-                                        color = color_primary,
-                                        strokeWidth = 2.dp,
-                                    )
-                                },
-                            )
-                        }
-                    }
+                    BookCover(
+                        coverUrl = state.coverUrl,
+                        title = state.title,
+                        author = state.author,
+                        bookId = state.bookId ?: 0,
+                        modifier = Modifier
+                            .width(100.dp)
+                            .height(150.dp)
+                            .align(Alignment.CenterHorizontally),
+                        contentDescription = stringResource(R.string.add_book_cover_content_description),
+                    )
 
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         AddBookTextField(
