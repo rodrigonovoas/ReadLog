@@ -64,8 +64,8 @@ class BookCollectionViewModel @Inject constructor(
     private fun refreshUserDataIfOnline() {
         val currentUser = getCurrentUserUseCase() ?: return
         if (!isOnlineUseCase()) return
+        _uiState.value = _uiState.value.copy(isSyncing = true)
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isSyncing = true)
             runCatching { syncUserDataUseCase(currentUser.uid) }
             refreshUserProfileIfOnlineUseCase()
             if (!currentUser.isAnonymous) {

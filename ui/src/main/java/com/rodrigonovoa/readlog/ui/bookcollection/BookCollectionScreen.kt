@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
@@ -63,11 +65,11 @@ import com.rodrigonovoa.readlog.ui.theme.color_chip
 import com.rodrigonovoa.readlog.ui.theme.color_error_container
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface_variant
+import com.rodrigonovoa.readlog.ui.theme.color_placeholder
 import com.rodrigonovoa.readlog.ui.theme.color_primary
 import com.rodrigonovoa.readlog.ui.theme.color_secondary
 import com.rodrigonovoa.readlog.ui.theme.color_surface
 import com.rodrigonovoa.readlog.ui.theme.color_surface_variant
-import com.rodrigonovoa.readlog.ui.theme.color_track
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -385,188 +387,177 @@ private fun BookCard(
     onCardClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val progress = if (book.numPages > 0) {
-        book.currentPage.toFloat() / book.numPages.toFloat()
-    } else {
-        0f
-    }
     val color = bookColor(book.bookId)
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(color_surface_variant)
-            .clickable(onClick = onCardClick)
-            .padding(14.dp)
+    Column(
+        modifier = modifier.fillMaxWidth(),
     ) {
-        Column(
-            modifier = Modifier.padding(top = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Text(
+            text = stringResource(
+                R.string.book_collection_added_on,
+                formatMillis(addedOnDateFormat, book.creationDate),
+            ),
+            fontSize = 9.sp,
+            color = color_placeholder,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(start = 14.dp, bottom = 4.dp),
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+                .clip(RoundedCornerShape(20.dp))
+                .background(color_surface_variant)
+                .clickable(onClick = onCardClick)
+                .padding(14.dp)
         ) {
-            if (book.coverUrl.isNotEmpty()) {
-                AsyncImage(
-                    model = book.coverUrl,
-                    contentDescription = stringResource(R.string.add_book_cover_content_description),
-                    modifier = Modifier
-                        .width(56.dp)
-                        .height(80.dp)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop,
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .width(56.dp)
-                        .height(80.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(color)
-                        .padding(horizontal = 5.dp, vertical = 6.dp),
-                ) {
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (book.coverUrl.isNotEmpty()) {
+                    AsyncImage(
+                        model = book.coverUrl,
+                        contentDescription = stringResource(R.string.add_book_cover_content_description),
+                        modifier = Modifier
+                            .width(72.dp)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .width(72.dp)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(color)
+                            .padding(horizontal = 5.dp, vertical = 6.dp),
+                    ) {
+                        Text(
+                            text = book.title,
+                            fontFamily = FontFamily.Serif,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 9.sp,
+                            lineHeight = 12.sp,
+                            color = color_surface,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Info
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column {
                     Text(
                         text = book.title,
                         fontFamily = FontFamily.Serif,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 9.sp,
-                        lineHeight = 12.sp,
-                        color = color_surface,
-                        maxLines = 3,
+                        fontSize = 17.sp,
+                        color = color_on_surface,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                    )
+
+                    Text(
+                        text = book.author,
+                        fontSize = 13.sp,
+                        color = color_on_surface_variant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.padding(top = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BookStateChip(
+                        state = book.state
+                    )
+
+                    Text(
+                        text = stringResource(
+                            R.string.book_collection_pages_chip,
+                            book.currentPage,
+                            book.numPages,
+                        ),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = color_on_surface,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(color_chip)
+                            .padding(horizontal = 8.dp, vertical = 3.dp),
                     )
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
-        // Info
-        Column(
-            modifier = Modifier.weight(1f),
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.book_collection_added_on,
-                    formatMillis(addedOnDateFormat, book.creationDate),
-                ),
-                fontSize = 9.sp,
-                color = color_on_surface_variant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = book.title,
-                    modifier = Modifier.weight(1f),
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 17.sp,
-                    color = color_on_surface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                BookStateChip(
-                    state = book.state,
-                    modifier = Modifier.padding(start = 8.dp),
-                )
-            }
-
-            Text(
-                text = book.author,
-                fontSize = 13.sp,
-                color = color_on_surface_variant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp)
-            )
-
-            // Progress bar
-            Row(
-                modifier = Modifier.padding(top = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .height(5.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(color_track),
+                        .size(BookRowActionButtonSize)
+                        .clip(CircleShape)
+                        .background(color_chip)
+                        .clickable(onClick = onEditClick),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(progress.coerceIn(0f, 1f))
-                            .height(5.dp)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(color),
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = stringResource(
+                            R.string.book_collection_edit_icon_content_description
+                        ),
+                        tint = color_primary,
+                        modifier = Modifier.size(12.dp),
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(
-                        R.string.book_collection_progress_pct,
-                        (progress * 100).toInt()
-                    ),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = color_on_surface_variant,
-                )
-            }
-        }
+                Box(
+                    modifier = Modifier
+                        .size(BookRowActionButtonSize)
+                        .clip(CircleShape)
+                        .background(color_error_container)
+                        .clickable(onClick = onDeleteClick),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = stringResource(
+                            R.string.book_collection_delete_icon_content_description
+                        ),
+                        tint = color_primary,
+                        modifier = Modifier.size(12.dp),
+                    )
+                }
 
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(BookRowActionButtonSize)
-                    .clip(CircleShape)
-                    .background(color_chip)
-                    .clickable(onClick = onEditClick),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = stringResource(
-                        R.string.book_collection_edit_icon_content_description
-                    ),
-                    tint = color_primary,
-                    modifier = Modifier.size(12.dp),
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .size(BookRowActionButtonSize)
-                    .clip(CircleShape)
-                    .background(color_error_container)
-                    .clickable(onClick = onDeleteClick),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = stringResource(
-                        R.string.book_collection_delete_icon_content_description
-                    ),
-                    tint = color_primary,
-                    modifier = Modifier.size(12.dp),
-                )
-            }
-
-            // Clock action button
-            Box(
-                modifier = Modifier
-                    .size(BookRowActionButtonSize)
-                    .clip(CircleShape)
-                    .background(color_primary)
-                    .clickable(onClick = onSessionClick),
-                contentAlignment = Alignment.Center,
-            ) {
-                ClockIcon(tint = color_surface, iconSize = 16.dp)
+                // Clock action button
+                Box(
+                    modifier = Modifier
+                        .size(BookRowActionButtonSize)
+                        .clip(CircleShape)
+                        .background(color_primary)
+                        .clickable(onClick = onSessionClick),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ClockIcon(tint = color_surface, iconSize = 16.dp)
+                }
             }
         }
     }
