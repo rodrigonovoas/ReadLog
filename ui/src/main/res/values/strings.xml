@@ -108,6 +108,8 @@
     <string name="book_detail_stat_days">DAYS READING</string>
     <string name="book_detail_recent_sessions_title">Recent sessions</string>
     <string name="book_detail_no_sessions">You haven\'t logged any sessions for this book yet.</string>
+    <string name="book_detail_previous_month">Previous month</string>
+    <string name="book_detail_next_month">Next month</string>
     <string name="book_collection_options_icon_content_description">Options</string>
     <string name="menu_profile">Profile</string>
     <string name="menu_likes">Likes</string>

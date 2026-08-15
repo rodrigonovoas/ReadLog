@@ -18,6 +18,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,6 +56,8 @@ fun BookDetailScreen(
     modifier: Modifier = Modifier,
     uiState: BookDetailUiState = BookDetailUiState(),
     onBackClick: () -> Unit = {},
+    onPreviousMonth: () -> Unit = {},
+    onNextMonth: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -84,7 +88,11 @@ fun BookDetailScreen(
             ) {
                 BookHeaderRow(uiState = uiState)
                 StatsRow(uiState = uiState)
-                MonthCalendar(uiState = uiState)
+                MonthCalendar(
+                    uiState = uiState,
+                    onPreviousMonth = onPreviousMonth,
+                    onNextMonth = onNextMonth,
+                )
                 RecentSessionsSection(sessions = uiState.recentSessions)
             }
         }
@@ -199,19 +207,48 @@ private fun StatsRow(
 @Composable
 private fun MonthCalendar(
     uiState: BookDetailUiState,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            text = uiState.monthLabel,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = color_on_surface,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.padding(bottom = 10.dp),
-        )
+        ) {
+            IconButton(
+                onClick = onPreviousMonth,
+                modifier = Modifier.size(24.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Default.KeyboardArrowLeft,
+                    contentDescription = stringResource(R.string.book_detail_previous_month),
+                    tint = color_on_surface,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            Text(
+                text = uiState.monthLabel,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = color_on_surface,
+            )
+            IconButton(
+                onClick = onNextMonth,
+                modifier = Modifier.size(24.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
+                    contentDescription = stringResource(R.string.book_detail_next_month),
+                    tint = color_on_surface,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {

@@ -234,6 +234,8 @@ class MainActivity : AppCompatActivity() {
                             modifier = Modifier.fillMaxSize(),
                             uiState = uiState,
                             onBackClick = { navController.popBackStack() },
+                            onPreviousMonth = { viewModel.onPreviousMonth() },
+                            onNextMonth = { viewModel.onNextMonth() },
                         )
                     }
                     composable(

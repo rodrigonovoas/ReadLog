@@ -38,8 +38,14 @@ class BookDetailViewModel @Inject constructor(
 
     private var bookLoaded = false
     private var sessionsLoaded = false
+    private var allSessions: List<Session> = emptyList()
 
     init {
+        val today = Calendar.getInstance()
+        val initialYear = today.get(Calendar.YEAR)
+        val initialMonth = today.get(Calendar.MONTH)
+        _uiState.update { it.copy(selectedYear = initialYear, selectedMonth = initialMonth) }
+
         if (bookId != -1) {
             viewModelScope.launch {
                 val book = getBookByIdUseCase(bookId)
@@ -66,6 +72,7 @@ class BookDetailViewModel @Inject constructor(
             }
             viewModelScope.launch {
                 getSessionsForBookUseCase(bookId).collect { sessions ->
+                    allSessions = sessions
                     updateSessionData(sessions)
                     if (!sessionsLoaded) {
                         sessionsLoaded = true
@@ -77,6 +84,48 @@ class BookDetailViewModel @Inject constructor(
             }
         } else {
             _uiState.update { it.copy(isLoading = false) }
+        }
+    }
+
+    fun onPreviousMonth() {
+        val currentState = _uiState.value
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.YEAR, currentState.selectedYear)
+            set(Calendar.MONTH, currentState.selectedMonth)
+            add(Calendar.MONTH, -1)
+        }
+        val newYear = calendar.get(Calendar.YEAR)
+        val newMonth = calendar.get(Calendar.MONTH)
+        _uiState.update {
+            it.copy(
+                selectedYear = newYear,
+                selectedMonth = newMonth,
+                monthLabel = formatMillis(monthLabelFormat, calendar.timeInMillis).replaceFirstChar { char ->
+                    char.uppercase(Locale.getDefault())
+                },
+                monthDays = buildMonthDays(newYear, newMonth),
+            )
+        }
+    }
+
+    fun onNextMonth() {
+        val currentState = _uiState.value
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.YEAR, currentState.selectedYear)
+            set(Calendar.MONTH, currentState.selectedMonth)
+            add(Calendar.MONTH, 1)
+        }
+        val newYear = calendar.get(Calendar.YEAR)
+        val newMonth = calendar.get(Calendar.MONTH)
+        _uiState.update {
+            it.copy(
+                selectedYear = newYear,
+                selectedMonth = newMonth,
+                monthLabel = formatMillis(monthLabelFormat, calendar.timeInMillis).replaceFirstChar { char ->
+                    char.uppercase(Locale.getDefault())
+                },
+                monthDays = buildMonthDays(newYear, newMonth),
+            )
         }
     }
 
@@ -98,14 +147,16 @@ class BookDetailViewModel @Inject constructor(
         }
 
         _uiState.update {
+            val year = it.selectedYear
+            val month = it.selectedMonth
             it.copy(
                 sessionsCount = sessions.size,
                 totalTimeLabel = formatDuration(
                     totalSeconds = sessions.sumOf { session -> session.time },
                     minuteUnit = "m.",
                 ),
-                monthLabel = currentMonthLabel(),
-                monthDays = buildMonthDays(sessions),
+                monthLabel = currentMonthLabel(it.selectedYear, it.selectedMonth),
+                monthDays = buildMonthDays(year, month),
                 recentSessions = recentSessions,
             )
         }
@@ -137,23 +188,30 @@ class BookDetailViewModel @Inject constructor(
         }
     }
 
-    private fun currentMonthLabel(): String {
-        return formatMillis(monthLabelFormat, System.currentTimeMillis()).replaceFirstChar {
+    private fun currentMonthLabel(year: Int, month: Int): String {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.YEAR, year)
+            set(Calendar.MONTH, month)
+        }
+        return formatMillis(monthLabelFormat, calendar.timeInMillis).replaceFirstChar {
             it.uppercase(Locale.getDefault())
         }
     }
 
-    private fun buildMonthDays(sessions: List<Session>): List<BookDetailMonthDay> {
+    private fun buildMonthDays(year: Int, month: Int): List<BookDetailMonthDay> {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.YEAR, year)
+            set(Calendar.MONTH, month)
+        }
         val today = Calendar.getInstance()
-        val currentYear = today.get(Calendar.YEAR)
-        val currentMonth = today.get(Calendar.MONTH)
         val todayOfMonth = today.get(Calendar.DAY_OF_MONTH)
-        val daysInMonth = today.getActualMaximum(Calendar.DAY_OF_MONTH)
+        val isCurrentMonth = today.get(Calendar.YEAR) == year && today.get(Calendar.MONTH) == month
+        val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
 
-        val readDays = sessions.mapNotNull { session ->
-            val calendar = Calendar.getInstance().apply { timeInMillis = session.creationDate }
-            if (calendar.get(Calendar.YEAR) == currentYear && calendar.get(Calendar.MONTH) == currentMonth) {
-                calendar.get(Calendar.DAY_OF_MONTH)
+        val readDays = allSessions.mapNotNull { session ->
+            val cal = Calendar.getInstance().apply { timeInMillis = session.creationDate }
+            if (cal.get(Calendar.YEAR) == year && cal.get(Calendar.MONTH) == month) {
+                cal.get(Calendar.DAY_OF_MONTH)
             } else {
                 null
             }
@@ -161,7 +219,7 @@ class BookDetailViewModel @Inject constructor(
 
         return (1..daysInMonth).map { day ->
             val status = when {
-                day == todayOfMonth -> BookDetailDayStatus.TODAY
+                isCurrentMonth && day == todayOfMonth -> BookDetailDayStatus.TODAY
                 day in readDays -> BookDetailDayStatus.READ
                 else -> BookDetailDayStatus.NONE
             }
