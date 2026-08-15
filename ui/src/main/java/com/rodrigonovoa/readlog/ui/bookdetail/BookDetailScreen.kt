@@ -65,7 +65,11 @@ fun BookDetailScreen(
             .background(color_surface)
             .safeDrawingPadding(),
     ) {
-        TopBar(onBackClick = onBackClick)
+        TopBar(
+            bookTitle = uiState.bookTitle,
+            bookAuthor = uiState.bookAuthor,
+            onBackClick = onBackClick,
+        )
 
         if (uiState.isLoading) {
             Box(
@@ -101,6 +105,8 @@ fun BookDetailScreen(
 
 @Composable
 private fun TopBar(
+    bookTitle: String,
+    bookAuthor: String,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -125,6 +131,28 @@ private fun TopBar(
                 modifier = Modifier.size(18.dp),
             )
         }
+        Column(
+            modifier = Modifier.padding(start = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = bookTitle,
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
+                lineHeight = 22.sp,
+                color = color_on_surface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = bookAuthor,
+                fontSize = 13.sp,
+                color = color_on_surface_variant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
@@ -135,7 +163,7 @@ private fun BookHeaderRow(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
         BookCover(
             coverUrl = uiState.coverUrl,
@@ -150,30 +178,14 @@ private fun BookHeaderRow(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(
-                text = uiState.bookTitle,
-                fontFamily = FontFamily.Serif,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 20.sp,
-                lineHeight = 25.sp,
-                color = color_on_surface,
-            )
-            Text(
-                text = uiState.bookAuthor,
-                fontSize = 14.sp,
-                color = color_on_surface_variant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            BookStateChip(
-                state = uiState.bookState,
-                modifier = Modifier.padding(top = 6.dp),
-            )
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = stringResource(R.string.book_detail_reading_since, uiState.readingSinceLabel),
                 fontSize = 12.sp,
                 color = color_placeholder,
+            )
+            BookStateChip(
+                state = uiState.bookState,
             )
         }
     }
