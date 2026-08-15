@@ -30,6 +30,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -231,6 +232,7 @@ fun BookSessionScreen(
                 annotationText = uiState.annotationText,
                 onAddManualTimeClick = { showManualTimeDialog = true },
                 onOpenAnnotationDialogClick = { onIntent(BookSessionIntent.OnOpenAnnotationDialogClicked) },
+                onOpenPageDialogClick = { onIntent(BookSessionIntent.OnOpenPageDialogClicked) },
             )
         }
     }
@@ -267,6 +269,17 @@ fun BookSessionScreen(
                 onIntent(BookSessionIntent.OnConfirmManualTimeClicked(hours, minutes, dateMillis))
                 showManualTimeDialog = false
             },
+        )
+    }
+
+    if (uiState.showPageDialog) {
+        UpdatePagesDialog(
+            currentPage = uiState.currentPage,
+            totalPages = uiState.totalPages,
+            input = uiState.pageDialogInput,
+            onInputChanged = { onIntent(BookSessionIntent.OnPageDialogInputChanged(it)) },
+            onDismiss = { onIntent(BookSessionIntent.OnDismissPageDialogClicked) },
+            onConfirm = { onIntent(BookSessionIntent.OnConfirmPageDialogClicked) },
         )
     }
 }
@@ -516,6 +529,7 @@ private fun SessionActionsSheet(
     annotationText: String,
     onAddManualTimeClick: () -> Unit,
     onOpenAnnotationDialogClick: () -> Unit,
+    onOpenPageDialogClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -546,6 +560,25 @@ private fun SessionActionsSheet(
                 StopwatchIcon(
                     tint = color_on_surface,
                     modifier = Modifier.size(16.dp),
+                )
+            }
+
+            val updatePagesContentDescription =
+                stringResource(R.string.book_session_update_pages_content_description)
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.White.copy(alpha = 0.55f))
+                    .clickable(onClick = onOpenPageDialogClick)
+                    .semantics { contentDescription = updatePagesContentDescription },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                    contentDescription = null,
+                    tint = color_on_surface,
+                    modifier = Modifier.size(18.dp),
                 )
             }
 
@@ -838,6 +871,150 @@ private fun ManualTimeEntryDialog(
             },
         ) {
             DatePicker(state = datePickerState)
+        }
+    }
+}
+
+@Composable
+private fun UpdatePagesDialog(
+    currentPage: Int,
+    totalPages: Int,
+    input: String,
+    onInputChanged: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = color_surface,
+            modifier = Modifier.widthIn(max = 320.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(start = 24.dp, top = 26.dp, end = 24.dp, bottom = 22.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(color_chip),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                            contentDescription = null,
+                            tint = color_primary,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(14.dp))
+                    Text(
+                        text = stringResource(R.string.book_session_update_pages_dialog_title),
+                        fontFamily = FontFamily.Serif,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 19.sp,
+                        color = color_on_surface,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+                Text(
+                    text = stringResource(R.string.book_session_update_pages_current_label, currentPage),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = color_on_surface,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.book_session_update_pages_total_label, totalPages),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = color_on_surface,
+                )
+
+                Spacer(modifier = Modifier.height(18.dp))
+                Text(
+                    text = stringResource(R.string.book_session_update_pages_input_label).uppercase(),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp,
+                    color = color_on_surface_variant,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(color_surface_variant)
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BasicTextField(
+                        value = input,
+                        onValueChange = onInputChanged,
+                        modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        textStyle = TextStyle(
+                            fontFamily = FontFamily.Serif,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 20.sp,
+                            color = color_on_surface,
+                        ),
+                        cursorBrush = SolidColor(color_on_surface),
+                        decorationBox = { innerTextField ->
+                            Box {
+                                if (input.isEmpty()) {
+                                    Text(
+                                        text = stringResource(R.string.book_session_update_pages_input_placeholder),
+                                        fontSize = 15.sp,
+                                        color = color_placeholder,
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        },
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .padding(top = 24.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    TextButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.textButtonColors(contentColor = color_on_surface_variant),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.book_session_update_pages_cancel),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    Button(
+                        onClick = onConfirm,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = color_primary, contentColor = color_surface),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.book_session_update_pages_accept),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
         }
     }
 }

@@ -14,4 +14,8 @@ sealed interface BookSessionIntent {
         val minutes: Int,
         val dateMillis: Long,
     ) : BookSessionIntent
+    data object OnOpenPageDialogClicked : BookSessionIntent
+    data object OnDismissPageDialogClicked : BookSessionIntent
+    data class OnPageDialogInputChanged(val input: String) : BookSessionIntent
+    data object OnConfirmPageDialogClicked : BookSessionIntent
 }

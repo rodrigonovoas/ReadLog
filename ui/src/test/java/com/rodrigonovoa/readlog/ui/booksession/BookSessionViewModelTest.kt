@@ -7,6 +7,7 @@ import com.rodrigonovoa.readlog.domain.usecase.AddAnnotationUseCase
 import com.rodrigonovoa.readlog.domain.usecase.AddSessionUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
+import com.rodrigonovoa.readlog.domain.usecase.UpdateBookUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -35,6 +36,7 @@ class BookSessionViewModelTest {
     private lateinit var getBookByIdUseCase: GetBookByIdUseCase
     private lateinit var addSessionUseCase: AddSessionUseCase
     private lateinit var addAnnotationUseCase: AddAnnotationUseCase
+    private lateinit var updateBookUseCase: UpdateBookUseCase
     private lateinit var refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var viewModel: BookSessionViewModel
@@ -47,6 +49,7 @@ class BookSessionViewModelTest {
         getBookByIdUseCase = mockk(relaxed = true)
         addSessionUseCase = mockk()
         addAnnotationUseCase = mockk(relaxed = true)
+        updateBookUseCase = mockk(relaxed = true)
         refreshUserProfileIfOnlineUseCase = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf("bookId" to bookId))
         coEvery { addSessionUseCase(any(), any(), any()) } returns Result.success(
@@ -60,6 +63,7 @@ class BookSessionViewModelTest {
             getBookByIdUseCase = getBookByIdUseCase,
             addSessionUseCase = addSessionUseCase,
             addAnnotationUseCase = addAnnotationUseCase,
+            updateBookUseCase = updateBookUseCase,
             refreshUserProfileIfOnlineUseCase = refreshUserProfileIfOnlineUseCase,
             savedStateHandle = savedStateHandle,
         )
@@ -494,6 +498,257 @@ class BookSessionViewModelTest {
         collectJob.join()
 
         coVerify { addSessionUseCase(bookId, 5_400L, manualDate) }
+        assertEquals(BookSessionEffect.NavigateBack, effect)
+    }
+
+    @Test
+    fun `init loads book currentPage and totalPages from use case`() = runTest {
+        val book = Book(
+            bookId = bookId,
+            title = "Cien años de soledad",
+            author = "Gabriel García Márquez",
+            genre = "Novel",
+            releaseDate = "1967",
+            numPages = 340,
+            currentPage = 231,
+        )
+        coEvery { getBookByIdUseCase(bookId) } returns book
+        val loadedViewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(231, loadedViewModel.uiState.value.currentPage)
+        assertEquals(340, loadedViewModel.uiState.value.totalPages)
+    }
+
+    @Test
+    fun `open page dialog shows it and preloads pending pages input`() = runTest {
+        val book = Book(
+            bookId = bookId,
+            title = "Cien años de soledad",
+            author = "Gabriel García Márquez",
+            genre = "Novel",
+            releaseDate = "1967",
+            numPages = 340,
+            currentPage = 40,
+        )
+        coEvery { getBookByIdUseCase(bookId) } returns book
+        val loadedViewModel = createViewModel()
+        advanceUntilIdle()
+
+        loadedViewModel.processIntent(BookSessionIntent.OnPageDialogInputChanged("20"))
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmPageDialogClicked)
+        loadedViewModel.processIntent(BookSessionIntent.OnOpenPageDialogClicked)
+        advanceUntilIdle()
+
+        val state = loadedViewModel.uiState.value
+        assertTrue(state.showPageDialog)
+        assertEquals(40, state.currentPage)
+        assertEquals("20", state.pageDialogInput)
+        assertEquals(20, state.pendingPages)
+    }
+
+    @Test
+    fun `page dialog input only accepts digits`() = runTest {
+        viewModel.processIntent(BookSessionIntent.OnPageDialogInputChanged("abc12x3"))
+        advanceUntilIdle()
+
+        assertEquals("123", viewModel.uiState.value.pageDialogInput)
+    }
+
+    @Test
+    fun `confirming page dialog stores pending pages without updating book or currentPage`() = runTest {
+        val book = Book(
+            bookId = bookId,
+            title = "Cien años de soledad",
+            author = "Gabriel García Márquez",
+            genre = "Novel",
+            releaseDate = "1967",
+            numPages = 340,
+            currentPage = 40,
+        )
+        coEvery { getBookByIdUseCase(bookId) } returns book
+        val loadedViewModel = createViewModel()
+        advanceUntilIdle()
+
+        loadedViewModel.processIntent(BookSessionIntent.OnPageDialogInputChanged("20"))
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmPageDialogClicked)
+        advanceUntilIdle()
+
+        val state = loadedViewModel.uiState.value
+        assertEquals(40, state.currentPage)
+        assertEquals(20, state.pendingPages)
+        assertFalse(state.showPageDialog)
+        assertEquals("", state.pageDialogInput)
+        coVerify(exactly = 0) { updateBookUseCase(any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `confirming page dialog replaces previous pending pages`() = runTest {
+        val book = Book(
+            bookId = bookId,
+            title = "Cien años de soledad",
+            author = "Gabriel García Márquez",
+            genre = "Novel",
+            releaseDate = "1967",
+            numPages = 340,
+            currentPage = 40,
+        )
+        coEvery { getBookByIdUseCase(bookId) } returns book
+        val loadedViewModel = createViewModel()
+        advanceUntilIdle()
+
+        loadedViewModel.processIntent(BookSessionIntent.OnPageDialogInputChanged("20"))
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmPageDialogClicked)
+        loadedViewModel.processIntent(BookSessionIntent.OnPageDialogInputChanged("15"))
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmPageDialogClicked)
+        advanceUntilIdle()
+
+        assertEquals(15, loadedViewModel.uiState.value.pendingPages)
+        assertEquals(40, loadedViewModel.uiState.value.currentPage)
+        coVerify(exactly = 0) { updateBookUseCase(any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `confirming page dialog with empty input clears pending pages`() = runTest {
+        val book = Book(
+            bookId = bookId,
+            title = "Cien años de soledad",
+            author = "Gabriel García Márquez",
+            genre = "Novel",
+            releaseDate = "1967",
+            numPages = 340,
+            currentPage = 40,
+        )
+        coEvery { getBookByIdUseCase(bookId) } returns book
+        val loadedViewModel = createViewModel()
+        advanceUntilIdle()
+
+        loadedViewModel.processIntent(BookSessionIntent.OnPageDialogInputChanged("20"))
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmPageDialogClicked)
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmPageDialogClicked)
+        advanceUntilIdle()
+
+        assertEquals(0, loadedViewModel.uiState.value.pendingPages)
+        assertEquals(40, loadedViewModel.uiState.value.currentPage)
+        coVerify(exactly = 0) { updateBookUseCase(any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `pending pages are applied when session is saved`() = runTest {
+        val book = Book(
+            bookId = bookId,
+            title = "Cien años de soledad",
+            author = "Gabriel García Márquez",
+            genre = "Novel",
+            releaseDate = "1967",
+            numPages = 340,
+            currentPage = 40,
+        )
+        coEvery { getBookByIdUseCase(bookId) } returns book
+        val loadedViewModel = createViewModel()
+        advanceUntilIdle()
+
+        loadedViewModel.processIntent(BookSessionIntent.OnPageDialogInputChanged("20"))
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmPageDialogClicked)
+        loadedViewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
+        advanceTimeBy(2_000)
+        runCurrent()
+        loadedViewModel.processIntent(BookSessionIntent.OnStopClicked)
+        advanceUntilIdle()
+
+        var effect: BookSessionEffect? = null
+        val collectJob = launch { effect = loadedViewModel.effect.first() }
+
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        advanceUntilIdle()
+        collectJob.join()
+
+        coVerify {
+            updateBookUseCase(
+                original = book,
+                title = book.title,
+                author = book.author,
+                numPages = book.numPages,
+                currentPage = 60,
+                state = book.state,
+            )
+        }
+        assertEquals(BookSessionEffect.NavigateBack, effect)
+    }
+
+    @Test
+    fun `pending pages are capped at total pages when session is saved`() = runTest {
+        val book = Book(
+            bookId = bookId,
+            title = "Cien años de soledad",
+            author = "Gabriel García Márquez",
+            genre = "Novel",
+            releaseDate = "1967",
+            numPages = 340,
+            currentPage = 320,
+        )
+        coEvery { getBookByIdUseCase(bookId) } returns book
+        val loadedViewModel = createViewModel()
+        advanceUntilIdle()
+
+        loadedViewModel.processIntent(BookSessionIntent.OnPageDialogInputChanged("50"))
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmPageDialogClicked)
+        loadedViewModel.processIntent(BookSessionIntent.OnStopClicked)
+        advanceUntilIdle()
+
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        advanceUntilIdle()
+
+        coVerify {
+            updateBookUseCase(
+                original = book,
+                title = book.title,
+                author = book.author,
+                numPages = book.numPages,
+                currentPage = 340,
+                state = book.state,
+            )
+        }
+    }
+
+    @Test
+    fun `pending pages are applied even when elapsed time is zero`() = runTest {
+        val book = Book(
+            bookId = bookId,
+            title = "Cien años de soledad",
+            author = "Gabriel García Márquez",
+            genre = "Novel",
+            releaseDate = "1967",
+            numPages = 340,
+            currentPage = 40,
+        )
+        coEvery { getBookByIdUseCase(bookId) } returns book
+        val loadedViewModel = createViewModel()
+        advanceUntilIdle()
+
+        loadedViewModel.processIntent(BookSessionIntent.OnPageDialogInputChanged("20"))
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmPageDialogClicked)
+        loadedViewModel.processIntent(BookSessionIntent.OnStopClicked)
+        advanceUntilIdle()
+
+        var effect: BookSessionEffect? = null
+        val collectJob = launch { effect = loadedViewModel.effect.first() }
+
+        loadedViewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        advanceUntilIdle()
+        collectJob.join()
+
+        coVerify(exactly = 0) { addSessionUseCase(any(), any(), any()) }
+        coVerify {
+            updateBookUseCase(
+                original = book,
+                title = book.title,
+                author = book.author,
+                numPages = book.numPages,
+                currentPage = 60,
+                state = book.state,
+            )
+        }
         assertEquals(BookSessionEffect.NavigateBack, effect)
     }
 }

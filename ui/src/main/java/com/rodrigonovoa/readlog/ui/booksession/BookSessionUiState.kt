@@ -8,4 +8,9 @@ data class BookSessionUiState(
     val showAnnotationDialog: Boolean = false,
     val annotationText: String = "",
     val sessionDate: Long = System.currentTimeMillis(),
+    val currentPage: Int = 0,
+    val totalPages: Int = 0,
+    val pendingPages: Int = 0,
+    val showPageDialog: Boolean = false,
+    val pageDialogInput: String = "",
 )

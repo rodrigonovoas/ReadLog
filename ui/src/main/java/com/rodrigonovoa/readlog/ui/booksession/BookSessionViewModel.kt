@@ -3,10 +3,12 @@ package com.rodrigonovoa.readlog.ui.booksession
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.domain.usecase.AddAnnotationUseCase
 import com.rodrigonovoa.readlog.domain.usecase.AddSessionUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetBookByIdUseCase
 import com.rodrigonovoa.readlog.domain.usecase.RefreshUserProfileIfOnlineUseCase
+import com.rodrigonovoa.readlog.domain.usecase.UpdateBookUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -28,6 +30,7 @@ class BookSessionViewModel @Inject constructor(
     private val getBookByIdUseCase: GetBookByIdUseCase,
     private val addSessionUseCase: AddSessionUseCase,
     private val addAnnotationUseCase: AddAnnotationUseCase,
+    private val updateBookUseCase: UpdateBookUseCase,
     private val refreshUserProfileIfOnlineUseCase: RefreshUserProfileIfOnlineUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -44,12 +47,20 @@ class BookSessionViewModel @Inject constructor(
     private var hasStartedTimer = false
     private var dialogTriggeredByBack = false
     private var resumeTimerOnDismiss = false
+    private var currentBook: Book? = null
 
     init {
         if (bookId != -1) {
             viewModelScope.launch {
                 val book = getBookByIdUseCase(bookId)
-                _uiState.update { it.copy(bookTitle = book?.title ?: "") }
+                currentBook = book
+                _uiState.update {
+                    it.copy(
+                        bookTitle = book?.title ?: "",
+                        currentPage = book?.currentPage ?: 0,
+                        totalPages = book?.numPages ?: 0,
+                    )
+                }
             }
         }
     }
@@ -115,6 +126,31 @@ class BookSessionViewModel @Inject constructor(
                     )
                 }
             }
+            is BookSessionIntent.OnOpenPageDialogClicked -> {
+                _uiState.update {
+                    it.copy(
+                        showPageDialog = true,
+                        pageDialogInput = it.pendingPages.toString(),
+                    )
+                }
+            }
+            is BookSessionIntent.OnDismissPageDialogClicked -> {
+                _uiState.update { it.copy(showPageDialog = false) }
+            }
+            is BookSessionIntent.OnPageDialogInputChanged -> {
+                val digitsOnly = intent.input.filter { it.isDigit() }
+                _uiState.update { it.copy(pageDialogInput = digitsOnly) }
+            }
+            is BookSessionIntent.OnConfirmPageDialogClicked -> {
+                val pagesToAdd = _uiState.value.pageDialogInput.toIntOrNull() ?: 0
+                _uiState.update {
+                    it.copy(
+                        pendingPages = pagesToAdd,
+                        showPageDialog = false,
+                        pageDialogInput = "",
+                    )
+                }
+            }
         }
     }
 
@@ -138,6 +174,7 @@ class BookSessionViewModel @Inject constructor(
     private fun saveSession() {
         viewModelScope.launch {
             val state = _uiState.value
+            applyPendingPages(state)
             if (state.elapsedSeconds == 0L) {
                 _effect.emit(BookSessionEffect.NavigateBack)
                 return@launch
@@ -153,5 +190,22 @@ class BookSessionViewModel @Inject constructor(
             }
             _effect.emit(BookSessionEffect.NavigateBack)
         }
+    }
+
+    private suspend fun applyPendingPages(state: BookSessionUiState) {
+        val book = currentBook ?: return
+        val pagesToAdd = state.pendingPages
+        if (pagesToAdd <= 0) return
+        val newPage = (state.currentPage + pagesToAdd).coerceAtMost(state.totalPages)
+        if (newPage == state.currentPage) return
+        updateBookUseCase(
+            original = book,
+            title = book.title,
+            author = book.author,
+            numPages = book.numPages,
+            currentPage = newPage,
+            state = book.state,
+        )
+        currentBook = book.copy(currentPage = newPage)
     }
 }

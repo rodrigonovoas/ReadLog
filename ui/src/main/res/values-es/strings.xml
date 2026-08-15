@@ -93,6 +93,14 @@
     <string name="book_session_manual_time_date_label">Fecha</string>
     <string name="book_session_manual_time_cancel">Cancelar</string>
     <string name="book_session_manual_time_save">Guardar</string>
+    <string name="book_session_update_pages_content_description">Actualizar páginas</string>
+    <string name="book_session_update_pages_dialog_title">Actualizar páginas</string>
+    <string name="book_session_update_pages_current_label">Página actual: %1$d</string>
+    <string name="book_session_update_pages_total_label">Total de páginas: %1$d</string>
+    <string name="book_session_update_pages_input_label">Páginas a añadir</string>
+    <string name="book_session_update_pages_input_placeholder">ej. 10</string>
+    <string name="book_session_update_pages_cancel">Cancelar</string>
+    <string name="book_session_update_pages_accept">Aceptar</string>
     <string name="book_detail_back_content_description">Atrás</string>
     <string name="book_detail_reading_since">Leyendo desde el %1$s</string>
     <string name="book_detail_stat_sessions">SESIONES</string>
