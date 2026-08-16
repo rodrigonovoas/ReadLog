@@ -26,15 +26,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,11 +54,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.rodrigonovoa.readlog.domain.model.Book
+import com.rodrigonovoa.readlog.domain.model.BookFilters
+import com.rodrigonovoa.readlog.domain.model.BookState
 import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.ui.common.BookCover
 import com.rodrigonovoa.readlog.ui.common.BookStateChip
@@ -96,9 +106,13 @@ fun BookCollectionScreen(
     onConfirmLogout: () -> Unit = {},
     currentLanguage: String = "en",
     onLanguageSelected: (String) -> Unit = {},
-    onSearchClick: () -> Unit = {},
+    onSearchUsersClick: () -> Unit = {},
     onUsernameChange: (String) -> Unit = {},
     onUsernameConfirm: () -> Unit = {},
+    onFilterClick: () -> Unit = {},
+    onFilterAccepted: (BookFilters) -> Unit = {},
+    onFilterDismissed: () -> Unit = {},
+    onFilterCleared: () -> Unit = {},
 ) {
     val books = uiState.books
     var showLanguageDialog by remember { mutableStateOf(false) }
@@ -115,6 +129,9 @@ fun BookCollectionScreen(
             val greetingName = uiState.userName.ifEmpty {
                 stringResource(R.string.reader_name_fallback)
             }
+            val hasActiveFilters = uiState.bookFilters.title != null ||
+                uiState.bookFilters.author != null ||
+                uiState.bookFilters.state != null
             HeaderSection(
                 showTitle = books.isNotEmpty(),
                 greeting = if (uiState.greetingResId != 0) {
@@ -123,12 +140,14 @@ fun BookCollectionScreen(
                     ""
                 },
                 canLike = uiState.canLike,
+                hasActiveFilters = hasActiveFilters,
                 onProfileMenuProfileClick = onProfileMenuProfileClick,
                 onProfileMenuLikesClick = onProfileMenuLikesClick,
                 onProfileMenuLoginClick = onProfileMenuLoginClick,
                 onProfileMenuLogoutClick = onProfileMenuLogoutClick,
                 onProfileMenuLanguageClick = { showLanguageDialog = true },
-                onSearchClick = onSearchClick,
+                onProfileMenuSearchUsersClick = onSearchUsersClick,
+                onFilterClick = onFilterClick,
             )
 
             if (books.isEmpty()) {
@@ -229,6 +248,15 @@ fun BookCollectionScreen(
             onConfirm = onConfirmLogout,
         )
     }
+
+    if (uiState.showFilterDialog) {
+        FilterDialog(
+            initialFilters = uiState.bookFilters,
+            onAccept = onFilterAccepted,
+            onDismiss = onFilterDismissed,
+            onClear = onFilterCleared,
+        )
+    }
 }
 
 @Composable
@@ -236,13 +264,15 @@ private fun HeaderSection(
     showTitle: Boolean = true,
     greeting: String,
     canLike: Boolean,
+    hasActiveFilters: Boolean = false,
     modifier: Modifier = Modifier,
     onProfileMenuProfileClick: () -> Unit = {},
     onProfileMenuLikesClick: () -> Unit = {},
     onProfileMenuLoginClick: () -> Unit = {},
     onProfileMenuLogoutClick: () -> Unit = {},
     onProfileMenuLanguageClick: () -> Unit = {},
-    onSearchClick: () -> Unit = {},
+    onProfileMenuSearchUsersClick: () -> Unit = {},
+    onFilterClick: () -> Unit = {},
 ) {
     Row(
         modifier = modifier
@@ -276,15 +306,15 @@ private fun HeaderSection(
                     .size(40.dp)
                     .clip(CircleShape)
                     .background(color_chip)
-                    .clickable(onClick = onSearchClick),
+                    .clickable(onClick = onFilterClick),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Default.Search,
+                    imageVector = Icons.Default.FilterList,
                     contentDescription = stringResource(
-                        R.string.book_collection_search_icon_content_description
+                        R.string.book_collection_filter_icon_content_description
                     ),
-                    tint = color_on_surface_variant,
+                    tint = if (hasActiveFilters) color_primary else color_on_surface_variant,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -295,6 +325,7 @@ private fun HeaderSection(
                 onLoginClick = onProfileMenuLoginClick,
                 onLogoutClick = onProfileMenuLogoutClick,
                 onLanguageClick = onProfileMenuLanguageClick,
+                onSearchUsersClick = onProfileMenuSearchUsersClick,
             )
         }
     }
@@ -308,6 +339,7 @@ private fun ProfileMenuIcon(
     onLoginClick: () -> Unit,
     onLogoutClick: () -> Unit,
     onLanguageClick: () -> Unit,
+    onSearchUsersClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -332,6 +364,13 @@ private fun ProfileMenuIcon(
             onDismissRequest = { expanded = false },
             modifier = Modifier.background(color_surface_variant),
         ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_search_users), color = Color.Black) },
+                onClick = {
+                    expanded = false
+                    onSearchUsersClick()
+                },
+            )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.menu_profile), color = Color.Black) },
                 onClick = {
@@ -573,6 +612,153 @@ private fun LogoutConfirmationDialog(
         onConfirm = onConfirm,
         useAccentConfirmButton = false,
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FilterDialog(
+    initialFilters: BookFilters,
+    onAccept: (BookFilters) -> Unit,
+    onDismiss: () -> Unit,
+    onClear: () -> Unit,
+) {
+    var title by remember { mutableStateOf(initialFilters.title ?: "") }
+    var author by remember { mutableStateOf(initialFilters.author ?: "") }
+    var selectedState by remember { mutableStateOf(initialFilters.state) }
+    var expanded by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .background(color_surface, shape = RoundedCornerShape(16.dp))
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.filter_dialog_title),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = color_on_surface,
+            )
+
+            OutlinedTextField(
+                value = title,
+                onValueChange = { title = it },
+                label = { Text(stringResource(R.string.filter_field_title), color = color_placeholder) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                colors = filterTextFieldColors(),
+            )
+
+            OutlinedTextField(
+                value = author,
+                onValueChange = { author = it },
+                label = { Text(stringResource(R.string.filter_field_author), color = color_placeholder) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                colors = filterTextFieldColors(),
+            )
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded },
+            ) {
+                OutlinedTextField(
+                    value = selectedState?.let { getBookStateString(it) } ?: stringResource(R.string.filter_all_states),
+                    onValueChange = {},
+                    label = { Text(stringResource(R.string.filter_field_state), color = color_placeholder) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    colors = filterTextFieldColors(),
+                    textStyle = TextStyle(
+                        color = if (selectedState == null) color_placeholder else color_on_surface,
+                    ),
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.background(color_surface_variant),
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.filter_all_states), color = color_on_surface) },
+                        onClick = {
+                            selectedState = null
+                            expanded = false
+                        },
+                    )
+                    BookState.entries.forEach { state ->
+                        DropdownMenuItem(
+                            text = { Text(getBookStateString(state), color = color_on_surface) },
+                            onClick = {
+                                selectedState = state
+                                expanded = false
+                            },
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = if (initialFilters.hasValues()) {
+                    Arrangement.SpaceBetween
+                } else {
+                    Arrangement.End
+                },
+            ) {
+                if (initialFilters.hasValues()) {
+                    TextButton(onClick = onClear) {
+                        Text(stringResource(R.string.filter_clear), color = color_primary)
+                    }
+                }
+                Row {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.filter_cancel), color = color_on_surface_variant)
+                    }
+                    TextButton(
+                        onClick = {
+                            onAccept(
+                                BookFilters(
+                                    title = title.takeIf { it.isNotBlank() },
+                                    author = author.takeIf { it.isNotBlank() },
+                                    state = selectedState,
+                                )
+                            )
+                        },
+                    ) {
+                        Text(stringResource(R.string.filter_accept), color = color_primary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun filterTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = color_on_surface,
+    unfocusedTextColor = color_on_surface,
+    focusedLabelColor = color_placeholder,
+    unfocusedLabelColor = color_placeholder,
+    focusedBorderColor = color_on_surface_variant,
+    unfocusedBorderColor = color_on_surface_variant,
+    cursorColor = color_primary,
+)
+
+private fun BookFilters.hasValues(): Boolean =
+    !title.isNullOrBlank() || !author.isNullOrBlank() || state != null
+
+@Composable
+private fun getBookStateString(state: BookState): String {
+    return when (state) {
+        BookState.IN_PROGRESS -> stringResource(R.string.book_state_in_progress)
+        BookState.COMPLETED -> stringResource(R.string.book_state_completed)
+        BookState.DROPPED -> stringResource(R.string.book_state_dropped)
+        BookState.PAUSED -> stringResource(R.string.book_state_paused)
+    }
 }
 
 @Composable

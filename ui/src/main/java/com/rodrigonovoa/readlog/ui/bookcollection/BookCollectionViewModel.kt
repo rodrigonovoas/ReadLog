@@ -2,6 +2,7 @@ package com.rodrigonovoa.readlog.ui.bookcollection
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rodrigonovoa.readlog.domain.model.BookFilters
 import com.rodrigonovoa.readlog.domain.model.User
 import com.rodrigonovoa.readlog.domain.usecase.ClaimUsernameResult
 import com.rodrigonovoa.readlog.domain.usecase.ClaimUsernameUseCase
@@ -53,12 +54,36 @@ class BookCollectionViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            getBooksUseCase().collect { bookList ->
+            getBooksUseCase(_uiState.value.bookFilters).collect { bookList ->
                 _uiState.value = _uiState.value.copy(books = bookList)
             }
         }
         buildGreeting()
         refreshUserDataIfOnline()
+    }
+
+    fun onFilterClick() {
+        _uiState.value = _uiState.value.copy(showFilterDialog = true)
+    }
+
+    fun onFilterAccepted(filters: BookFilters) {
+        _uiState.value = _uiState.value.copy(
+            bookFilters = filters,
+            showFilterDialog = false,
+        )
+        viewModelScope.launch {
+            getBooksUseCase(filters).collect { bookList ->
+                _uiState.value = _uiState.value.copy(books = bookList)
+            }
+        }
+    }
+
+    fun dismissFilterDialog() {
+        _uiState.value = _uiState.value.copy(showFilterDialog = false)
+    }
+
+    fun clearFilters() {
+        onFilterAccepted(BookFilters())
     }
 
     private fun refreshUserDataIfOnline() {

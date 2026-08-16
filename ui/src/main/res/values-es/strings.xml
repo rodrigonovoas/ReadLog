@@ -143,4 +143,14 @@
     <string name="language_english">Inglés</string>
     <string name="language_spanish">Español</string>
     <string name="downloading_label">Descargando…</string>
+    <string name="menu_search_users">Buscar usuarios</string>
+    <string name="filter_dialog_title">Filtrar libros</string>
+    <string name="filter_field_title">Título del libro</string>
+    <string name="filter_field_author">Autor</string>
+    <string name="filter_field_state">Estado</string>
+    <string name="filter_accept">Aceptar</string>
+    <string name="filter_cancel">Cancelar</string>
+    <string name="filter_clear">Borrar</string>
+    <string name="filter_all_states">Todos</string>
+    <string name="book_collection_filter_icon_content_description">Filtrar libros</string>
 </resources>

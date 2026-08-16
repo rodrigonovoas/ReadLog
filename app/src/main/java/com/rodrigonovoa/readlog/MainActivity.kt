@@ -134,9 +134,13 @@ class MainActivity : AppCompatActivity() {
                             onLanguageSelected = { languageTag ->
                                 AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageTag))
                             },
-                            onSearchClick = { navController.navigate("userSearch") },
+                            onSearchUsersClick = { navController.navigate("userSearch") },
                             onUsernameChange = viewModel::onUsernameChanged,
                             onUsernameConfirm = viewModel::onUsernameConfirmClicked,
+                            onFilterClick = viewModel::onFilterClick,
+                            onFilterAccepted = viewModel::onFilterAccepted,
+                            onFilterDismissed = viewModel::dismissFilterDialog,
+                            onFilterCleared = viewModel::clearFilters,
                         )
                     }
                     composable(
