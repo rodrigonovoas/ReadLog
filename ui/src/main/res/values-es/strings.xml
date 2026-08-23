@@ -82,6 +82,9 @@
     <string name="book_session_annotation_placeholder">¿Algo que anotar sobre esta sesión?</string>
     <string name="book_session_comment_content_description">Añadir anotación</string>
     <string name="book_session_add_manual_time_content_description">Añadir tiempo manual</string>
+    <string name="book_session_tab_timer">Cronómetro</string>
+    <string name="book_session_tab_manual">Manual</string>
+    <string name="book_session_save_button">Guardar sesión</string>
     <string name="book_session_annotation_dialog_title">Anotaciones</string>
     <string name="book_session_annotation_dialog_placeholder">¿Qué quieres recordar de esta sesión?</string>
     <string name="book_session_annotation_dialog_cancel">Cancelar</string>

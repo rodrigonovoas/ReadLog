@@ -426,22 +426,18 @@ class BookSessionViewModelTest {
 
     @Test
     fun `confirming manual time with zero hours and minutes then ending the session discards it`() = runTest {
-        viewModel.processIntent(
-            BookSessionIntent.OnConfirmManualTimeClicked(
-                hours = 0,
-                minutes = 0,
-                dateMillis = 1_700_000_000_000L,
-            )
-        )
+        viewModel.processIntent(BookSessionIntent.OnModeSelected(BookSessionMode.Manual))
         advanceUntilIdle()
 
-        viewModel.processIntent(BookSessionIntent.OnStopClicked)
+        viewModel.processIntent(BookSessionIntent.OnManualHoursChanged("0"))
+        viewModel.processIntent(BookSessionIntent.OnManualMinutesChanged("0"))
+        viewModel.processIntent(BookSessionIntent.OnManualDateChanged(1_700_000_000_000L))
         advanceUntilIdle()
 
         var effect: BookSessionEffect? = null
         val collectJob = launch { effect = viewModel.effect.first() }
 
-        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        viewModel.processIntent(BookSessionIntent.OnSaveManualTimeClicked)
         advanceUntilIdle()
         collectJob.join()
 
@@ -450,50 +446,36 @@ class BookSessionViewModelTest {
     }
 
     @Test
-    fun `confirming manual time updates elapsed seconds, date and pauses the timer`() = runTest {
+    fun `switching to manual mode pre-fills hours and minutes from elapsed seconds`() = runTest {
         viewModel.processIntent(BookSessionIntent.OnPlayPauseClicked)
         advanceTimeBy(2_000)
         runCurrent()
 
-        val manualDate = 1_700_000_000_000L
-        viewModel.processIntent(
-            BookSessionIntent.OnConfirmManualTimeClicked(
-                hours = 1,
-                minutes = 30,
-                dateMillis = manualDate,
-            )
-        )
+        viewModel.processIntent(BookSessionIntent.OnModeSelected(BookSessionMode.Manual))
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
-        assertEquals(5_400L, state.elapsedSeconds)
-        assertEquals(manualDate, state.sessionDate)
+        assertEquals(BookSessionMode.Manual, state.selectedMode)
+        assertEquals(0, state.manualHours)
+        assertEquals(0, state.manualMinutes)
         assertFalse(state.isRunning)
-
-        advanceTimeBy(3_000)
-        advanceUntilIdle()
-        assertEquals(5_400L, viewModel.uiState.value.elapsedSeconds)
     }
 
     @Test
-    fun `confirming end session after manual time entry saves the manual values`() = runTest {
+    fun `saving manual time entry saves the manual values`() = runTest {
         val manualDate = 1_700_000_000_000L
-        viewModel.processIntent(
-            BookSessionIntent.OnConfirmManualTimeClicked(
-                hours = 1,
-                minutes = 30,
-                dateMillis = manualDate,
-            )
-        )
+        viewModel.processIntent(BookSessionIntent.OnModeSelected(BookSessionMode.Manual))
         advanceUntilIdle()
 
-        viewModel.processIntent(BookSessionIntent.OnStopClicked)
+        viewModel.processIntent(BookSessionIntent.OnManualHoursChanged("1"))
+        viewModel.processIntent(BookSessionIntent.OnManualMinutesChanged("30"))
+        viewModel.processIntent(BookSessionIntent.OnManualDateChanged(manualDate))
         advanceUntilIdle()
 
         var effect: BookSessionEffect? = null
         val collectJob = launch { effect = viewModel.effect.first() }
 
-        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        viewModel.processIntent(BookSessionIntent.OnSaveManualTimeClicked)
         advanceUntilIdle()
         collectJob.join()
 

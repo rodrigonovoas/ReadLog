@@ -82,6 +82,9 @@
     <string name="book_session_annotation_placeholder">Anything to note about this session?</string>
     <string name="book_session_comment_content_description">Add annotation</string>
     <string name="book_session_add_manual_time_content_description">Add manual time</string>
+    <string name="book_session_tab_timer">Timer</string>
+    <string name="book_session_tab_manual">Manual</string>
+    <string name="book_session_save_button">Save session</string>
     <string name="book_session_annotation_dialog_title">Annotations</string>
     <string name="book_session_annotation_dialog_placeholder">What do you want to remember about this session?</string>
     <string name="book_session_annotation_dialog_cancel">Cancel</string>

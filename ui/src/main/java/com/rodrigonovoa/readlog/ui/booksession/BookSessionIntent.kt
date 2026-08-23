@@ -9,11 +9,11 @@ sealed interface BookSessionIntent {
     data object OnOpenAnnotationDialogClicked : BookSessionIntent
     data object OnDismissAnnotationDialogClicked : BookSessionIntent
     data class OnAnnotationTextChanged(val text: String) : BookSessionIntent
-    data class OnConfirmManualTimeClicked(
-        val hours: Int,
-        val minutes: Int,
-        val dateMillis: Long,
-    ) : BookSessionIntent
+    data class OnModeSelected(val mode: BookSessionMode) : BookSessionIntent
+    data class OnManualHoursChanged(val hours: String) : BookSessionIntent
+    data class OnManualMinutesChanged(val minutes: String) : BookSessionIntent
+    data class OnManualDateChanged(val dateMillis: Long) : BookSessionIntent
+    data object OnSaveManualTimeClicked : BookSessionIntent
     data object OnOpenPageDialogClicked : BookSessionIntent
     data object OnDismissPageDialogClicked : BookSessionIntent
     data class OnPageDialogInputChanged(val input: String) : BookSessionIntent

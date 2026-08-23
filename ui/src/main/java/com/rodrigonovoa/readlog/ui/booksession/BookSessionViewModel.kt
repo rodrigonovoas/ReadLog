@@ -116,15 +116,58 @@ class BookSessionViewModel @Inject constructor(
                     _uiState.update { it.copy(annotationText = intent.text) }
                 }
             }
-            is BookSessionIntent.OnConfirmManualTimeClicked -> {
-                pauseTimer()
+            is BookSessionIntent.OnModeSelected -> {
+                val currentMode = _uiState.value.selectedMode
+                if (currentMode == intent.mode) return
+                when (intent.mode) {
+                    BookSessionMode.Manual -> {
+                        pauseTimer()
+                        _uiState.update {
+                            it.copy(
+                                selectedMode = BookSessionMode.Manual,
+                                manualHours = (it.elapsedSeconds / 3600).toInt(),
+                                manualMinutes = ((it.elapsedSeconds % 3600) / 60).toInt(),
+                                manualDateMillis = it.sessionDate,
+                            )
+                        }
+                    }
+                    BookSessionMode.Timer -> {
+                        val state = _uiState.value
+                        _uiState.update {
+                            it.copy(
+                                selectedMode = BookSessionMode.Timer,
+                                elapsedSeconds = state.manualHours * 3600L + state.manualMinutes * 60L,
+                                sessionDate = state.manualDateMillis,
+                            )
+                        }
+                    }
+                }
+            }
+            is BookSessionIntent.OnManualHoursChanged -> {
+                val digitsOnly = intent.hours.filter { it.isDigit() }.take(2)
+                val parsed = digitsOnly.toIntOrNull() ?: 0
+                val capped = if (parsed > 23) 23 else parsed
+                _uiState.update { it.copy(manualHours = capped) }
+            }
+            is BookSessionIntent.OnManualMinutesChanged -> {
+                val digitsOnly = intent.minutes.filter { it.isDigit() }.take(2)
+                val parsed = digitsOnly.toIntOrNull() ?: 0
+                val capped = if (parsed > 59) 59 else parsed
+                _uiState.update { it.copy(manualMinutes = capped) }
+            }
+            is BookSessionIntent.OnManualDateChanged -> {
+                _uiState.update { it.copy(manualDateMillis = intent.dateMillis) }
+            }
+            is BookSessionIntent.OnSaveManualTimeClicked -> {
+                val state = _uiState.value
                 hasStartedTimer = true
                 _uiState.update {
                     it.copy(
-                        elapsedSeconds = intent.hours * 3600L + intent.minutes * 60L,
-                        sessionDate = intent.dateMillis,
+                        elapsedSeconds = state.manualHours * 3600L + state.manualMinutes * 60L,
+                        sessionDate = state.manualDateMillis,
                     )
                 }
+                saveSession()
             }
             is BookSessionIntent.OnOpenPageDialogClicked -> {
                 _uiState.update {

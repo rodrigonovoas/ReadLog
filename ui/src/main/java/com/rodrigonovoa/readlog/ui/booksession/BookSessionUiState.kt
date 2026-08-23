@@ -13,4 +13,8 @@ data class BookSessionUiState(
     val pendingPages: Int = 0,
     val showPageDialog: Boolean = false,
     val pageDialogInput: String = "",
+    val selectedMode: BookSessionMode = BookSessionMode.Timer,
+    val manualHours: Int = 0,
+    val manualMinutes: Int = 0,
+    val manualDateMillis: Long = System.currentTimeMillis(),
 )
