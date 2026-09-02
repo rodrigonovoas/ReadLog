@@ -172,6 +172,23 @@ class BookDetailViewModelTest {
     }
 
     @Test
+    fun `calendar day contains all sessions logged on that day`() = runTest {
+        val sessionDate = daysAgo(0)
+        val sessions = listOf(
+            Session(sessionId = 1, bookId = bookId, time = 120L, creationDate = sessionDate),
+            Session(sessionId = 2, bookId = bookId, time = 180L, creationDate = sessionDate + 1_000L),
+        )
+        coEvery { getBookByIdUseCase(bookId) } returns book()
+        coEvery { getSessionsForBookUseCase(bookId) } returns flowOf(sessions)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val day = Calendar.getInstance().apply { timeInMillis = sessionDate }.get(Calendar.DAY_OF_MONTH)
+        assertEquals(2, viewModel.uiState.value.monthDays.first { it.day == day }.sessions.size)
+    }
+
+    @Test
     fun `isLoading is true immediately after creation`() = runTest {
         coEvery { getBookByIdUseCase(bookId) } returns book()
         coEvery { getSessionsForBookUseCase(bookId) } returns flowOf(emptyList())

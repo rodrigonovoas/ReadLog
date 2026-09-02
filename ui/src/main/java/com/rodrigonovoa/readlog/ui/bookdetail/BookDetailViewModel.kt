@@ -39,6 +39,7 @@ class BookDetailViewModel @Inject constructor(
     private var bookLoaded = false
     private var sessionsLoaded = false
     private var allSessions: List<Session> = emptyList()
+    private var sessionDetails: List<BookDetailSessionWithDate> = emptyList()
 
     init {
         val today = Calendar.getInstance()
@@ -132,19 +133,23 @@ class BookDetailViewModel @Inject constructor(
     private suspend fun updateSessionData(sessions: List<Session>) {
         val sortedSessions = sessions.sortedByDescending { it.creationDate }
 
-        val recentSessions = sortedSessions.take(RECENT_SESSIONS_LIMIT).map { session ->
+        sessionDetails = sortedSessions.map { session ->
             val comment = getAnnotationsForSessionUseCase(session.sessionId)
                 .firstOrNull()
                 ?.annotation
-            BookDetailSession(
-                dateLabel = formatMillis(dayMonthFormat, session.creationDate),
-                dayLabel = formatMillis(weekdayFormat, session.creationDate).replaceFirstChar {
-                    it.uppercase(Locale.getDefault())
-                },
-                durationLabel = formatDuration(session.time),
-                comment = comment,
+            BookDetailSessionWithDate(
+                date = sessionDateKey(session.creationDate),
+                session = BookDetailSession(
+                    dateLabel = formatMillis(dayMonthFormat, session.creationDate),
+                    dayLabel = formatMillis(weekdayFormat, session.creationDate).replaceFirstChar {
+                        it.uppercase(Locale.getDefault())
+                    },
+                    durationLabel = formatDuration(session.time),
+                    comment = comment,
+                ),
             )
         }
+        val recentSessions = sessionDetails.take(RECENT_SESSIONS_LIMIT).map { it.session }
 
         _uiState.update {
             val year = it.selectedYear
@@ -218,13 +223,29 @@ class BookDetailViewModel @Inject constructor(
         }.toSet()
 
         return (1..daysInMonth).map { day ->
+            val dayKey = DateKey(year, month, day)
             val status = when {
                 isCurrentMonth && day == todayOfMonth -> BookDetailDayStatus.TODAY
                 day in readDays -> BookDetailDayStatus.READ
                 else -> BookDetailDayStatus.NONE
             }
-            BookDetailMonthDay(day = day, status = status)
+            BookDetailMonthDay(
+                day = day,
+                status = status,
+                sessions = sessionDetails
+                    .filter { it.date == dayKey }
+                    .map { it.session },
+            )
         }
+    }
+
+    private fun sessionDateKey(millis: Long): DateKey {
+        val calendar = Calendar.getInstance().apply { timeInMillis = millis }
+        return DateKey(
+            year = calendar.get(Calendar.YEAR),
+            month = calendar.get(Calendar.MONTH),
+            day = calendar.get(Calendar.DAY_OF_MONTH),
+        )
     }
 
     private fun formatDuration(totalSeconds: Long, minuteUnit: String = "min"): String {
@@ -244,5 +265,12 @@ class BookDetailViewModel @Inject constructor(
         val monthLabelFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
     }
 }
+
+private data class DateKey(val year: Int, val month: Int, val day: Int)
+
+private data class BookDetailSessionWithDate(
+    val date: DateKey,
+    val session: BookDetailSession,
+)
 
 private fun formatMillis(format: SimpleDateFormat, millis: Long): String = format.format(Date(millis))

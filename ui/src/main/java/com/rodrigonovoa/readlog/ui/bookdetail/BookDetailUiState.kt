@@ -25,6 +25,7 @@ enum class BookDetailDayStatus { NONE, READ, TODAY }
 data class BookDetailMonthDay(
     val day: Int,
     val status: BookDetailDayStatus = BookDetailDayStatus.NONE,
+    val sessions: List<BookDetailSession> = emptyList(),
 )
 
 data class BookDetailSession(

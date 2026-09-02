@@ -83,6 +83,7 @@ class BookSessionViewModelTest {
         assertFalse(state.showEndSessionDialog)
         assertFalse(state.showAnnotationDialog)
         assertEquals("", state.annotationText)
+        assertEquals(BookSessionStatus.NotStarted, state.sessionStatus)
     }
 
     @Test
@@ -101,6 +102,33 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
 
         assertEquals("Cien años de soledad", loadedViewModel.uiState.value.bookTitle)
+        assertFalse(loadedViewModel.uiState.value.isLoading)
+        assertFalse(loadedViewModel.uiState.value.loadError)
+    }
+
+    @Test
+    fun `missing book exposes error state and retry loads it`() = runTest {
+        val book = Book(
+            bookId = bookId,
+            title = "Cien años de soledad",
+            author = "Gabriel García Márquez",
+            genre = "Novel",
+            releaseDate = "1967",
+            numPages = 340,
+            currentPage = 231,
+        )
+        coEvery { getBookByIdUseCase(bookId) } returns null andThen book
+        val loadedViewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertTrue(loadedViewModel.uiState.value.loadError)
+
+        loadedViewModel.processIntent(BookSessionIntent.OnRetryLoadClicked)
+        advanceUntilIdle()
+
+        assertEquals(book.title, loadedViewModel.uiState.value.bookTitle)
+        assertFalse(loadedViewModel.uiState.value.loadError)
+        assertFalse(loadedViewModel.uiState.value.isLoading)
     }
 
     @Test
@@ -109,6 +137,7 @@ class BookSessionViewModelTest {
         runCurrent()
 
         assertTrue(viewModel.uiState.value.isRunning)
+        assertEquals(BookSessionStatus.Reading, viewModel.uiState.value.sessionStatus)
 
         advanceTimeBy(3_000)
         runCurrent()
@@ -130,6 +159,7 @@ class BookSessionViewModelTest {
 
         val elapsedAfterPause = viewModel.uiState.value.elapsedSeconds
         assertFalse(viewModel.uiState.value.isRunning)
+        assertEquals(BookSessionStatus.Paused, viewModel.uiState.value.sessionStatus)
 
         advanceTimeBy(3_000)
         advanceUntilIdle()
@@ -179,7 +209,11 @@ class BookSessionViewModelTest {
     @Test
     fun `back without starting the timer emits NavigateBack directly without showing the dialog`() = runTest {
         var effect: BookSessionEffect? = null
-        val collectJob = launch { effect = viewModel.effect.first() }
+        val collectJob = launch {
+            effect = viewModel.effect.first {
+                it is BookSessionEffect.NavigateBack || it is BookSessionEffect.NavigateBackWithSnackbar
+            }
+        }
 
         viewModel.processIntent(BookSessionIntent.OnBackClicked)
         advanceUntilIdle()
@@ -255,9 +289,13 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
 
         var effect: BookSessionEffect? = null
-        val collectJob = launch { effect = viewModel.effect.first() }
+        val collectJob = launch {
+            effect = viewModel.effect.first {
+                it is BookSessionEffect.NavigateBack || it is BookSessionEffect.NavigateBackWithSnackbar
+            }
+        }
 
-        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        viewModel.processIntent(BookSessionIntent.OnDiscardSessionClicked)
         advanceUntilIdle()
         collectJob.join()
 
@@ -353,15 +391,19 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
 
         var effect: BookSessionEffect? = null
-        val collectJob = launch { effect = viewModel.effect.first() }
+        val collectJob = launch {
+            effect = viewModel.effect.first {
+                it is BookSessionEffect.NavigateBack || it is BookSessionEffect.NavigateBackWithSnackbar
+            }
+        }
 
-        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        viewModel.processIntent(BookSessionIntent.OnSaveAndFinishSessionClicked)
         advanceUntilIdle()
         collectJob.join()
 
         coVerify { addSessionUseCase(bookId, 4L, any()) }
         coVerify { refreshUserProfileIfOnlineUseCase() }
-        assertEquals(BookSessionEffect.NavigateBack, effect)
+        assertTrue(effect is BookSessionEffect.NavigateBackWithSnackbar)
         assertFalse(viewModel.uiState.value.showEndSessionDialog)
     }
 
@@ -379,14 +421,18 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
 
         var effect: BookSessionEffect? = null
-        val collectJob = launch { effect = viewModel.effect.first() }
+        val collectJob = launch {
+            effect = viewModel.effect.first {
+                it is BookSessionEffect.NavigateBack || it is BookSessionEffect.NavigateBackWithSnackbar
+            }
+        }
 
-        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        viewModel.processIntent(BookSessionIntent.OnSaveAndFinishSessionClicked)
         advanceUntilIdle()
         collectJob.join()
 
         coVerify { addAnnotationUseCase(42, "Great chapter") }
-        assertEquals(BookSessionEffect.NavigateBack, effect)
+        assertTrue(effect is BookSessionEffect.NavigateBackWithSnackbar)
     }
 
     @Test
@@ -395,9 +441,13 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
 
         var effect: BookSessionEffect? = null
-        val collectJob = launch { effect = viewModel.effect.first() }
+        val collectJob = launch {
+            effect = viewModel.effect.first {
+                it is BookSessionEffect.NavigateBack || it is BookSessionEffect.NavigateBackWithSnackbar
+            }
+        }
 
-        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        viewModel.processIntent(BookSessionIntent.OnSaveAndFinishSessionClicked)
         advanceUntilIdle()
         collectJob.join()
 
@@ -411,9 +461,13 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
 
         var effect: BookSessionEffect? = null
-        val collectJob = launch { effect = viewModel.effect.first() }
+        val collectJob = launch {
+            effect = viewModel.effect.first {
+                it is BookSessionEffect.NavigateBack || it is BookSessionEffect.NavigateBackWithSnackbar
+            }
+        }
 
-        viewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        viewModel.processIntent(BookSessionIntent.OnSaveAndFinishSessionClicked)
         advanceUntilIdle()
         collectJob.join()
 
@@ -435,7 +489,11 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
 
         var effect: BookSessionEffect? = null
-        val collectJob = launch { effect = viewModel.effect.first() }
+        val collectJob = launch {
+            effect = viewModel.effect.first {
+                it is BookSessionEffect.NavigateBack || it is BookSessionEffect.NavigateBackWithSnackbar
+            }
+        }
 
         viewModel.processIntent(BookSessionIntent.OnSaveManualTimeClicked)
         advanceUntilIdle()
@@ -473,14 +531,30 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
 
         var effect: BookSessionEffect? = null
-        val collectJob = launch { effect = viewModel.effect.first() }
+        val collectJob = launch {
+            effect = viewModel.effect.first {
+                it is BookSessionEffect.NavigateBack || it is BookSessionEffect.NavigateBackWithSnackbar
+            }
+        }
 
         viewModel.processIntent(BookSessionIntent.OnSaveManualTimeClicked)
         advanceUntilIdle()
         collectJob.join()
 
         coVerify { addSessionUseCase(bookId, 5_400L, manualDate) }
-        assertEquals(BookSessionEffect.NavigateBack, effect)
+        assertTrue(effect is BookSessionEffect.NavigateBackWithSnackbar)
+    }
+
+    @Test
+    fun `changing manual date updates the header session date immediately`() = runTest {
+        val manualDate = 1_700_000_000_000L
+
+        viewModel.processIntent(BookSessionIntent.OnModeSelected(BookSessionMode.Manual))
+        viewModel.processIntent(BookSessionIntent.OnManualDateChanged(manualDate))
+        advanceUntilIdle()
+
+        assertEquals(manualDate, viewModel.uiState.value.sessionDate)
+        assertEquals(manualDate, viewModel.uiState.value.manualDateMillis)
     }
 
     @Test
@@ -639,9 +713,13 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
 
         var effect: BookSessionEffect? = null
-        val collectJob = launch { effect = loadedViewModel.effect.first() }
+        val collectJob = launch {
+            effect = loadedViewModel.effect.first {
+                it is BookSessionEffect.NavigateBack || it is BookSessionEffect.NavigateBackWithSnackbar
+            }
+        }
 
-        loadedViewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        loadedViewModel.processIntent(BookSessionIntent.OnSaveAndFinishSessionClicked)
         advanceUntilIdle()
         collectJob.join()
 
@@ -655,7 +733,7 @@ class BookSessionViewModelTest {
                 state = book.state,
             )
         }
-        assertEquals(BookSessionEffect.NavigateBack, effect)
+        assertTrue(effect is BookSessionEffect.NavigateBackWithSnackbar)
     }
 
     @Test
@@ -678,7 +756,7 @@ class BookSessionViewModelTest {
         loadedViewModel.processIntent(BookSessionIntent.OnStopClicked)
         advanceUntilIdle()
 
-        loadedViewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        loadedViewModel.processIntent(BookSessionIntent.OnSaveAndFinishSessionClicked)
         advanceUntilIdle()
 
         coVerify {
@@ -714,9 +792,13 @@ class BookSessionViewModelTest {
         advanceUntilIdle()
 
         var effect: BookSessionEffect? = null
-        val collectJob = launch { effect = loadedViewModel.effect.first() }
+        val collectJob = launch {
+            effect = loadedViewModel.effect.first {
+                it is BookSessionEffect.NavigateBack || it is BookSessionEffect.NavigateBackWithSnackbar
+            }
+        }
 
-        loadedViewModel.processIntent(BookSessionIntent.OnConfirmEndSessionClicked)
+        loadedViewModel.processIntent(BookSessionIntent.OnSaveAndFinishSessionClicked)
         advanceUntilIdle()
         collectJob.join()
 
@@ -731,6 +813,6 @@ class BookSessionViewModelTest {
                 state = book.state,
             )
         }
-        assertEquals(BookSessionEffect.NavigateBack, effect)
+        assertTrue(effect is BookSessionEffect.NavigateBackWithSnackbar)
     }
 }

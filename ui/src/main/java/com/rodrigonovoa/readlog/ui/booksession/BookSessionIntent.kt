@@ -4,8 +4,10 @@ sealed interface BookSessionIntent {
     data object OnPlayPauseClicked : BookSessionIntent
     data object OnStopClicked : BookSessionIntent
     data object OnBackClicked : BookSessionIntent
-    data object OnConfirmEndSessionClicked : BookSessionIntent
+    data object OnDiscardSessionClicked : BookSessionIntent
+    data object OnSaveAndFinishSessionClicked : BookSessionIntent
     data object OnDismissEndSessionDialogClicked : BookSessionIntent
+    data object OnRetryLoadClicked : BookSessionIntent
     data object OnOpenAnnotationDialogClicked : BookSessionIntent
     data object OnDismissAnnotationDialogClicked : BookSessionIntent
     data class OnAnnotationTextChanged(val text: String) : BookSessionIntent

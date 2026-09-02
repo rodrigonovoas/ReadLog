@@ -2,8 +2,11 @@ package com.rodrigonovoa.readlog.ui.booksession
 
 data class BookSessionUiState(
     val bookTitle: String = "",
+    val isLoading: Boolean = true,
+    val loadError: Boolean = false,
     val elapsedSeconds: Long = 0L,
     val isRunning: Boolean = false,
+    val sessionStatus: BookSessionStatus = BookSessionStatus.NotStarted,
     val showEndSessionDialog: Boolean = false,
     val showAnnotationDialog: Boolean = false,
     val annotationText: String = "",

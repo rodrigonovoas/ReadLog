@@ -34,6 +34,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -74,7 +75,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.rodrigonovoa.readlog.ui.R
-import com.rodrigonovoa.readlog.ui.common.ConfirmationDialog
 import com.rodrigonovoa.readlog.ui.theme.ReadLogTheme
 import com.rodrigonovoa.readlog.ui.theme.color_chip
 import com.rodrigonovoa.readlog.ui.theme.color_on_surface
@@ -140,132 +140,143 @@ fun BookSessionScreen(
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing.exclude(WindowInsets.navigationBars)),
         ) {
-            SessionHeader(
-                bookTitle = uiState.bookTitle,
-                sessionDateLabel = formatSessionDate(uiState.sessionDate),
-                onBackClick = { onIntent(BookSessionIntent.OnBackClicked) },
-            )
+            when {
+                uiState.isLoading -> LoadingContent()
+                uiState.loadError -> ErrorContent(
+                    onRetry = { onIntent(BookSessionIntent.OnRetryLoadClicked) },
+                    onBack = { onIntent(BookSessionIntent.OnBackClicked) },
+                )
+                else -> {
+                    SessionHeader(
+                        bookTitle = uiState.bookTitle,
+                        sessionDateLabel = formatSessionDate(uiState.sessionDate),
+                        currentPage = uiState.currentPage,
+                        pendingPages = uiState.pendingPages,
+                        totalPages = uiState.totalPages,
+                        onBackClick = { onIntent(BookSessionIntent.OnBackClicked) },
+                    )
 
-            SessionModeSelector(
-                selectedMode = uiState.selectedMode,
-                onModeSelected = { onIntent(BookSessionIntent.OnModeSelected(it)) },
-                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-            )
+                    SessionModeSelector(
+                        selectedMode = uiState.selectedMode,
+                        onModeSelected = { onIntent(BookSessionIntent.OnModeSelected(it)) },
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                    )
 
-            when (uiState.selectedMode) {
-                BookSessionMode.Timer -> {
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.book_session_reading_time_label)
-                                .uppercase(),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            letterSpacing = 1.sp,
-                            color = color_on_surface_variant,
-                        )
-                        Text(
-                            text = formatElapsedTime(uiState.elapsedSeconds),
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 64.sp,
-                            color = color_on_surface,
-                            modifier = Modifier.padding(top = 10.dp),
-                        )
-                        SessionWaveform(modifier = Modifier.padding(top = 10.dp))
-
-                        Row(
-                            modifier = Modifier.padding(top = 26.dp),
-                            horizontalArrangement = Arrangement.spacedBy(22.dp),
-                            verticalAlignment = Alignment.Top,
-                        ) {
-                            SessionActionButton(
-                                label = stringResource(R.string.book_session_stop),
-                                buttonSize = 52.dp,
-                                containerColor = Color.White.copy(alpha = 0.6f),
-                                onClick = { onIntent(BookSessionIntent.OnStopClicked) },
+                    when (uiState.selectedMode) {
+                        BookSessionMode.Timer -> {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(12.dp)
-                                        .clip(RoundedCornerShape(2.dp))
-                                        .background(color_on_surface),
+                                Text(
+                                    text = stringResource(R.string.book_session_reading_time_label)
+                                        .uppercase(),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    letterSpacing = 1.sp,
+                                    color = color_on_surface_variant,
                                 )
-                            }
-                            SessionActionButton(
-                                label = stringResource(
-                                    if (uiState.isRunning) R.string.book_session_pause else R.string.book_session_play
-                                ),
-                                buttonSize = 76.dp,
-                                containerColor = color_primary,
-                                elevated = true,
-                                onClick = { onIntent(BookSessionIntent.OnPlayPauseClicked) },
-                            ) {
-                                if (uiState.isRunning) {
-                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                SessionStatusLabel(status = uiState.sessionStatus)
+                                Text(
+                                    text = formatElapsedTime(uiState.elapsedSeconds),
+                                    fontFamily = FontFamily.Serif,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 64.sp,
+                                    color = color_on_surface,
+                                    modifier = Modifier.padding(top = 10.dp),
+                                )
+                                SessionWaveform(modifier = Modifier.padding(top = 10.dp))
+
+                                Row(
+                                    modifier = Modifier.padding(top = 26.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(22.dp),
+                                    verticalAlignment = Alignment.Top,
+                                ) {
+                                    SessionActionButton(
+                                        label = stringResource(R.string.book_session_stop),
+                                        buttonSize = 52.dp,
+                                        containerColor = Color.White.copy(alpha = 0.6f),
+                                        onClick = { onIntent(BookSessionIntent.OnStopClicked) },
+                                    ) {
                                         Box(
                                             modifier = Modifier
-                                                .width(4.dp)
-                                                .height(14.dp)
-                                                .clip(RoundedCornerShape(1.5.dp))
-                                                .background(color_surface),
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .width(4.dp)
-                                                .height(14.dp)
-                                                .clip(RoundedCornerShape(1.5.dp))
-                                                .background(color_surface),
+                                                .size(12.dp)
+                                                .clip(RoundedCornerShape(2.dp))
+                                                .background(color_on_surface),
                                         )
                                     }
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.PlayArrow,
-                                        contentDescription = null,
-                                        tint = color_surface,
-                                        modifier = Modifier.size(28.dp),
-                                    )
+                                    SessionActionButton(
+                                        label = stringResource(
+                                            if (uiState.isRunning) R.string.book_session_pause else R.string.book_session_play
+                                        ),
+                                        buttonSize = 76.dp,
+                                        containerColor = color_primary,
+                                        elevated = true,
+                                        onClick = { onIntent(BookSessionIntent.OnPlayPauseClicked) },
+                                    ) {
+                                        if (uiState.isRunning) {
+                                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .width(4.dp)
+                                                        .height(14.dp)
+                                                        .clip(RoundedCornerShape(1.5.dp))
+                                                        .background(color_surface),
+                                                )
+                                                Box(
+                                                    modifier = Modifier
+                                                        .width(4.dp)
+                                                        .height(14.dp)
+                                                        .clip(RoundedCornerShape(1.5.dp))
+                                                        .background(color_surface),
+                                                )
+                                            }
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Default.PlayArrow,
+                                                contentDescription = null,
+                                                tint = color_surface,
+                                                modifier = Modifier.size(28.dp),
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
+                        BookSessionMode.Manual -> {
+                            ManualTimeEntryContent(
+                                hours = uiState.manualHours,
+                                minutes = uiState.manualMinutes,
+                                dateMillis = uiState.manualDateMillis,
+                                onHoursChanged = { onIntent(BookSessionIntent.OnManualHoursChanged(it)) },
+                                onMinutesChanged = { onIntent(BookSessionIntent.OnManualMinutesChanged(it)) },
+                                onDateChanged = { onIntent(BookSessionIntent.OnManualDateChanged(it)) },
+                                onSaveClick = { onIntent(BookSessionIntent.OnSaveManualTimeClicked) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
-                }
-                BookSessionMode.Manual -> {
-                    ManualTimeEntryContent(
-                        hours = uiState.manualHours,
-                        minutes = uiState.manualMinutes,
-                        dateMillis = uiState.manualDateMillis,
-                        onHoursChanged = { onIntent(BookSessionIntent.OnManualHoursChanged(it)) },
-                        onMinutesChanged = { onIntent(BookSessionIntent.OnManualMinutesChanged(it)) },
-                        onDateChanged = { onIntent(BookSessionIntent.OnManualDateChanged(it)) },
-                        onSaveClick = { onIntent(BookSessionIntent.OnSaveManualTimeClicked) },
-                        modifier = Modifier.weight(1f),
+
+                    SessionActionsSheet(
+                        annotationText = uiState.annotationText,
+                        onOpenAnnotationDialogClick = { onIntent(BookSessionIntent.OnOpenAnnotationDialogClicked) },
+                        onOpenPageDialogClick = { onIntent(BookSessionIntent.OnOpenPageDialogClicked) },
                     )
                 }
             }
-
-            SessionActionsSheet(
-                annotationText = uiState.annotationText,
-                onOpenAnnotationDialogClick = { onIntent(BookSessionIntent.OnOpenAnnotationDialogClicked) },
-                onOpenPageDialogClick = { onIntent(BookSessionIntent.OnOpenPageDialogClicked) },
-            )
         }
     }
 
     if (uiState.showEndSessionDialog) {
-        ConfirmationDialog(
+        EndSessionDialog(
             title = stringResource(R.string.book_session_end_dialog_title),
             message = stringResource(R.string.book_session_end_dialog_message),
-            confirmLabel = stringResource(R.string.book_session_end_dialog_yes),
-            dismissLabel = stringResource(R.string.book_session_end_dialog_no),
-            onDismiss = { onIntent(BookSessionIntent.OnDismissEndSessionDialogClicked) },
-            onConfirm = { onIntent(BookSessionIntent.OnConfirmEndSessionClicked) },
-            useAccentConfirmButton = false,
+            onDiscard = { onIntent(BookSessionIntent.OnDiscardSessionClicked) },
+            onSaveAndFinish = { onIntent(BookSessionIntent.OnSaveAndFinishSessionClicked) },
+            onKeepReading = { onIntent(BookSessionIntent.OnDismissEndSessionDialogClicked) },
         )
     }
 
@@ -302,9 +313,105 @@ private fun formatSessionDate(millis: Long): String =
     SimpleDateFormat("d MMM", Locale.getDefault()).format(Date(millis))
 
 @Composable
+private fun LoadingContent() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        CircularProgressIndicator(color = color_primary)
+        Text(
+            text = stringResource(R.string.book_session_loading),
+            modifier = Modifier.padding(top = 16.dp),
+            fontSize = 14.sp,
+            color = color_on_surface_variant,
+        )
+    }
+}
+
+@Composable
+private fun ErrorContent(
+    onRetry: () -> Unit,
+    onBack: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.book_session_error_load),
+            fontFamily = FontFamily.Serif,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 20.sp,
+            color = color_on_surface,
+            textAlign = TextAlign.Center,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            TextButton(
+                onClick = onBack,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.textButtonColors(contentColor = color_on_surface_variant),
+            ) {
+                Text(stringResource(R.string.book_session_back_content_description))
+            }
+            Button(
+                onClick = onRetry,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = color_primary,
+                    contentColor = color_surface,
+                ),
+            ) {
+                Text(stringResource(R.string.book_session_retry))
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionStatusLabel(status: BookSessionStatus) {
+    val statusLabel = when (status) {
+        BookSessionStatus.NotStarted -> stringResource(R.string.book_session_status_ready)
+        BookSessionStatus.Reading -> stringResource(R.string.book_session_status_reading)
+        BookSessionStatus.Paused -> stringResource(R.string.book_session_status_paused)
+    }
+    Row(
+        modifier = Modifier.padding(top = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(7.dp)
+                .clip(CircleShape)
+                .background(
+                    if (status == BookSessionStatus.Reading) color_primary else color_on_surface_variant,
+                ),
+        )
+        Text(
+            text = statusLabel,
+            modifier = Modifier.padding(start = 6.dp),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = color_on_surface_variant,
+        )
+    }
+}
+
+@Composable
 private fun SessionHeader(
     bookTitle: String,
     sessionDateLabel: String,
+    currentPage: Int,
+    pendingPages: Int,
+    totalPages: Int,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -331,22 +438,38 @@ private fun SessionHeader(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
-            Text(
-                text = bookTitle,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = color_on_surface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = sessionDateLabel,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                color = color_on_surface_variant,
-                maxLines = 1,
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = bookTitle,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = color_on_surface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = sessionDateLabel,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = color_on_surface_variant,
+                    maxLines = 1,
+                )
+            }
+            if (totalPages > 0) {
+                val displayPage = (currentPage + pendingPages).coerceAtMost(totalPages)
+                Text(
+                    text = stringResource(R.string.book_session_page_progress, displayPage, totalPages),
+                    modifier = Modifier.padding(start = 16.dp),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = color_on_surface_variant,
+                )
+            }
         }
     }
 }
@@ -740,6 +863,7 @@ private fun SessionActionsSheet(
             .navigationBarsPadding()
             .padding(start = 24.dp, top = 18.dp, end = 24.dp, bottom = 26.dp),
     ) {
+        val hasAnnotation = annotationText.isNotBlank()
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -747,39 +871,140 @@ private fun SessionActionsSheet(
         ) {
             val updatePagesContentDescription =
                 stringResource(R.string.book_session_update_pages_content_description)
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.55f))
-                    .clickable(onClick = onOpenPageDialogClick)
-                    .semantics { contentDescription = updatePagesContentDescription },
-                contentAlignment = Alignment.Center,
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                    contentDescription = null,
-                    tint = color_on_surface,
-                    modifier = Modifier.size(18.dp),
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.55f))
+                        .clickable(onClick = onOpenPageDialogClick)
+                        .semantics { contentDescription = updatePagesContentDescription },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                        contentDescription = null,
+                        tint = color_on_surface,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.book_session_pages_action),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = color_on_surface_variant,
                 )
             }
 
-            val hasAnnotation = annotationText.isNotBlank()
             val commentContentDescription =
                 stringResource(R.string.book_session_comment_content_description)
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.55f))
-                    .clickable(onClick = onOpenAnnotationDialogClick)
-                    .semantics { contentDescription = commentContentDescription },
-                contentAlignment = Alignment.Center,
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                CommentIcon(
-                    tint = if (hasAnnotation) color_primary else color_on_surface,
-                    modifier = Modifier.size(16.dp),
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.55f))
+                        .clickable(onClick = onOpenAnnotationDialogClick)
+                        .semantics { contentDescription = commentContentDescription },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CommentIcon(
+                        tint = if (hasAnnotation) color_primary else color_on_surface,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.book_session_note_action),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = color_on_surface_variant,
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EndSessionDialog(
+    title: String,
+    message: String,
+    onDiscard: () -> Unit,
+    onSaveAndFinish: () -> Unit,
+    onKeepReading: () -> Unit,
+) {
+    Dialog(onDismissRequest = onKeepReading) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = color_surface,
+            modifier = Modifier.widthIn(max = 320.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(start = 24.dp, top = 28.dp, end = 24.dp, bottom = 22.dp),
+            ) {
+                Text(
+                    text = title,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp,
+                    color = color_on_surface,
+                )
+                Text(
+                    text = message,
+                    modifier = Modifier.padding(top = 18.dp),
+                    fontSize = 14.sp,
+                    color = color_on_surface_variant,
+                    lineHeight = 20.sp,
+                )
+                Button(
+                    onClick = onSaveAndFinish,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = color_primary,
+                        contentColor = color_surface,
+                    ),
+                ) {
+                    Text(
+                        text = stringResource(R.string.book_session_save_and_finish),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                TextButton(
+                    onClick = onKeepReading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.textButtonColors(contentColor = color_on_surface_variant),
+                ) {
+                    Text(
+                        text = stringResource(R.string.book_session_end_dialog_keep_reading),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                TextButton(
+                    onClick = onDiscard,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.textButtonColors(contentColor = color_on_surface_variant),
+                ) {
+                    Text(
+                        text = stringResource(R.string.book_session_discard_session),
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
     }

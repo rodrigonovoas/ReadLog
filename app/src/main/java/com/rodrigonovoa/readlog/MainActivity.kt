@@ -7,16 +7,24 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.core.os.LocaleListCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import java.util.Locale
+import kotlinx.coroutines.launch
 import com.rodrigonovoa.readlog.domain.usecase.IsUserSignedInUseCase
 import com.rodrigonovoa.readlog.ui.addbook.AddBookEffect
 import com.rodrigonovoa.readlog.ui.addbook.AddBookIntent
@@ -57,11 +65,22 @@ class MainActivity : AppCompatActivity() {
         setContent {
             ReadLogTheme {
                 val navController = rememberNavController()
+                val snackbarHostState = remember { SnackbarHostState() }
+                val snackbarScope = rememberCoroutineScope()
 
-                NavHost(
-                    navController = navController,
-                    startDestination = startDestination,
+                Scaffold(
+                    snackbarHost = {
+                        SnackbarHost(
+                            hostState = snackbarHostState,
+                            modifier = Modifier.navigationBarsPadding(),
+                        )
+                    },
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 ) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = startDestination,
+                    ) {
                     composable("login") {
                         val viewModel: LoginViewModel = hiltViewModel()
                         val state by viewModel.uiState.collectAsState()
@@ -212,6 +231,12 @@ class MainActivity : AppCompatActivity() {
                                     is BookSessionEffect.NavigateBack -> {
                                         navController.popBackStack()
                                     }
+                                    is BookSessionEffect.NavigateBackWithSnackbar -> {
+                                        navController.popBackStack()
+                                        snackbarScope.launch {
+                                            snackbarHostState.showSnackbar(getString(effect.messageResId))
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -278,6 +303,7 @@ class MainActivity : AppCompatActivity() {
                             state = state,
                             onIntent = viewModel::processIntent,
                         )
+                    }
                     }
                 }
             }

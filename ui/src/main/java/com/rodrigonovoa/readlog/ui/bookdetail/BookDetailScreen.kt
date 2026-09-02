@@ -23,8 +23,14 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +56,8 @@ import com.rodrigonovoa.readlog.ui.theme.color_secondary
 import com.rodrigonovoa.readlog.ui.theme.color_surface
 import com.rodrigonovoa.readlog.ui.theme.color_surface_variant
 import com.rodrigonovoa.readlog.ui.theme.color_track
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.clickable
 
 @Composable
 fun BookDetailScreen(
@@ -278,28 +286,73 @@ private fun MonthCalendar(
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun MonthDayCell(
     monthDay: BookDetailMonthDay,
     modifier: Modifier = Modifier,
 ) {
+    val tooltipState = rememberTooltipState(isPersistent = true)
+    val coroutineScope = rememberCoroutineScope()
     val (boxColor, textColor) = when (monthDay.status) {
         BookDetailDayStatus.READ -> color_primary to color_surface
         BookDetailDayStatus.TODAY -> color_secondary to color_surface
         BookDetailDayStatus.NONE -> color_track to color_on_surface_variant
     }
-    Box(
-        modifier = modifier
-            .size(26.dp)
-            .clip(RoundedCornerShape(6.dp))
-            .background(boxColor),
-        contentAlignment = Alignment.Center,
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+        tooltip = {
+            PlainTooltip {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    monthDay.sessions.forEach { session ->
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                text = "${session.dateLabel} · ${session.dayLabel}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            Text(
+                                text = session.durationLabel,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            session.comment?.takeIf { it.isNotBlank() }?.let { comment ->
+                                Text(
+                                    text = comment,
+                                    fontSize = 12.sp,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        state = tooltipState,
     ) {
-        Text(
-            text = monthDay.day.toString(),
-            fontSize = 9.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = textColor,
-        )
+        Box(
+            modifier = modifier
+                .size(26.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(boxColor)
+                .then(
+                    if (monthDay.sessions.isNotEmpty()) {
+                        Modifier.clickable {
+                            coroutineScope.launch { tooltipState.show() }
+                        }
+                    } else {
+                        Modifier
+                    },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = monthDay.day.toString(),
+                fontSize = 9.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = textColor,
+            )
+        }
     }
 }
 

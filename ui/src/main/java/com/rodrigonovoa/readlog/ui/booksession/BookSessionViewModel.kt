@@ -3,6 +3,7 @@ package com.rodrigonovoa.readlog.ui.booksession
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rodrigonovoa.readlog.ui.R
 import com.rodrigonovoa.readlog.domain.model.Book
 import com.rodrigonovoa.readlog.domain.usecase.AddAnnotationUseCase
 import com.rodrigonovoa.readlog.domain.usecase.AddSessionUseCase
@@ -50,19 +51,7 @@ class BookSessionViewModel @Inject constructor(
     private var currentBook: Book? = null
 
     init {
-        if (bookId != -1) {
-            viewModelScope.launch {
-                val book = getBookByIdUseCase(bookId)
-                currentBook = book
-                _uiState.update {
-                    it.copy(
-                        bookTitle = book?.title ?: "",
-                        currentPage = book?.currentPage ?: 0,
-                        totalPages = book?.numPages ?: 0,
-                    )
-                }
-            }
-        }
+        loadBook()
     }
 
     fun processIntent(intent: BookSessionIntent) {
@@ -81,7 +70,8 @@ class BookSessionViewModel @Inject constructor(
             }
             is BookSessionIntent.OnBackClicked -> {
                 val hasAnnotations = _uiState.value.annotationText.isNotBlank()
-                if (hasStartedTimer || hasAnnotations) {
+                val hasPendingPages = _uiState.value.pendingPages > 0
+                if (hasStartedTimer || hasAnnotations || hasPendingPages) {
                     resumeTimerOnDismiss = _uiState.value.isRunning
                     pauseTimer()
                     dialogTriggeredByBack = true
@@ -90,13 +80,13 @@ class BookSessionViewModel @Inject constructor(
                     viewModelScope.launch { _effect.emit(BookSessionEffect.NavigateBack) }
                 }
             }
-            is BookSessionIntent.OnConfirmEndSessionClicked -> {
+            is BookSessionIntent.OnDiscardSessionClicked -> {
                 _uiState.update { it.copy(showEndSessionDialog = false) }
-                if (dialogTriggeredByBack) {
-                    viewModelScope.launch { _effect.emit(BookSessionEffect.NavigateBack) }
-                } else {
-                    saveSession()
-                }
+                viewModelScope.launch { _effect.emit(BookSessionEffect.NavigateBack) }
+            }
+            is BookSessionIntent.OnSaveAndFinishSessionClicked -> {
+                _uiState.update { it.copy(showEndSessionDialog = false) }
+                saveSession()
             }
             is BookSessionIntent.OnDismissEndSessionDialogClicked -> {
                 _uiState.update { it.copy(showEndSessionDialog = false) }
@@ -104,6 +94,7 @@ class BookSessionViewModel @Inject constructor(
                     startTimer()
                 }
             }
+            is BookSessionIntent.OnRetryLoadClicked -> loadBook()
             is BookSessionIntent.OnOpenAnnotationDialogClicked -> {
                 _uiState.update { it.copy(showAnnotationDialog = true) }
             }
@@ -138,6 +129,11 @@ class BookSessionViewModel @Inject constructor(
                                 selectedMode = BookSessionMode.Timer,
                                 elapsedSeconds = state.manualHours * 3600L + state.manualMinutes * 60L,
                                 sessionDate = state.manualDateMillis,
+                                sessionStatus = if (state.manualHours > 0 || state.manualMinutes > 0) {
+                                    BookSessionStatus.Paused
+                                } else {
+                                    BookSessionStatus.NotStarted
+                                },
                             )
                         }
                     }
@@ -156,7 +152,12 @@ class BookSessionViewModel @Inject constructor(
                 _uiState.update { it.copy(manualMinutes = capped) }
             }
             is BookSessionIntent.OnManualDateChanged -> {
-                _uiState.update { it.copy(manualDateMillis = intent.dateMillis) }
+                _uiState.update {
+                    it.copy(
+                        manualDateMillis = intent.dateMillis,
+                        sessionDate = intent.dateMillis,
+                    )
+                }
             }
             is BookSessionIntent.OnSaveManualTimeClicked -> {
                 val state = _uiState.value
@@ -199,7 +200,9 @@ class BookSessionViewModel @Inject constructor(
 
     private fun startTimer() {
         hasStartedTimer = true
-        _uiState.update { it.copy(isRunning = true) }
+        _uiState.update {
+            it.copy(isRunning = true, sessionStatus = BookSessionStatus.Reading)
+        }
         timerJob = viewModelScope.launch {
             while (isActive) {
                 delay(1000)
@@ -211,15 +214,28 @@ class BookSessionViewModel @Inject constructor(
     private fun pauseTimer() {
         timerJob?.cancel()
         timerJob = null
-        _uiState.update { it.copy(isRunning = false) }
+        _uiState.update {
+            it.copy(
+                isRunning = false,
+                sessionStatus = if (it.elapsedSeconds > 0L) {
+                    BookSessionStatus.Paused
+                } else {
+                    BookSessionStatus.NotStarted
+                },
+            )
+        }
     }
 
     private fun saveSession() {
         viewModelScope.launch {
             val state = _uiState.value
-            applyPendingPages(state)
+            val pagesUpdated = applyPendingPages(state)
             if (state.elapsedSeconds == 0L) {
-                _effect.emit(BookSessionEffect.NavigateBack)
+                if (pagesUpdated) {
+                    _effect.emit(BookSessionEffect.NavigateBackWithSnackbar(R.string.book_session_saved_message))
+                } else {
+                    _effect.emit(BookSessionEffect.NavigateBack)
+                }
                 return@launch
             }
             val result = addSessionUseCase(bookId, state.elapsedSeconds, state.sessionDate)
@@ -231,17 +247,38 @@ class BookSessionViewModel @Inject constructor(
                 }
                 refreshUserProfileIfOnlineUseCase()
             }
-            _effect.emit(BookSessionEffect.NavigateBack)
+            _effect.emit(BookSessionEffect.NavigateBackWithSnackbar(R.string.book_session_saved_message))
         }
     }
 
-    private suspend fun applyPendingPages(state: BookSessionUiState) {
-        val book = currentBook ?: return
+    private fun loadBook() {
+        if (bookId == -1) {
+            _uiState.update { it.copy(isLoading = false, loadError = true) }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, loadError = false) }
+            val book = getBookByIdUseCase(bookId)
+            currentBook = book
+            _uiState.update {
+                it.copy(
+                    bookTitle = book?.title ?: "",
+                    currentPage = book?.currentPage ?: 0,
+                    totalPages = book?.numPages ?: 0,
+                    isLoading = false,
+                    loadError = book == null,
+                )
+            }
+        }
+    }
+
+    private suspend fun applyPendingPages(state: BookSessionUiState): Boolean {
+        val book = currentBook ?: return false
         val pagesToAdd = state.pendingPages
-        if (pagesToAdd <= 0) return
+        if (pagesToAdd <= 0) return false
         val newPage = (state.currentPage + pagesToAdd).coerceAtMost(state.totalPages)
-        if (newPage == state.currentPage) return
-        updateBookUseCase(
+        if (newPage == state.currentPage) return false
+        val result = updateBookUseCase(
             original = book,
             title = book.title,
             author = book.author,
@@ -250,5 +287,6 @@ class BookSessionViewModel @Inject constructor(
             state = book.state,
         )
         currentBook = book.copy(currentPage = newPage)
+        return result.isSuccess
     }
 }
