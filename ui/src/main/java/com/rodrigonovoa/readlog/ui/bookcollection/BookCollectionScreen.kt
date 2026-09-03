@@ -18,16 +18,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.ViewList
+import androidx.compose.material.icons.filled.ViewModule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -84,6 +91,8 @@ import java.util.Date
 import java.util.Locale
 
 private val addedOnDateFormat = SimpleDateFormat("d MMM yyyy", Locale.getDefault())
+private const val VIEW_MODE_PREFERENCES = "book_collection_preferences"
+private const val VIEW_MODE_KEY = "view_mode"
 
 private fun formatMillis(format: SimpleDateFormat, millis: Long): String = format.format(Date(millis))
 
@@ -116,6 +125,15 @@ fun BookCollectionScreen(
 ) {
     val books = uiState.books
     var showLanguageDialog by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var viewMode by remember {
+        mutableStateOf(
+            context.getSharedPreferences(VIEW_MODE_PREFERENCES, 0)
+                .getString(VIEW_MODE_KEY, BookCollectionViewMode.LIST.name)
+                ?.let { mode -> runCatching { BookCollectionViewMode.valueOf(mode) }.getOrDefault(BookCollectionViewMode.LIST) }
+                ?: BookCollectionViewMode.LIST,
+        )
+    }
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -148,6 +166,14 @@ fun BookCollectionScreen(
                 onProfileMenuLanguageClick = { showLanguageDialog = true },
                 onProfileMenuSearchUsersClick = onSearchUsersClick,
                 onFilterClick = onFilterClick,
+                viewMode = viewMode,
+                onViewModeSelected = { selectedMode ->
+                    viewMode = selectedMode
+                    context.getSharedPreferences(VIEW_MODE_PREFERENCES, 0)
+                        .edit()
+                        .putString(VIEW_MODE_KEY, selectedMode.name)
+                        .apply()
+                },
             )
 
             if (books.isEmpty()) {
@@ -157,22 +183,45 @@ fun BookCollectionScreen(
                         .fillMaxWidth(),
                 )
             } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    contentPadding = PaddingValues(vertical = 4.dp),
-                ) {
-                    items(books, key = { it.bookId }) { book ->
-                        BookCard(
-                            book = book,
-                            onEditClick = { onEditIconClick(book.bookId) },
-                            onDeleteClick = { onDeleteIconClick(book.bookId) },
-                            onSessionClick = { onSessionClick(book.bookId) },
-                            onCardClick = { onBookClick(book.bookId) },
-                        )
+                if (viewMode == BookCollectionViewMode.LIST) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        contentPadding = PaddingValues(vertical = 4.dp),
+                    ) {
+                        items(books, key = { it.bookId }) { book ->
+                            BookCard(
+                                book = book,
+                                onEditClick = { onEditIconClick(book.bookId) },
+                                onDeleteClick = { onDeleteIconClick(book.bookId) },
+                                onSessionClick = { onSessionClick(book.bookId) },
+                                onCardClick = { onBookClick(book.bookId) },
+                            )
+                        }
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp),
+                        contentPadding = PaddingValues(vertical = 4.dp),
+                    ) {
+                        items(books, key = { it.bookId }) { book ->
+                            BookGridItem(
+                                book = book,
+                                onEditClick = { onEditIconClick(book.bookId) },
+                                onDeleteClick = { onDeleteIconClick(book.bookId) },
+                                onSessionClick = { onSessionClick(book.bookId) },
+                                onCoverClick = { onBookClick(book.bookId) },
+                            )
+                        }
                     }
                 }
             }
@@ -273,6 +322,8 @@ private fun HeaderSection(
     onProfileMenuLanguageClick: () -> Unit = {},
     onProfileMenuSearchUsersClick: () -> Unit = {},
     onFilterClick: () -> Unit = {},
+    viewMode: BookCollectionViewMode = BookCollectionViewMode.LIST,
+    onViewModeSelected: (BookCollectionViewMode) -> Unit = {},
 ) {
     Row(
         modifier = modifier
@@ -300,7 +351,7 @@ private fun HeaderSection(
             }
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -318,6 +369,10 @@ private fun HeaderSection(
                     modifier = Modifier.size(20.dp),
                 )
             }
+            ViewModeToggle(
+                selectedMode = viewMode,
+                onModeSelected = onViewModeSelected,
+            )
             ProfileMenuIcon(
                 canLike = canLike,
                 onProfileClick = onProfileMenuProfileClick,
@@ -328,6 +383,60 @@ private fun HeaderSection(
                 onSearchUsersClick = onProfileMenuSearchUsersClick,
             )
         }
+    }
+}
+
+@Composable
+private fun ViewModeToggle(
+    selectedMode: BookCollectionViewMode,
+    onModeSelected: (BookCollectionViewMode) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(color_chip)
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        ViewModeButton(
+            mode = BookCollectionViewMode.LIST,
+            selectedMode = selectedMode,
+            icon = Icons.AutoMirrored.Filled.ViewList,
+            contentDescription = stringResource(R.string.book_collection_list_view_content_description),
+            onClick = onModeSelected,
+        )
+        ViewModeButton(
+            mode = BookCollectionViewMode.GRID,
+            selectedMode = selectedMode,
+            icon = Icons.Default.ViewModule,
+            contentDescription = stringResource(R.string.book_collection_grid_view_content_description),
+            onClick = onModeSelected,
+        )
+    }
+}
+
+@Composable
+private fun ViewModeButton(
+    mode: BookCollectionViewMode,
+    selectedMode: BookCollectionViewMode,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    onClick: (BookCollectionViewMode) -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(if (mode == selectedMode) color_surface else Color.Transparent)
+            .clickable { onClick(mode) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = if (mode == selectedMode) color_primary else color_on_surface_variant,
+            modifier = Modifier.size(17.dp),
+        )
     }
 }
 
@@ -412,6 +521,90 @@ private fun ProfileMenuIcon(
                     },
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun BookGridItem(
+    book: Book,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onSessionClick: () -> Unit,
+    onCoverClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        BookCover(
+            coverUrl = book.coverUrl,
+            title = book.title,
+            author = book.author,
+            bookId = book.bookId,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(0.68f)
+                .clickable(onClick = onCoverClick),
+            contentDescription = stringResource(R.string.add_book_cover_content_description),
+        )
+
+        Row(
+            modifier = Modifier.padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            GridActionButton(
+                icon = Icons.Default.Edit,
+                tint = color_primary,
+                contentDescription = stringResource(R.string.book_collection_edit_icon_content_description),
+                onClick = onEditClick,
+            )
+            GridActionButton(
+                icon = Icons.Default.Delete,
+                tint = color_primary,
+                containerColor = color_error_container,
+                contentDescription = stringResource(R.string.book_collection_delete_icon_content_description),
+                onClick = onDeleteClick,
+            )
+            GridActionButton(
+                tint = color_surface,
+                containerColor = color_primary,
+                contentDescription = stringResource(R.string.book_collection_session_icon_content_description),
+                onClick = onSessionClick,
+                content = { ClockIcon(tint = color_surface, iconSize = 14.dp) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun GridActionButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector = Icons.Default.Edit,
+    tint: Color,
+    contentDescription: String,
+    onClick: () -> Unit,
+    containerColor: Color = color_chip,
+    content: (@Composable () -> Unit)? = null,
+) {
+    Box(
+        modifier = Modifier
+            .size(28.dp)
+            .clip(CircleShape)
+            .background(containerColor)
+            .clickable(onClick = onClick),
+            
+        contentAlignment = Alignment.Center,
+    ) {
+        if (content != null) {
+            content()
+        } else {
+            Icon(
+                imageVector = icon,
+                contentDescription = contentDescription,
+                tint = tint,
+                modifier = Modifier.size(13.dp),
+            )
         }
     }
 }

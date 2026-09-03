@@ -169,4 +169,7 @@
     <string name="filter_clear">Clear</string>
     <string name="filter_all_states">All</string>
     <string name="book_collection_filter_icon_content_description">Filter books</string>
+    <string name="book_collection_list_view_content_description">List view</string>
+    <string name="book_collection_grid_view_content_description">Cover grid view</string>
+    <string name="book_collection_session_icon_content_description">Start reading session</string>
 </resources>
