@@ -72,8 +72,11 @@ class UserProfileRepositoryImpl @Inject constructor(
                 username = username,
                 lastModified = System.currentTimeMillis(),
             )
+            val remoteResult = userProfileInfoFirestoreDataSource.claimUsername(userId, updated)
+            if (remoteResult.isFailure) {
+                return remoteResult.map { updated }
+            }
             userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(updated))
-            userProfileInfoFirestoreDataSource.upload(userId, updated)
             Result.success(updated)
         } catch (e: Exception) {
             Result.failure(e)

@@ -205,7 +205,7 @@ class UserProfileRepositoryImplTest {
     @Test
     fun `setUsername stores the new username locally and remotely`() = runTest {
         coEvery { userProfileInfoDao.getByUserId("uid") } returns null
-        coEvery { userProfileInfoFirestoreDataSource.upload("uid", any()) } returns Result.success(Unit)
+        coEvery { userProfileInfoFirestoreDataSource.claimUsername("uid", any()) } returns Result.success(Unit)
 
         val result = repository.setUsername("uid", "elena_marin")
 
@@ -214,7 +214,7 @@ class UserProfileRepositoryImplTest {
         assertEquals("uid", info.userId)
         assertEquals("elena_marin", info.username)
         coVerify { userProfileInfoDao.upsert(any()) }
-        coVerify { userProfileInfoFirestoreDataSource.upload("uid", any()) }
+        coVerify { userProfileInfoFirestoreDataSource.claimUsername("uid", any()) }
     }
 
     @Test
@@ -227,7 +227,7 @@ class UserProfileRepositoryImplTest {
             bookCollection = listOf("Book A"),
             lastModified = 1000L,
         )
-        coEvery { userProfileInfoFirestoreDataSource.upload("uid", any()) } returns Result.success(Unit)
+        coEvery { userProfileInfoFirestoreDataSource.claimUsername("uid", any()) } returns Result.success(Unit)
 
         val result = repository.setUsername("uid", "elena_marin")
 

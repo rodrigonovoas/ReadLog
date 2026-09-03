@@ -1,6 +1,7 @@
 package com.rodrigonovoa.readlog.domain.usecase
 
 import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
+import com.rodrigonovoa.readlog.domain.exception.UsernameAlreadyTakenException
 import javax.inject.Inject
 
 sealed interface ClaimUsernameResult {
@@ -26,7 +27,13 @@ class ClaimUsernameUseCase @Inject constructor(
 
         return setUsernameUseCase(userId, candidate).fold(
             onSuccess = { ClaimUsernameResult.Success(it) },
-            onFailure = { ClaimUsernameResult.Error(it) },
+            onFailure = { error ->
+                if (error is UsernameAlreadyTakenException) {
+                    ClaimUsernameResult.AlreadyTaken
+                } else {
+                    ClaimUsernameResult.Error(error)
+                }
+            },
         )
     }
 

@@ -1,6 +1,7 @@
 package com.rodrigonovoa.readlog.domain.usecase
 
 import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
+import com.rodrigonovoa.readlog.domain.exception.UsernameAlreadyTakenException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -69,5 +70,15 @@ class ClaimUsernameUseCaseTest {
         val result = useCase("uid1", "free_name")
 
         assertTrue(result is ClaimUsernameResult.Error)
+    }
+
+    @Test
+    fun `returns AlreadyTaken when the authoritative claim detects a race`() = runTest {
+        coEvery { isUsernameAvailableUseCase("free_name") } returns Result.success(true)
+        coEvery { setUsernameUseCase("uid1", "free_name") } returns Result.failure(UsernameAlreadyTakenException())
+
+        val result = useCase("uid1", "free_name")
+
+        assertEquals(ClaimUsernameResult.AlreadyTaken, result)
     }
 }

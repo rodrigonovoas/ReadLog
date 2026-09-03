@@ -3,6 +3,7 @@ package com.rodrigonovoa.readlog.data.firestore
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.rodrigonovoa.readlog.data.mapper.UserProfileInfoFirestoreMapper
+import com.rodrigonovoa.readlog.domain.exception.UsernameAlreadyTakenException
 import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -23,6 +24,33 @@ class UserProfileInfoFirestoreDataSourceImpl @Inject constructor(
                 .document("info")
                 .set(userProfileInfoFirestoreMapper.toFirestoreMap(info))
                 .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun claimUsername(userId: String, info: UserProfileInfo): Result<Unit> {
+        return try {
+            val usernameLower = info.username.orEmpty().lowercase()
+            val usernameRef = firestore.collection("usernames").document(usernameLower)
+            val profileRef = profileInfoReference(userId)
+
+            firestore.runTransaction { transaction ->
+                val usernameSnapshot = transaction.get(usernameRef)
+                val reservedBy = usernameSnapshot.getString("userId")
+                if (usernameSnapshot.exists() && reservedBy != userId) {
+                    throw UsernameAlreadyTakenException()
+                }
+
+                transaction.set(usernameRef, mapOf("userId" to userId))
+                transaction.set(
+                    profileRef,
+                    userProfileInfoFirestoreMapper.toFirestoreMap(info.copy(username = info.username?.trim())),
+                    SetOptions.merge(),
+                )
+                null
+            }.await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
