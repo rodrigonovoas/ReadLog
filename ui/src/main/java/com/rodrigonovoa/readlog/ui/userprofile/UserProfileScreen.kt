@@ -201,6 +201,7 @@ private fun AvatarSection(
             if (!uiState.isOwnProfile && uiState.canLike) {
                 IconButton(
                     onClick = onLikeClick,
+                    enabled = !uiState.isLikeLoading,
                     modifier = Modifier.size(32.dp),
                 ) {
                     Icon(

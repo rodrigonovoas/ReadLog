@@ -71,7 +71,21 @@ class UserSearchViewModel @Inject constructor(
 
     private fun loadLikedProfiles() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, hasError = false) }
+            getLikedProfilesUseCase.getCached().onSuccess { profiles ->
+                if (profiles.isNotEmpty()) {
+                    _uiState.update {
+                        it.copy(
+                            results = profiles.map { profile ->
+                                UserSearchResultUi(profile.userId, profile.username.orEmpty())
+                            },
+                            isLoading = false,
+                            hasError = false,
+                        )
+                    }
+                }
+            }
+
+            _uiState.update { it.copy(isLoading = it.results.isEmpty(), hasError = false) }
 
             getLikedProfilesUseCase().fold(
                 onSuccess = { profiles ->
@@ -88,7 +102,13 @@ class UserSearchViewModel @Inject constructor(
                     }
                 },
                 onFailure = {
-                    _uiState.update { it.copy(results = emptyList(), isLoading = false, hasError = true) }
+                    _uiState.update {
+                        it.copy(
+                            results = if (it.results.isEmpty()) emptyList() else it.results,
+                            isLoading = false,
+                            hasError = it.results.isEmpty(),
+                        )
+                    }
                 },
             )
         }

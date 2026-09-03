@@ -35,6 +35,7 @@ class UserSearchViewModelTest {
         getLikedProfilesUseCase = mockk()
         coEvery { searchUsersUseCase("") } returns Result.success(emptyList())
         coEvery { getLikedProfilesUseCase() } returns Result.success(emptyList())
+        coEvery { getLikedProfilesUseCase.getCached() } returns Result.success(emptyList())
     }
 
     @After
@@ -157,6 +158,23 @@ class UserSearchViewModelTest {
 
         assertEquals(true, viewModel.uiState.value.hasError)
         assertEquals(emptyList<UserSearchResultUi>(), viewModel.uiState.value.results)
+        assertEquals(false, viewModel.uiState.value.isLoading)
+    }
+
+    @Test
+    fun `keeps cached liked profiles when the refresh fails`() = runTest {
+        val cachedProfiles = listOf(UserProfileInfo(userId = "1", username = "elenalee"))
+        coEvery { getLikedProfilesUseCase.getCached() } returns Result.success(cachedProfiles)
+        coEvery { getLikedProfilesUseCase() } returns Result.failure(RuntimeException("offline"))
+
+        val viewModel = createViewModel(mode = UserSearchMode.LIKES)
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(UserSearchResultUi(userId = "1", username = "elenalee")),
+            viewModel.uiState.value.results,
+        )
+        assertEquals(false, viewModel.uiState.value.hasError)
         assertEquals(false, viewModel.uiState.value.isLoading)
     }
 }

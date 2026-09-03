@@ -18,4 +18,10 @@ class GetLikedProfilesUseCase @Inject constructor(
             ?: return Result.success(emptyList())
         return userProfileRepository.getLikedProfiles(currentUserId)
     }
+
+    suspend fun getCached(): Result<List<UserProfileInfo>> {
+        val currentUserId = getCurrentUserUseCase()?.uid
+            ?: return Result.success(emptyList())
+        return userProfileRepository.getCachedLikedProfiles(currentUserId)
+    }
 }

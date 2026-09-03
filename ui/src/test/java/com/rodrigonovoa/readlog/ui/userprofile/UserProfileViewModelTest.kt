@@ -19,6 +19,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.CompletableDeferred
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -257,6 +258,30 @@ class UserProfileViewModelTest {
         assertFalse(viewModel.uiState.value.isLiked)
         assertEquals(4, viewModel.uiState.value.likesCount)
         assertTrue(viewModel.uiState.value.hasLikeError)
+    }
+
+    @Test
+    fun `onLikeClick ignores a second click while the first request is pending`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena")
+        coEvery { getUserProfileInfoUseCase("other-uid") } returns UserProfileInfo(userId = "other-uid")
+        coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(userId = "uid-1")
+        coEvery { getRemoteUserProfileInfoUseCase("other-uid") } returns Result.success(UserProfileInfo(userId = "other-uid"))
+        val request = CompletableDeferred<Result<Unit>>()
+        coEvery { toggleUserLikeUseCase("uid-1", "other-uid", true) } coAnswers { request.await() }
+
+        val viewModel = createViewModel(userId = "other-uid")
+        advanceUntilIdle()
+
+        viewModel.onLikeClick()
+        advanceUntilIdle()
+        viewModel.onLikeClick()
+
+        coVerify(exactly = 1) { toggleUserLikeUseCase("uid-1", "other-uid", true) }
+        assertTrue(viewModel.uiState.value.isLikeLoading)
+
+        request.complete(Result.success(Unit))
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isLikeLoading)
     }
 
     @Test

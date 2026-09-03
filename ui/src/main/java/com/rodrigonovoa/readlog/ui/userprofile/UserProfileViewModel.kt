@@ -91,20 +91,22 @@ class UserProfileViewModel @Inject constructor(
         val currentUser = getCurrentUserUseCase() ?: return
         if (currentUser.uid == targetId) return
         if (currentUser.isAnonymous) return
+        if (_uiState.value.isLikeLoading) return
         val newLikedState = !_uiState.value.isLiked
         viewModelScope.launch {
-            _uiState.update { it.copy(hasLikeError = false) }
+            _uiState.update { it.copy(hasLikeError = false, isLikeLoading = true) }
             toggleUserLikeUseCase(currentUser.uid, targetId, newLikedState).fold(
                 onSuccess = {
                     _uiState.update {
                         it.copy(
                             isLiked = newLikedState,
                             likesCount = (it.likesCount + if (newLikedState) 1 else -1).coerceAtLeast(0),
+                            isLikeLoading = false,
                         )
                     }
                 },
                 onFailure = {
-                    _uiState.update { it.copy(hasLikeError = true) }
+                    _uiState.update { it.copy(hasLikeError = true, isLikeLoading = false) }
                 },
             )
         }

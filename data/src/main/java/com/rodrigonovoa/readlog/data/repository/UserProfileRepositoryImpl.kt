@@ -88,49 +88,44 @@ class UserProfileRepositoryImpl @Inject constructor(
         if (currentUserId == targetUserId) {
             return Result.failure(IllegalArgumentException("Cannot like own profile"))
         }
-        val delta = if (liked) 1 else -1
+        val result = userProfileInfoFirestoreDataSource.setLike(currentUserId, targetUserId, liked)
+        if (result.getOrNull() == true) {
+            runCatching {
+                val currentInfo = getUserProfileInfo(currentUserId)
+                val updatedCurrent = currentInfo.copy(
+                    followeds = if (liked) {
+                        (currentInfo.followeds + targetUserId).distinct()
+                    } else {
+                        currentInfo.followeds - targetUserId
+                    },
+                    lastModified = System.currentTimeMillis(),
+                )
+                userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(updatedCurrent))
 
-        val incrementResult = userProfileInfoFirestoreDataSource.incrementLikesCount(targetUserId, delta)
-        if (incrementResult.isFailure) {
-            return Result.failure(incrementResult.exceptionOrNull()!!)
-        }
-
-        runCatching {
-            val cachedTarget = getUserProfileInfo(targetUserId)
-            val patched = cachedTarget.copy(likesCount = (cachedTarget.likesCount + delta).coerceAtLeast(0))
-            userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(patched))
-        }
-
-        val ownUpdateResult = try {
-            val ownInfo = getUserProfileInfo(currentUserId)
-            val updatedFolloweds = if (liked) {
-                (ownInfo.followeds + targetUserId).distinct()
-            } else {
-                ownInfo.followeds - targetUserId
+                val targetInfo = getUserProfileInfo(targetUserId)
+                userProfileInfoDao.upsert(
+                    userProfileInfoDataMapper.toEntity(
+                        targetInfo.copy(
+                            likesCount = (targetInfo.likesCount + if (liked) 1 else -1).coerceAtLeast(0),
+                        ),
+                    ),
+                )
             }
-            val updatedOwn = ownInfo.copy(
-                userId = currentUserId,
-                followeds = updatedFolloweds,
-                lastModified = System.currentTimeMillis(),
+        }
+        return result.map { Unit }
+    }
+
+    override suspend fun getCachedLikedProfiles(currentUserId: String): Result<List<UserProfileInfo>> {
+        return try {
+            val followeds = getUserProfileInfo(currentUserId).followeds.distinct()
+            Result.success(
+                followeds.mapNotNull { userId ->
+                    getUserProfileInfo(userId).takeIf { !it.username.isNullOrBlank() }
+                },
             )
-            userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(updatedOwn))
-            userProfileInfoFirestoreDataSource.upload(currentUserId, updatedOwn).getOrThrow()
-            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
-
-        if (ownUpdateResult.isFailure) {
-            userProfileInfoFirestoreDataSource.incrementLikesCount(targetUserId, -delta)
-            runCatching {
-                val cachedTarget = getUserProfileInfo(targetUserId)
-                val reverted = cachedTarget.copy(likesCount = (cachedTarget.likesCount - delta).coerceAtLeast(0))
-                userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(reverted))
-            }
-            return Result.failure(ownUpdateResult.exceptionOrNull()!!)
-        }
-
-        return Result.success(Unit)
     }
 
     override suspend fun getLikedProfiles(currentUserId: String): Result<List<UserProfileInfo>> {

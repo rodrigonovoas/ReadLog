@@ -12,6 +12,7 @@ data class UserProfileUiState(
     val isOwnProfile: Boolean = false,
     val isLiked: Boolean = false,
     val hasLikeError: Boolean = false,
+    val isLikeLoading: Boolean = false,
     val canLike: Boolean = true,
     val isLoading: Boolean = true,
 )
