@@ -14,7 +14,7 @@ import com.rodrigonovoa.readlog.data.db.entity.UserProfileInfoEntity
 
 @Database(
     entities = [BookEntity::class, SessionEntity::class, AnnotationEntity::class, UserProfileInfoEntity::class],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -135,6 +135,10 @@ abstract class ReadLogDatabase : RoomDatabase() {
 
         val MIGRATION_10_11 = androidx.room.migration.Migration(10, 11) { database ->
             database.execSQL("ALTER TABLE books ADD COLUMN coverUrl TEXT NOT NULL DEFAULT ''")
+        }
+
+        val MIGRATION_11_12 = androidx.room.migration.Migration(11, 12) { database ->
+            database.execSQL("ALTER TABLE user_profile_info ADD COLUMN isHiddenFromSearch INTEGER NOT NULL DEFAULT 0")
         }
     }
 }

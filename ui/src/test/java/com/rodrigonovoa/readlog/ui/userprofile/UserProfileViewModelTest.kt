@@ -8,6 +8,7 @@ import com.rodrigonovoa.readlog.domain.usecase.GetRemoteUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.ToggleUserLikeUseCase
+import com.rodrigonovoa.readlog.domain.usecase.SetUserSearchVisibilityUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -36,6 +37,7 @@ class UserProfileViewModelTest {
     private lateinit var getUserProfileInfoUseCase: GetUserProfileInfoUseCase
     private lateinit var getRemoteUserProfileInfoUseCase: GetRemoteUserProfileInfoUseCase
     private lateinit var toggleUserLikeUseCase: ToggleUserLikeUseCase
+    private lateinit var setUserSearchVisibilityUseCase: SetUserSearchVisibilityUseCase
 
     @Before
     fun setup() {
@@ -45,6 +47,7 @@ class UserProfileViewModelTest {
         getUserProfileInfoUseCase = mockk()
         getRemoteUserProfileInfoUseCase = mockk()
         toggleUserLikeUseCase = mockk()
+        setUserSearchVisibilityUseCase = mockk()
     }
 
     @After
@@ -65,6 +68,7 @@ class UserProfileViewModelTest {
             getUserProfileInfoUseCase = getUserProfileInfoUseCase,
             getRemoteUserProfileInfoUseCase = getRemoteUserProfileInfoUseCase,
             toggleUserLikeUseCase = toggleUserLikeUseCase,
+            setUserSearchVisibilityUseCase = setUserSearchVisibilityUseCase,
         )
     }
 
@@ -323,6 +327,37 @@ class UserProfileViewModelTest {
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.canLike)
+    }
+
+    @Test
+    fun `own profile reflects hidden from search setting`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena")
+        coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(
+            userId = "uid-1",
+            isHiddenFromSearch = true,
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.isHiddenFromSearch)
+    }
+
+    @Test
+    fun `changing search visibility updates the setting`() = runTest {
+        every { getCurrentUserUseCase() } returns User("uid-1", "test@test.com", "Elena")
+        coEvery { getUserProfileInfoUseCase("uid-1") } returns UserProfileInfo(userId = "uid-1")
+        coEvery {
+            setUserSearchVisibilityUseCase("uid-1", true)
+        } returns Result.success(UserProfileInfo(userId = "uid-1", isHiddenFromSearch = true))
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.onSearchVisibilityChange(true)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.isHiddenFromSearch)
+        assertFalse(viewModel.uiState.value.hasSearchVisibilityError)
     }
 
     @Test

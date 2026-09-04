@@ -179,6 +179,7 @@ class MainActivity : AppCompatActivity() {
                             uiState = uiState,
                             onBackClick = { navController.popBackStack() },
                             onLikeClick = viewModel::onLikeClick,
+                            onSearchVisibilityChange = viewModel::onSearchVisibilityChange,
                         )
                     }
                     composable("userSearch") {

@@ -14,6 +14,9 @@ data class UserProfileUiState(
     val hasLikeError: Boolean = false,
     val isLikeLoading: Boolean = false,
     val canLike: Boolean = true,
+    val isHiddenFromSearch: Boolean = false,
+    val isSearchVisibilityLoading: Boolean = false,
+    val hasSearchVisibilityError: Boolean = false,
     val isLoading: Boolean = true,
 )
 

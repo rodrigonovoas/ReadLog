@@ -22,6 +22,7 @@ class UserSearchFirestoreDataSourceImpl @Inject constructor(
         return try {
             val snapshot = firestore
                 .collectionGroup("profile")
+                .whereEqualTo("isHiddenFromSearch", false)
                 .orderBy("usernameLower")
                 .startAt(usernameLowerPrefix)
                 .endAt(usernameLowerPrefix + UNICODE_PREFIX_END_MARKER)

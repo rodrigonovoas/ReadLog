@@ -16,6 +16,7 @@ class UserProfileInfoDataMapperImpl @Inject constructor() : UserProfileInfoDataM
             displayName = entity.displayName,
             username = entity.username,
             followeds = entity.followeds,
+            isHiddenFromSearch = entity.isHiddenFromSearch,
         )
     }
 
@@ -30,6 +31,7 @@ class UserProfileInfoDataMapperImpl @Inject constructor() : UserProfileInfoDataM
             displayName = domain.displayName,
             username = domain.username,
             followeds = domain.followeds,
+            isHiddenFromSearch = domain.isHiddenFromSearch,
         )
     }
 }

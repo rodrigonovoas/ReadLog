@@ -46,6 +46,7 @@ class UserProfileRepositoryImpl @Inject constructor(
                 displayName = resolvedDisplayName,
                 username = remoteInfo?.username?.ifBlank { null },
                 followeds = remoteInfo?.followeds ?: emptyList(),
+                isHiddenFromSearch = remoteInfo?.isHiddenFromSearch ?: false,
             )
 
             userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(merged))
@@ -78,6 +79,19 @@ class UserProfileRepositoryImpl @Inject constructor(
             }
             userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(updated))
             Result.success(updated)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun setHiddenFromSearch(userId: String, hidden: Boolean): Result<UserProfileInfo> {
+        return try {
+            val updated = getUserProfileInfo(userId).copy(
+                isHiddenFromSearch = hidden,
+                lastModified = System.currentTimeMillis(),
+            )
+            userProfileInfoDao.upsert(userProfileInfoDataMapper.toEntity(updated))
+            userProfileInfoFirestoreDataSource.upload(userId, updated).map { updated }
         } catch (e: Exception) {
             Result.failure(e)
         }

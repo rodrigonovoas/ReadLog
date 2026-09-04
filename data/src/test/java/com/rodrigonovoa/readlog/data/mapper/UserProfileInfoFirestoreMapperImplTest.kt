@@ -20,6 +20,7 @@ class UserProfileInfoFirestoreMapperImplTest {
             displayName = "Elena Marín",
             username = "Elena_Marin",
             followeds = listOf("uid-2", "uid-3"),
+            isHiddenFromSearch = true,
         )
 
         val map = mapper.toFirestoreMap(stats)
@@ -33,6 +34,7 @@ class UserProfileInfoFirestoreMapperImplTest {
         assertEquals("Elena_Marin", map["username"])
         assertEquals("elena_marin", map["usernameLower"])
         assertEquals(listOf("uid-2", "uid-3"), map["followeds"])
+        assertEquals(true, map["isHiddenFromSearch"])
     }
 
     @Test
@@ -45,6 +47,7 @@ class UserProfileInfoFirestoreMapperImplTest {
         assertEquals("", map["username"])
         assertEquals("", map["usernameLower"])
         assertEquals(emptyList<String>(), map["followeds"])
+        assertEquals(false, map["isHiddenFromSearch"])
     }
 
     @Test
@@ -65,7 +68,8 @@ class UserProfileInfoFirestoreMapperImplTest {
                 lastModified = 0L,
                 displayName = null,
                 username = null,
-                followeds = emptyList(),
+            followeds = emptyList(),
+            isHiddenFromSearch = false,
             ),
             stats
         )
@@ -88,5 +92,12 @@ class UserProfileInfoFirestoreMapperImplTest {
         val stats = mapper.fromFirestoreMap(map, "uid-2")
 
         assertEquals(listOf("uid-7", "uid-8"), stats.followeds)
+    }
+
+    @Test
+    fun `fromFirestoreMap reconstructs hidden from search when present`() {
+        val stats = mapper.fromFirestoreMap(mapOf("isHiddenFromSearch" to true), "uid-2")
+
+        assertEquals(true, stats.isHiddenFromSearch)
     }
 }

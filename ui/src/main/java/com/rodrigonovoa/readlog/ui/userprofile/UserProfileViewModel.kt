@@ -9,6 +9,7 @@ import com.rodrigonovoa.readlog.domain.usecase.GetRemoteUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserDisplayNameUseCase
 import com.rodrigonovoa.readlog.domain.usecase.GetUserProfileInfoUseCase
 import com.rodrigonovoa.readlog.domain.usecase.ToggleUserLikeUseCase
+import com.rodrigonovoa.readlog.domain.usecase.SetUserSearchVisibilityUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,7 @@ class UserProfileViewModel @Inject constructor(
     private val getUserProfileInfoUseCase: GetUserProfileInfoUseCase,
     private val getRemoteUserProfileInfoUseCase: GetRemoteUserProfileInfoUseCase,
     private val toggleUserLikeUseCase: ToggleUserLikeUseCase,
+    private val setUserSearchVisibilityUseCase: SetUserSearchVisibilityUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UserProfileUiState())
@@ -112,6 +114,35 @@ class UserProfileViewModel @Inject constructor(
         }
     }
 
+    fun onSearchVisibilityChange(hidden: Boolean) {
+        if (targetUserId != null) return
+        val userId = getCurrentUserUseCase()?.uid ?: return
+        if (_uiState.value.isSearchVisibilityLoading || _uiState.value.isHiddenFromSearch == hidden) return
+
+        _uiState.update {
+            it.copy(
+                isHiddenFromSearch = hidden,
+                isSearchVisibilityLoading = true,
+                hasSearchVisibilityError = false,
+            )
+        }
+        viewModelScope.launch {
+            setUserSearchVisibilityUseCase(userId, hidden).fold(
+                onSuccess = {
+                    _uiState.update { it.copy(isSearchVisibilityLoading = false) }
+                },
+                onFailure = {
+                    _uiState.update {
+                        it.copy(
+                            isSearchVisibilityLoading = false,
+                            hasSearchVisibilityError = true,
+                        )
+                    }
+                },
+            )
+        }
+    }
+
     private fun applyIdentity(info: UserProfileInfo) {
         _uiState.update {
             it.copy(
@@ -129,6 +160,7 @@ class UserProfileViewModel @Inject constructor(
                 monthlySessionsCount = info.sessionsThisMonth,
                 monthlyTimeLabel = formatDuration(info.monthTimeSeconds),
                 collectionBooks = info.bookCollection.map { title -> UserProfileBook(title = title) },
+                isHiddenFromSearch = info.isHiddenFromSearch,
             )
         }
     }

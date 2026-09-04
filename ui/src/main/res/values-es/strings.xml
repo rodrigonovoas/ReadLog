@@ -146,6 +146,11 @@
     <string name="user_profile_time_this_month_label">TIEMPO ESTE MES</string>
     <string name="user_profile_collection_title">Colección de libros</string>
     <string name="user_profile_collection_count">%1$d libros</string>
+    <string name="user_profile_search_visibility_visible_tooltip">Tu perfil es visible en la búsqueda de usuarios.</string>
+    <string name="user_profile_search_visibility_hidden_tooltip">Tu perfil está oculto en la búsqueda de usuarios.</string>
+    <string name="user_profile_search_visibility_error">No se pudo actualizar la visibilidad. Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="user_profile_search_visibility_visible_content_description">Ocultarme de la búsqueda de usuarios</string>
+    <string name="user_profile_search_visibility_hidden_content_description">Mostrarme en la búsqueda de usuarios</string>
     <string name="book_collection_search_icon_content_description">Buscar usuarios</string>
     <string name="user_search_title">Buscar usuarios</string>
     <string name="user_search_back_content_description">Atrás</string>

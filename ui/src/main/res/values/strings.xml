@@ -146,6 +146,11 @@
     <string name="user_profile_time_this_month_label">TIME THIS MONTH</string>
     <string name="user_profile_collection_title">Book Collection</string>
     <string name="user_profile_collection_count">%1$d books</string>
+    <string name="user_profile_search_visibility_visible_tooltip">Your profile is visible in user search.</string>
+    <string name="user_profile_search_visibility_hidden_tooltip">Your profile is hidden from user search.</string>
+    <string name="user_profile_search_visibility_error">Couldn\'t update search visibility. Check your connection and try again.</string>
+    <string name="user_profile_search_visibility_visible_content_description">Hide me from user search</string>
+    <string name="user_profile_search_visibility_hidden_content_description">Show me in user search</string>
     <string name="book_collection_search_icon_content_description">Search users</string>
     <string name="user_search_title">Search users</string>
     <string name="user_search_back_content_description">Back</string>

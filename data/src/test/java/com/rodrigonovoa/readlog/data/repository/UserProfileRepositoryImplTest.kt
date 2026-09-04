@@ -247,6 +247,18 @@ class UserProfileRepositoryImplTest {
     }
 
     @Test
+    fun `setHiddenFromSearch stores the preference locally and remotely`() = runTest {
+        coEvery { userProfileInfoDao.getByUserId("uid") } returns UserProfileInfoEntity(userId = "uid")
+        coEvery { userProfileInfoFirestoreDataSource.upload("uid", any()) } returns Result.success(Unit)
+
+        val result = repository.setHiddenFromSearch("uid", true)
+
+        assertEquals(true, result.getOrThrow().isHiddenFromSearch)
+        coVerify { userProfileInfoDao.upsert(match { it.isHiddenFromSearch }) }
+        coVerify { userProfileInfoFirestoreDataSource.upload("uid", match { it.isHiddenFromSearch }) }
+    }
+
+    @Test
     fun `setLiked returns failure when liking own profile`() = runTest {
         val result = repository.setLiked("me", "me", true)
 

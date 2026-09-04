@@ -11,6 +11,7 @@ interface UserProfileRepository {
     ): Result<UserProfileInfo>
     suspend fun getRemoteUserProfileInfo(userId: String): Result<UserProfileInfo>
     suspend fun setUsername(userId: String, username: String): Result<UserProfileInfo>
+    suspend fun setHiddenFromSearch(userId: String, hidden: Boolean): Result<UserProfileInfo>
     suspend fun setLiked(currentUserId: String, targetUserId: String, liked: Boolean): Result<Unit>
     suspend fun getCachedLikedProfiles(currentUserId: String): Result<List<UserProfileInfo>>
     suspend fun getLikedProfiles(currentUserId: String): Result<List<UserProfileInfo>>

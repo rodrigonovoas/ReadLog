@@ -24,11 +24,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,6 +65,7 @@ import com.rodrigonovoa.readlog.ui.theme.color_primary
 import com.rodrigonovoa.readlog.ui.theme.color_secondary
 import com.rodrigonovoa.readlog.ui.theme.color_surface
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 @Composable
 fun UserProfileScreen(
@@ -64,6 +73,7 @@ fun UserProfileScreen(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
     onLikeClick: () -> Unit = {},
+    onSearchVisibilityChange: (Boolean) -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -92,7 +102,11 @@ fun UserProfileScreen(
                     .padding(top = 20.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(26.dp),
             ) {
-                AvatarSection(uiState = uiState, onLikeClick = onLikeClick)
+                AvatarSection(
+                    uiState = uiState,
+                    onLikeClick = onLikeClick,
+                    onSearchVisibilityChange = onSearchVisibilityChange,
+                )
                 ProfileStatsRow(uiState = uiState)
                 CollectionSection(uiState = uiState)
             }
@@ -142,6 +156,7 @@ private fun AvatarSection(
     uiState: UserProfileUiState,
     modifier: Modifier = Modifier,
     onLikeClick: () -> Unit = {},
+    onSearchVisibilityChange: (Boolean) -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -198,6 +213,12 @@ private fun AvatarSection(
                 fontSize = 22.sp,
                 color = color_on_surface,
             )
+            if (uiState.isOwnProfile) {
+                SearchVisibilityIcon(
+                    uiState = uiState,
+                    onSearchVisibilityChange = onSearchVisibilityChange,
+                )
+            }
             if (!uiState.isOwnProfile && uiState.canLike) {
                 IconButton(
                     onClick = onLikeClick,
@@ -225,12 +246,75 @@ private fun AvatarSection(
             color = color_on_surface_variant,
             modifier = Modifier.padding(top = 2.dp),
         )
+        if (uiState.hasSearchVisibilityError && uiState.isOwnProfile) {
+            Text(
+                text = stringResource(R.string.user_profile_search_visibility_error),
+                fontSize = 11.sp,
+                color = color_error,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
         if (uiState.hasLikeError) {
             Text(
                 text = stringResource(R.string.user_profile_like_error_message),
                 fontSize = 11.sp,
                 color = color_error,
                 modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun SearchVisibilityIcon(
+    uiState: UserProfileUiState,
+    onSearchVisibilityChange: (Boolean) -> Unit,
+) {
+    val tooltipState = rememberTooltipState(isPersistent = true)
+    val coroutineScope = rememberCoroutineScope()
+
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                tooltip = {
+                    PlainTooltip {
+                        Text(
+                            text = stringResource(
+                                if (uiState.isHiddenFromSearch) {
+                                    R.string.user_profile_search_visibility_hidden_tooltip
+                                } else {
+                                    R.string.user_profile_search_visibility_visible_tooltip
+                                },
+                            ),
+                            fontSize = 12.sp,
+                        )
+            }
+        },
+        state = tooltipState,
+    ) {
+        IconButton(
+            onClick = {
+                onSearchVisibilityChange(!uiState.isHiddenFromSearch)
+                coroutineScope.launch { tooltipState.show() }
+            },
+            enabled = !uiState.isSearchVisibilityLoading,
+            modifier = Modifier.size(32.dp),
+        ) {
+            Icon(
+                imageVector = if (uiState.isHiddenFromSearch) {
+                    Icons.Outlined.VisibilityOff
+                } else {
+                    Icons.Outlined.Visibility
+                },
+                contentDescription = stringResource(
+                    if (uiState.isHiddenFromSearch) {
+                        R.string.user_profile_search_visibility_hidden_content_description
+                    } else {
+                        R.string.user_profile_search_visibility_visible_content_description
+                    },
+                ),
+                tint = color_on_surface_variant,
+                modifier = Modifier.size(18.dp),
             )
         }
     }

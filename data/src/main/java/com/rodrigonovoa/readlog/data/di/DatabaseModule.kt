@@ -39,6 +39,7 @@ object DatabaseModule {
                 ReadLogDatabase.MIGRATION_8_9,
                 ReadLogDatabase.MIGRATION_9_10,
                 ReadLogDatabase.MIGRATION_10_11,
+                ReadLogDatabase.MIGRATION_11_12,
             )
             .build()
     }

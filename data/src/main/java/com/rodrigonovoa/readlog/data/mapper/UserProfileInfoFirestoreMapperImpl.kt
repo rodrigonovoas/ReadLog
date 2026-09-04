@@ -16,6 +16,7 @@ class UserProfileInfoFirestoreMapperImpl @Inject constructor() : UserProfileInfo
             "username" to info.username.orEmpty(),
             "usernameLower" to info.username.orEmpty().lowercase(),
             "followeds" to info.followeds,
+            "isHiddenFromSearch" to info.isHiddenFromSearch,
         )
     }
 
@@ -31,6 +32,7 @@ class UserProfileInfoFirestoreMapperImpl @Inject constructor() : UserProfileInfo
             displayName = (map["displayName"] as? String)?.ifBlank { null },
             username = (map["username"] as? String)?.ifBlank { null },
             followeds = (map["followeds"] as? List<String>) ?: emptyList(),
+            isHiddenFromSearch = map["isHiddenFromSearch"] as? Boolean ?: false,
         )
     }
 }

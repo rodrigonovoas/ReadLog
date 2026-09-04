@@ -14,4 +14,5 @@ data class UserProfileInfoEntity(
     val displayName: String? = null,
     val username: String? = null,
     val followeds: List<String> = emptyList(),
+    val isHiddenFromSearch: Boolean = false,
 )
