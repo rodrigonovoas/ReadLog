@@ -144,19 +144,10 @@ fun BookCollectionScreen(
                 .fillMaxSize()
                 .safeDrawingPadding(),
         ) {
-            val greetingName = uiState.userName.ifEmpty {
-                stringResource(R.string.reader_name_fallback)
-            }
             val hasActiveFilters = uiState.bookFilters.title != null ||
                 uiState.bookFilters.author != null ||
                 uiState.bookFilters.state != null
             HeaderSection(
-                showTitle = books.isNotEmpty(),
-                greeting = if (uiState.greetingResId != 0) {
-                    stringResource(uiState.greetingResId, greetingName)
-                } else {
-                    ""
-                },
                 canLike = uiState.canLike,
                 hasActiveFilters = hasActiveFilters,
                 onProfileMenuProfileClick = onProfileMenuProfileClick,
@@ -311,7 +302,6 @@ fun BookCollectionScreen(
 @Composable
 private fun HeaderSection(
     showTitle: Boolean = true,
-    greeting: String,
     canLike: Boolean,
     hasActiveFilters: Boolean = false,
     modifier: Modifier = Modifier,
@@ -333,18 +323,12 @@ private fun HeaderSection(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column {
-            Text(
-                text = greeting,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = color_on_surface_variant,
-            )
             if (showTitle) {
                 Text(
                     text = stringResource(R.string.book_collection_title),
                     fontFamily = FontFamily.Serif,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 26.sp,
+                    fontSize = 22.sp,
                     color = color_on_surface,
                     modifier = Modifier.padding(top = 2.dp),
                 )
