@@ -1,6 +1,11 @@
 package com.rodrigonovoa.readlog
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -12,12 +17,16 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
@@ -279,10 +288,20 @@ class MainActivity : AppCompatActivity() {
                     ) { backStackEntry ->
                         val viewModel: AddBookViewModel = hiltViewModel()
                         val state by viewModel.uiState.collectAsState()
+                        val cameraPermissionWasRequested = rememberSaveable { mutableStateOf(false) }
 
                         val cameraPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
                             contract = ActivityResultContracts.RequestPermission(),
                         ) { isGranted ->
+                            viewModel.processIntent(AddBookIntent.OnCameraPermissionResult(isGranted))
+                        }
+                        val appSettingsLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                            contract = ActivityResultContracts.StartActivityForResult(),
+                        ) {
+                            val isGranted = ContextCompat.checkSelfPermission(
+                                this@MainActivity,
+                                Manifest.permission.CAMERA,
+                            ) == PackageManager.PERMISSION_GRANTED
                             viewModel.processIntent(AddBookIntent.OnCameraPermissionResult(isGranted))
                         }
 
@@ -293,7 +312,22 @@ class MainActivity : AppCompatActivity() {
                                         navController.popBackStack()
                                     }
                                     is AddBookEffect.RequestCameraPermission -> {
-                                        cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                                        val shouldOpenSettings = cameraPermissionWasRequested.value &&
+                                            !ActivityCompat.shouldShowRequestPermissionRationale(
+                                                this@MainActivity,
+                                                Manifest.permission.CAMERA,
+                                            )
+
+                                        if (shouldOpenSettings) {
+                                            appSettingsLauncher.launch(
+                                                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                                    data = Uri.parse("package:$packageName")
+                                                },
+                                            )
+                                        } else {
+                                            cameraPermissionWasRequested.value = true
+                                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                        }
                                     }
                                 }
                             }

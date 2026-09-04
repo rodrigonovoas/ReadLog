@@ -65,6 +65,7 @@
     <string name="add_book_scan_network_error">No se pudo obtener la información del libro. Comprueba tu conexión.</string>
     <string name="add_book_scan_invalid_barcode">No se detectó un ISBN válido. Inténtalo de nuevo.</string>
     <string name="add_book_scan_retry">Reintentar</string>
+    <string name="add_book_scan_ok">OK</string>
     <string name="add_book_cover_content_description">Portada del libro</string>
     <string name="add_book_exit_dialog_title">Cambios sin guardar</string>
     <string name="add_book_exit_dialog_message">Tienes datos sin guardar. ¿Estás seguro de que quieres salir?</string>

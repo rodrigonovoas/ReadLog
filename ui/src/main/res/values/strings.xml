@@ -65,6 +65,7 @@
     <string name="add_book_scan_network_error">Couldn’t fetch book info. Check your connection.</string>
     <string name="add_book_scan_invalid_barcode">No valid ISBN detected. Try again.</string>
     <string name="add_book_scan_retry">Retry</string>
+    <string name="add_book_scan_ok">OK</string>
     <string name="add_book_cover_content_description">Book cover</string>
     <string name="add_book_exit_dialog_title">Unsaved Changes</string>
     <string name="add_book_exit_dialog_message">You have unsaved data. Are you sure you want to leave?</string>

@@ -105,26 +105,27 @@ fun AddBookScreen(
         onIntent(AddBookIntent.OnBackClicked)
     }
 
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(color_surface)
             .safeDrawingPadding(),
     ) {
-        AddBookHeader(
-            isEditMode = state.isEditMode,
-            onBackClick = { onIntent(AddBookIntent.OnBackClicked) },
-        )
-
-        if (!state.isEditMode) {
-            AddBookModeSelector(
-                modifier = Modifier.padding(start = 24.dp, top = 20.dp, end = 24.dp),
-                selectedMode = state.selectedMode,
-                onModeSelected = { onIntent(AddBookIntent.OnModeSelected(it)) },
+        Column {
+            AddBookHeader(
+                isEditMode = state.isEditMode,
+                onBackClick = { onIntent(AddBookIntent.OnBackClicked) },
             )
-        }
 
-        when (state.selectedMode) {
+            if (!state.isEditMode) {
+                AddBookModeSelector(
+                    modifier = Modifier.padding(start = 24.dp, top = 20.dp, end = 24.dp),
+                    selectedMode = state.selectedMode,
+                    onModeSelected = { onIntent(AddBookIntent.OnModeSelected(it)) },
+                )
+            }
+
+            when (state.selectedMode) {
             AddBookMode.Manual -> {
                 Column(
                     modifier = Modifier
@@ -236,34 +237,35 @@ fun AddBookScreen(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxWidth()
-                        .padding(24.dp),
+                        .fillMaxWidth(),
                 ) {
-                    if (state.hasCameraPermission) {
-                        Column(
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.add_book_scan_title),
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                            fontFamily = FontFamily.Serif,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 18.sp,
+                            color = color_on_surface,
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .verticalScroll(rememberScrollState()),
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                                .fillMaxWidth(0.8f)
+                                .aspectRatio(1f)
+                                .clip(RoundedCornerShape(24.dp)),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            Text(
-                                text = stringResource(R.string.add_book_scan_title),
-                                modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center,
-                                fontFamily = FontFamily.Serif,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp,
-                                color = color_on_surface,
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth(0.8f)
-                                    .aspectRatio(1f)
-                                    .clip(RoundedCornerShape(24.dp)),
-                            ) {
+                            if (state.hasCameraPermission) {
                                 BarcodeScanner(
                                     onBarcodeDetected = {
                                         onIntent(AddBookIntent.OnBarcodeScanned(it))
@@ -295,101 +297,88 @@ fun AddBookScreen(
                                         }
                                     }
                                 }
-
-                                state.scanError?.let { error ->
-                                    val messageRes = when (error) {
-                                        ScanError.Network -> R.string.add_book_scan_network_error
-                                        ScanError.NotFound -> R.string.add_book_scan_book_not_found
-                                        ScanError.Unknown -> R.string.add_book_scan_invalid_barcode
-                                    }
-                                    ScanErrorOverlay(
-                                        message = stringResource(messageRes),
-                                        onRetry = { onIntent(AddBookIntent.OnScanRetryClicked) },
-                                        onDismiss = { onIntent(AddBookIntent.OnScanErrorDismissed) },
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Text(
-                                text = stringResource(R.string.add_book_scan_instructions),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = color_on_surface_variant,
-                            )
-
-                            HorizontalDivider(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 24.dp),
-                                thickness = 1.dp,
-                                color = color_track,
-                            )
-
-                            AddBookTextField(
-                                label = stringResource(R.string.add_book_scan_isbn_label),
-                                value = state.manualIsbn,
-                                placeholder = stringResource(R.string.add_book_scan_isbn_placeholder),
-                                onValueChange = { onIntent(AddBookIntent.OnManualIsbnChanged(it)) },
-                                keyboardType = KeyboardType.Number,
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Button(
-                                onClick = { onIntent(AddBookIntent.OnManualIsbnSearchClicked) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp),
-                                shape = RoundedCornerShape(24.dp),
-                                enabled = state.isManualIsbnSearchEnabled && !state.isScanning,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = color_primary,
-                                    contentColor = color_surface,
-                                    disabledContainerColor = color_primary.copy(alpha = 0.5f),
-                                    disabledContentColor = color_surface.copy(alpha = 0.7f),
-                                ),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.add_book_scan_search_button),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
-                        }
-                    } else {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(0.8f),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.add_book_scan_no_permission),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = color_on_surface,
-                                )
-                                Button(
-                                    onClick = { onIntent(AddBookIntent.RequestCameraPermission) },
-                                    shape = RoundedCornerShape(28.dp),
+                            } else {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(color_surface_variant),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center,
                                 ) {
                                     Text(
-                                        text = stringResource(R.string.add_book_scan_grant_permission),
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.SemiBold,
+                                        text = stringResource(R.string.add_book_scan_no_permission),
+                                        modifier = Modifier.fillMaxWidth(0.8f),
+                                        textAlign = TextAlign.Center,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = color_on_surface,
                                     )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Button(
+                                        onClick = { onIntent(AddBookIntent.RequestCameraPermission) },
+                                        shape = RoundedCornerShape(28.dp),
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.add_book_scan_grant_permission),
+                                            fontSize = 15.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                    }
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = stringResource(R.string.add_book_scan_instructions),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = color_on_surface_variant,
+                        )
+
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp),
+                            thickness = 1.dp,
+                            color = color_track,
+                        )
+
+                        AddBookTextField(
+                            label = stringResource(R.string.add_book_scan_isbn_label),
+                            value = state.manualIsbn,
+                            placeholder = stringResource(R.string.add_book_scan_isbn_placeholder),
+                            onValueChange = { onIntent(AddBookIntent.OnManualIsbnChanged(it)) },
+                            keyboardType = KeyboardType.Number,
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = { onIntent(AddBookIntent.OnManualIsbnSearchClicked) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            enabled = state.isManualIsbnSearchEnabled && !state.isScanning,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = color_primary,
+                                contentColor = color_surface,
+                                disabledContainerColor = color_primary.copy(alpha = 0.5f),
+                                disabledContentColor = color_surface.copy(alpha = 0.7f),
+                            ),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.add_book_scan_search_button),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
                     }
+
                 }
+            }
             }
         }
 
@@ -419,6 +408,19 @@ fun AddBookScreen(
                         Text(text = stringResource(R.string.add_book_exit_dialog_no))
                     }
                 },
+            )
+        }
+
+        state.scanError?.let { error ->
+            val messageRes = when (error) {
+                ScanError.Network -> R.string.add_book_scan_network_error
+                ScanError.NotFound -> R.string.add_book_scan_book_not_found
+                ScanError.Unknown -> R.string.add_book_scan_invalid_barcode
+            }
+            ScanErrorOverlay(
+                message = stringResource(messageRes),
+                onRetry = { onIntent(AddBookIntent.OnScanRetryClicked) },
+                onDismiss = { onIntent(AddBookIntent.OnScanErrorDismissed) },
             )
         }
     }
@@ -677,7 +679,7 @@ private fun ScanErrorOverlay(
         modifier = modifier
             .fillMaxSize()
             .background(color_on_surface.copy(alpha = 0.6f))
-            .padding(24.dp),
+            .padding(32.dp),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -700,7 +702,7 @@ private fun ScanErrorOverlay(
             ) {
                 TextButton(onClick = onDismiss) {
                     Text(
-                        text = stringResource(R.string.add_book_exit_dialog_no),
+                        text = stringResource(R.string.add_book_scan_ok),
                         color = color_on_surface_variant,
                     )
                 }
