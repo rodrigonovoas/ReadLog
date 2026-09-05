@@ -16,6 +16,10 @@ data class UserSearchUiState(
 data class UserSearchResultUi(
     val userId: String,
     val username: String,
+    val displayName: String? = null,
+    val collectionSize: Int = 0,
+    val sessionsThisMonth: Int = 0,
+    val isLikeLoading: Boolean = false,
 )
 
 val sampleUserSearchUiState = UserSearchUiState(

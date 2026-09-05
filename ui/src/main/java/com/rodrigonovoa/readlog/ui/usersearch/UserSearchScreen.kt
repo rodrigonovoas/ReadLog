@@ -14,16 +14,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -54,6 +56,7 @@ fun UserSearchScreen(
     onQueryChange: (String) -> Unit = {},
     onBackClick: () -> Unit = {},
     onUserClick: (String) -> Unit = {},
+    onUnlikeClick: (String) -> Unit = {},
 ) {
     val isSearchMode = uiState.mode == UserSearchMode.SEARCH
     Column(
@@ -95,7 +98,23 @@ fun UserSearchScreen(
                     )
                 }
             }
-            else -> ResultsList(results = uiState.results, onUserClick = onUserClick)
+            else -> {
+                if (!isSearchMode) {
+                    Text(
+                        text = stringResource(R.string.likes_count, uiState.results.size),
+                        modifier = Modifier.padding(horizontal = 24.dp)
+                            .padding(top = 8.dp),
+                        fontSize = 13.sp,
+                        color = color_on_surface_variant,
+                    )
+                }
+                ResultsList(
+                    results = uiState.results,
+                    onUserClick = onUserClick,
+                    onUnlikeClick = onUnlikeClick,
+                    showLikeAction = !isSearchMode,
+                )
+            }
         }
     }
 }
@@ -202,6 +221,8 @@ private fun MessageState(message: String, modifier: Modifier = Modifier) {
 private fun ResultsList(
     results: List<UserSearchResultUi>,
     onUserClick: (String) -> Unit,
+    onUnlikeClick: (String) -> Unit = {},
+    showLikeAction: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -210,8 +231,16 @@ private fun ResultsList(
             .padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        items(results, key = { it.userId }) { result ->
-            UserSearchResultRow(result = result, onClick = { onUserClick(result.userId) })
+        itemsIndexed(results, key = { _, result -> result.userId }) { index, result ->
+            UserSearchResultRow(
+                result = result,
+                onClick = { onUserClick(result.userId) },
+                onUnlikeClick = { onUnlikeClick(result.userId) },
+                showLikeAction = showLikeAction,
+            )
+            if (index < results.lastIndex) {
+                HorizontalDivider(color = color_outline)
+            }
         }
     }
 }
@@ -220,6 +249,8 @@ private fun ResultsList(
 private fun UserSearchResultRow(
     result: UserSearchResultUi,
     onClick: () -> Unit,
+    onUnlikeClick: () -> Unit = {},
+    showLikeAction: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -238,20 +269,67 @@ private fun UserSearchResultRow(
                 .background(color_chip),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = color_on_surface_variant,
-                modifier = Modifier.size(20.dp),
+            Text(
+                text = initialsFor(result),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = color_on_surface_variant,
             )
         }
-        Text(
-            text = "@${result.username}",
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-            color = color_on_surface,
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = result.displayName?.takeIf { it.isNotBlank() } ?: "@${result.username}",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = color_on_surface,
+                maxLines = 1,
+            )
+            if (result.displayName?.isNotBlank() == true) {
+                Text(
+                    text = "@${result.username}",
+                    fontSize = 12.sp,
+                    color = color_on_surface_variant,
+                    maxLines = 1,
+                )
+            }
+            if (result.collectionSize > 0 || result.sessionsThisMonth > 0) {
+                Text(
+                    text = stringResource(
+                        R.string.user_search_profile_stats,
+                        result.collectionSize,
+                        result.sessionsThisMonth,
+                    ),
+                    fontSize = 12.sp,
+                    color = color_on_surface_variant,
+                    maxLines = 1,
+                )
+            }
+        }
+        if (showLikeAction) {
+            IconButton(
+                onClick = onUnlikeClick,
+                enabled = !result.isLikeLoading,
+                modifier = Modifier.size(40.dp),
+            ) {
+                Icon(
+                    imageVector = if (result.isLikeLoading) Icons.Default.FavoriteBorder else Icons.Default.Favorite,
+                    contentDescription = stringResource(R.string.user_search_unlike_content_description),
+                    tint = color_primary,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+        }
     }
+}
+
+private fun initialsFor(result: UserSearchResultUi): String {
+    val name = result.displayName?.takeIf { it.isNotBlank() } ?: result.username
+    return name
+        .split(" ", "_", "-")
+        .filter { it.isNotBlank() }
+        .take(2)
+        .joinToString("") { it.first().uppercase() }
+        .take(2)
 }
 
 @Preview(showBackground = true, widthDp = 412, heightDp = 915)

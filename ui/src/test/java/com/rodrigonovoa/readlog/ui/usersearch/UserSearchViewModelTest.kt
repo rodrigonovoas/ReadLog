@@ -4,7 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import com.rodrigonovoa.readlog.domain.model.UserProfileInfo
 import com.rodrigonovoa.readlog.domain.model.UserSearchResult
 import com.rodrigonovoa.readlog.domain.usecase.GetLikedProfilesUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SearchUsersUseCase
+import com.rodrigonovoa.readlog.domain.usecase.ToggleUserLikeUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -27,12 +29,16 @@ class UserSearchViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var searchUsersUseCase: SearchUsersUseCase
     private lateinit var getLikedProfilesUseCase: GetLikedProfilesUseCase
+    private lateinit var getCurrentUserUseCase: GetCurrentUserUseCase
+    private lateinit var toggleUserLikeUseCase: ToggleUserLikeUseCase
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         searchUsersUseCase = mockk()
         getLikedProfilesUseCase = mockk()
+        getCurrentUserUseCase = mockk()
+        toggleUserLikeUseCase = mockk()
         coEvery { searchUsersUseCase("") } returns Result.success(emptyList())
         coEvery { getLikedProfilesUseCase() } returns Result.success(emptyList())
         coEvery { getLikedProfilesUseCase.getCached() } returns Result.success(emptyList())
@@ -49,6 +55,8 @@ class UserSearchViewModelTest {
         SavedStateHandle(mapOf(UserSearchViewModel.MODE_ARG to mode.name)),
         searchUsersUseCase,
         getLikedProfilesUseCase,
+        getCurrentUserUseCase,
+        toggleUserLikeUseCase,
     )
 
     @Test
@@ -117,7 +125,13 @@ class UserSearchViewModelTest {
     fun `loads liked profiles on init in likes mode`() = runTest {
         coEvery { getLikedProfilesUseCase() } returns Result.success(
             listOf(
-                UserProfileInfo(userId = "1", username = "elenalee"),
+                UserProfileInfo(
+                    userId = "1",
+                    username = "elenalee",
+                    displayName = "Elena Lee",
+                    bookCollection = listOf("Book 1", "Book 2"),
+                    sessionsThisMonth = 3,
+                ),
                 UserProfileInfo(userId = "2", username = "elena_ruiz"),
             )
         )
@@ -127,7 +141,13 @@ class UserSearchViewModelTest {
 
         assertEquals(
             listOf(
-                UserSearchResultUi(userId = "1", username = "elenalee"),
+                UserSearchResultUi(
+                    userId = "1",
+                    username = "elenalee",
+                    displayName = "Elena Lee",
+                    collectionSize = 2,
+                    sessionsThisMonth = 3,
+                ),
                 UserSearchResultUi(userId = "2", username = "elena_ruiz"),
             ),
             viewModel.uiState.value.results,

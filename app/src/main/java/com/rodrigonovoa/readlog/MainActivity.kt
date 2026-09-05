@@ -201,6 +201,7 @@ class MainActivity : AppCompatActivity() {
                             onQueryChange = viewModel::onQueryChange,
                             onBackClick = { navController.popBackStack() },
                             onUserClick = { userId -> navController.navigate("userProfile?userId=$userId") },
+                            onUnlikeClick = viewModel::onUnlikeClick,
                         )
                     }
                     composable(
@@ -221,6 +222,7 @@ class MainActivity : AppCompatActivity() {
                             onQueryChange = viewModel::onQueryChange,
                             onBackClick = { navController.popBackStack() },
                             onUserClick = { userId -> navController.navigate("userProfile?userId=$userId") },
+                            onUnlikeClick = viewModel::onUnlikeClick,
                         )
                     }
                     composable(

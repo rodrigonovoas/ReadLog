@@ -4,7 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rodrigonovoa.readlog.domain.usecase.GetLikedProfilesUseCase
+import com.rodrigonovoa.readlog.domain.usecase.GetCurrentUserUseCase
 import com.rodrigonovoa.readlog.domain.usecase.SearchUsersUseCase
+import com.rodrigonovoa.readlog.domain.usecase.ToggleUserLikeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,8 @@ class UserSearchViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val searchUsersUseCase: SearchUsersUseCase,
     private val getLikedProfilesUseCase: GetLikedProfilesUseCase,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val toggleUserLikeUseCase: ToggleUserLikeUseCase,
 ) : ViewModel() {
 
     private val mode = UserSearchMode.valueOf(
@@ -76,7 +80,13 @@ class UserSearchViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             results = profiles.map { profile ->
-                                UserSearchResultUi(profile.userId, profile.username.orEmpty())
+                                UserSearchResultUi(
+                                    userId = profile.userId,
+                                    username = profile.username.orEmpty(),
+                                    displayName = profile.displayName,
+                                    collectionSize = profile.bookCollection.size,
+                                    sessionsThisMonth = profile.sessionsThisMonth,
+                                )
                             },
                             isLoading = false,
                             hasError = false,
@@ -95,6 +105,9 @@ class UserSearchViewModel @Inject constructor(
                                 UserSearchResultUi(
                                     userId = profile.userId,
                                     username = profile.username.orEmpty(),
+                                    displayName = profile.displayName,
+                                    collectionSize = profile.bookCollection.size,
+                                    sessionsThisMonth = profile.sessionsThisMonth,
                                 )
                             },
                             isLoading = false,
@@ -118,6 +131,39 @@ class UserSearchViewModel @Inject constructor(
         if (mode == UserSearchMode.LIKES) return
         _uiState.update { it.copy(query = query) }
         queryFlow.value = query
+    }
+
+    fun onUnlikeClick(userId: String) {
+        if (mode != UserSearchMode.LIKES) return
+        val currentUserId = getCurrentUserUseCase()?.uid ?: return
+        val result = _uiState.value.results.firstOrNull { it.userId == userId } ?: return
+        if (result.isLikeLoading) return
+
+        _uiState.update { state ->
+            state.copy(
+                results = state.results.map {
+                    if (it.userId == userId) it.copy(isLikeLoading = true) else it
+                },
+            )
+        }
+        viewModelScope.launch {
+            toggleUserLikeUseCase(currentUserId, userId, liked = false).fold(
+                onSuccess = {
+                    _uiState.update { state ->
+                        state.copy(results = state.results.filterNot { it.userId == userId })
+                    }
+                },
+                onFailure = {
+                    _uiState.update { state ->
+                        state.copy(
+                            results = state.results.map {
+                                if (it.userId == userId) it.copy(isLikeLoading = false) else it
+                            },
+                        )
+                    }
+                },
+            )
+        }
     }
 
     companion object {

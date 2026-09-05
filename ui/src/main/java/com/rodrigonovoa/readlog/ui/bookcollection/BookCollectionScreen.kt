@@ -458,17 +458,17 @@ private fun ProfileMenuIcon(
             modifier = Modifier.background(color_surface_variant),
         ) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.menu_search_users), color = Color.Black) },
-                onClick = {
-                    expanded = false
-                    onSearchUsersClick()
-                },
-            )
-            DropdownMenuItem(
                 text = { Text(stringResource(R.string.menu_profile), color = Color.Black) },
                 onClick = {
                     expanded = false
                     onProfileClick()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_search_users), color = Color.Black) },
+                onClick = {
+                    expanded = false
+                    onSearchUsersClick()
                 },
             )
             if (canLike) {
